@@ -156,7 +156,7 @@ export function InvitationTable({
   const prevInvitationsLength = useRef<number>(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const selectedCount = useMemo(() => selected.size, [selected]);
-  const SKELETON_FILL = 3;
+  const skeletonFill = useMemo(() => Math.max(3 - others.length, 0), [others]);
   const tBody = useRef<HTMLTableSectionElement>(null);
   console.log("render");
   useEffect(() => {
@@ -167,7 +167,7 @@ export function InvitationTable({
   }, [invitations]);
 
   const deselectAll = () => {
-    setSelected((prev) => new Set());
+    setSelected(new Set());
   };
   const onClickDeleteButton = (e: MouseEvent<HTMLButtonElement>) => {
     setInvitations((invitations: Invitation[]) =>
@@ -233,56 +233,19 @@ export function InvitationTable({
             <TableCell className="text-right">{formatPhone(me.phone)}</TableCell>
           </TableRow>
 
-          {[...Array(SKELETON_FILL)].map((_, idx) => (
-            <TableRow key={idx + 1} className="relative h-[60px] z-0">
-              <TableCell>
-                {others[idx] && (
-                  <>
-                    <Checkbox
-                      className="align-text-bottom animate-fadein"
-                      aria-label="행 선택"
-                      onCheckedChange={(checked) => {
-                        onCheckedChange(checked, idx + 1);
-                      }}
-                      id={others[idx].phone}
-                    />
-                    <Label
-                      htmlFor={others[idx].phone}
-                      className="block w-full h-[60px] absolute bottom-0 left-0 cursor-pointer"
-                    ></Label>
-                  </>
-                )}
-              </TableCell>
-              <TableCell>
-                {others[idx] ? (
-                  <span className="animate-fadein">{others[idx].name}</span>
-                ) : (
-                  <Skeleton className="h-6 w-10" />
-                )}
-              </TableCell>
-              <TableCell className="text-right">
-                {others[idx] ? (
-                  <span className="animate-fadein">{formatPhone(others[idx].phone)}</span>
-                ) : (
-                  <Skeleton className="h-6 w-28 ml-auto" />
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-
-          {others.slice(SKELETON_FILL).map((invitation, idx) => (
+          {others.map((invitation, idx) => (
             <TableRow key={invitation.phone} className="relative h-[60px] z-0">
               <TableCell>
                 <Checkbox
                   className="align-text-bottom"
                   aria-label="행 선택"
                   onCheckedChange={(checked) => {
-                    onCheckedChange(checked, idx + 1 + SKELETON_FILL);
+                    onCheckedChange(checked, idx + 1);
                   }}
-                  id={invitations[idx + 1 + SKELETON_FILL].phone}
+                  id={invitation.phone}
                 />
                 <Label
-                  htmlFor={invitations[idx + 1 + SKELETON_FILL].phone}
+                  htmlFor={invitation.phone}
                   className="block w-full h-[60px] absolute bottom-0 left-0 cursor-pointer"
                 ></Label>
               </TableCell>
@@ -291,6 +254,18 @@ export function InvitationTable({
               </TableCell>
               <TableCell className="text-right">
                 <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
+              </TableCell>
+            </TableRow>
+          ))}
+
+          {[...Array(skeletonFill)].map((_, idx) => (
+            <TableRow key={invitations.length + idx + 1} className="relative h-[60px] z-0">
+              <TableCell></TableCell>
+              <TableCell>
+                <Skeleton className="h-6 w-10" />
+              </TableCell>
+              <TableCell className="text-right">
+                <Skeleton className="h-6 w-28 ml-auto" />
               </TableCell>
             </TableRow>
           ))}
