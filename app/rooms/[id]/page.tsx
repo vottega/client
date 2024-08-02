@@ -158,7 +158,9 @@ export function InvitationTable({
   const selectedCount = useMemo(() => selected.size, [selected]);
   const skeletonFill = useMemo(() => Math.max(3 - others.length, 0), [others]);
   const tBody = useRef<HTMLTableSectionElement>(null);
-  console.log("render");
+  const checkboxSelectAll = useRef<HTMLButtonElement>(null);
+  const checkboxes = useRef<HTMLButtonElement[]>([]);
+
   useEffect(() => {
     if (invitations.length > prevInvitationsLength.current) {
       tBody.current?.lastElementChild?.scrollIntoView({ behavior: "smooth" });
@@ -166,15 +168,12 @@ export function InvitationTable({
     prevInvitationsLength.current = invitations.length;
   }, [invitations]);
 
-  const deselectAll = () => {
-    setSelected(new Set());
-  };
   const onClickDeleteButton = (e: MouseEvent<HTMLButtonElement>) => {
     setInvitations((invitations: Invitation[]) =>
       invitations.filter((_, idx) => !selected.has(idx)),
     );
-
-    deselectAll();
+    setSelected(new Set());
+    checkboxSelectAll.current?.ariaChecked === "true" && checkboxSelectAll.current?.click();
   };
   const onCheckedChange = (checked: CheckedState, idx: number) => {
     if (checked) {
@@ -189,6 +188,15 @@ export function InvitationTable({
         newSet.delete(idx);
         return newSet;
       });
+    }
+  };
+  const toggleSelectAll = (checked: CheckedState) => {
+    if (checked) {
+      setSelected(new Set(Array.from(others.keys()).map((key) => key + 1)));
+      checkboxes.current.forEach((checkbox) => checkbox.ariaChecked !== "true" && checkbox.click());
+    } else {
+      setSelected(new Set());
+      checkboxes.current.forEach((checkbox) => checkbox.ariaChecked === "true" && checkbox.click());
     }
   };
 
@@ -211,10 +219,16 @@ export function InvitationTable({
         <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
           현재까지 초대된 목록이에요.
         </TableCaption>
+
         <TableHeader className="sticky top-0 bg-white z-10">
           <TableRow>
             <TableHead>
-              <Checkbox className="align-text-bottom" aria-label="전체 행 선택" />
+              <Checkbox
+                className="align-text-bottom"
+                aria-label="전체 행 선택"
+                onCheckedChange={toggleSelectAll}
+                ref={checkboxSelectAll}
+              />
             </TableHead>
             <TableHead>성함</TableHead>
             <TableHead className="text-right">전화번호</TableHead>
@@ -243,6 +257,11 @@ export function InvitationTable({
                     onCheckedChange(checked, idx + 1);
                   }}
                   id={invitation.phone}
+                  ref={(checkbox) => {
+                    if (checkbox) {
+                      checkboxes.current[idx] = checkbox;
+                    }
+                  }}
                 />
                 <Label
                   htmlFor={invitation.phone}
