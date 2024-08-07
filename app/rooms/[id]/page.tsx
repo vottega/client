@@ -159,7 +159,7 @@ export function InvitationTable({
   const skeletonFill = useMemo(() => Math.max(3 - others.length, 0), [others]);
   const tBody = useRef<HTMLTableSectionElement>(null);
   const checkboxSelectAll = useRef<HTMLButtonElement>(null);
-  const checkboxes = useRef<HTMLButtonElement[]>([]);
+  const checkboxes = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   useEffect(() => {
     if (invitations.length > prevInvitationsLength.current) {
@@ -258,8 +258,11 @@ export function InvitationTable({
                   }}
                   id={invitation.phone}
                   ref={(checkbox) => {
+                    // TODO: do sth on every rerender, to many calls maybe?
                     if (checkbox) {
-                      checkboxes.current[idx] = checkbox;
+                      checkboxes.current.set(invitation.phone, checkbox);
+                    } else {
+                      checkboxes.current.delete(invitation.phone);
                     }
                   }}
                 />
