@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Bell,
   CircleUser,
@@ -13,6 +12,7 @@ import {
   ShoppingCart,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,15 +37,38 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 export default function Dashboard() {
   const router = useRouter();
-  const onClickCreateRoomButton = () => {
+  const FormSchema = z.object({
+    title: z.string({
+      required_error: "방 제목을 입력해주세요.",
+    }),
+  });
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      title: "",
+    },
+  });
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
     const roomId = 1;
     router.push(`/rooms/${roomId}`);
-  };
+  }
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
@@ -233,7 +256,7 @@ export default function Dashboard() {
             <div className="flex flex-col items-center gap-1 text-center">
               <h3 className="text-2xl font-bold tracking-tight">아직 개설한 방이 없어요.</h3>
               <p className="text-sm text-muted-foreground">
-                방을 개설하면 회의를 시작할 수 있습니다.
+                방을 개설하면 회의를 시작할 수 있어요.
               </p>
               <Dialog>
                 <DialogTrigger asChild>
@@ -244,19 +267,32 @@ export default function Dashboard() {
                     <DialogTitle>방 개설하기</DialogTitle>
                     <DialogDescription>기본적인 정보를 입력해 방을 개설해주세요.</DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        방 제목
-                      </Label>
-                      <Input id="name" className="col-span-3" />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button type="submit" onClick={onClickCreateRoomButton}>
-                      개설하기
-                    </Button>
-                  </DialogFooter>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4 space-y-0">
+                            <FormLabel className="text-right">방 이름</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="방 이름을 입력해주세요."
+                                className="col-span-3"
+                              />
+                            </FormControl>
+                            <FormDescription className="sr-only">
+                              방 이름을 입력해주세요.
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter>
+                        <Button type="submit">개설하기</Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
                 </DialogContent>
               </Dialog>
             </div>
