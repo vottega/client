@@ -325,61 +325,58 @@ export function RoleTable({ invitations }: { invitations: Invitation[] }) {
     },
   ]);
   return (
-    <>
-      <Combobox commands={roles} defaultValue={"의장"} />
-      <Table>
-        <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
-          현재까지 초대된 목록이에요.
-        </TableCaption>
+    <Table>
+      <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
+        현재까지 초대된 목록이에요.
+      </TableCaption>
 
-        <TableHeader className="sticky top-0 bg-white z-10">
-          <TableRow>
-            <TableHead>성함</TableHead>
-            <TableHead>전화번호</TableHead>
-            <TableHead className="text-right">역할</TableHead>
-          </TableRow>
-        </TableHeader>
+      <TableHeader className="sticky top-0 bg-white z-10">
+        <TableRow>
+          <TableHead>성함</TableHead>
+          <TableHead>전화번호</TableHead>
+          <TableHead className="text-right">역할</TableHead>
+        </TableRow>
+      </TableHeader>
 
-        <TableBody>
-          <TableRow className="h-[60px] relative">
+      <TableBody>
+        <TableRow className="h-[60px] relative">
+          <TableCell className="font-medium">
+            {me.name}
+            <Badge className="align-bottom">
+              <Award size={14} />
+            </Badge>
+          </TableCell>
+          <TableCell>{formatPhone(me.phone)}</TableCell>
+          <TableCell className="text-right">
+            <Combobox commands={roles} defaultValue={"의장"} />
+          </TableCell>
+        </TableRow>
+
+        {others.map((invitation, idx) => (
+          <TableRow key={invitation.phone} className="relative h-[60px] z-0">
             <TableCell className="font-medium">
-              {me.name}
-              <Badge className="align-bottom">
-                <Award size={14} />
-              </Badge>
+              <span className="animate-fadein">{invitation.name}</span>
             </TableCell>
-            <TableCell>{formatPhone(me.phone)}</TableCell>
+            <TableCell>
+              <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
+            </TableCell>
             <TableCell className="text-right">
-              <Combobox commands={roles} defaultValue={"의장"} />
+              <Combobox commands={roles} defaultValue={"회의자"} />
             </TableCell>
           </TableRow>
+        ))}
 
-          {others.map((invitation, idx) => (
-            <TableRow key={invitation.phone} className="relative h-[60px] z-0">
-              <TableCell className="font-medium">
-                <span className="animate-fadein">{invitation.name}</span>
-              </TableCell>
-              <TableCell>
-                <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Combobox commands={roles} defaultValue={"회의자"} />
-              </TableCell>
-            </TableRow>
-          ))}
-
-          <TableRow className="sr-only">
-            <TableCell></TableCell>
-          </TableRow>
-        </TableBody>
-        <TableFooter className="sticky bottom-[36px] bg-muted">
-          <TableRow>
-            <TableCell colSpan={2}>총 인원 수</TableCell>
-            <TableCell className="text-right">{invitations.length}명</TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
-    </>
+        <TableRow className="sr-only">
+          <TableCell></TableCell>
+        </TableRow>
+      </TableBody>
+      <TableFooter className="sticky bottom-[36px] bg-muted">
+        <TableRow>
+          <TableCell colSpan={2}>총 인원 수</TableCell>
+          <TableCell className="text-right">{invitations.length}명</TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
   );
 }
 
