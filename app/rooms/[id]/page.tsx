@@ -3,6 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Combobox, Command } from "@/components/ui/combobox";
 import {
   Form,
   FormControl,
@@ -30,7 +31,7 @@ import {
 import { formatPhone, phoneRegex } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckedState } from "@radix-ui/react-checkbox";
-import { Award, CircleCheck, CircleX, Trash2 } from "lucide-react";
+import { Award, ChevronLeft, ChevronRight, CircleCheck, CircleX, Trash2 } from "lucide-react";
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -94,7 +95,7 @@ export function InvitationForm({
             <FormItem className="flex flex-col">
               <FormLabel>성함</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="성함을 입력해주세요." />
+                <Input {...field} placeholder="성함을 입력해주세요." autoFocus />
               </FormControl>
               <FormDescription className="sr-only">성함을 입력해주세요.</FormDescription>
               <FormMessage />
@@ -307,19 +308,102 @@ export function InvitationTable({
   );
 }
 
+export function RoleTable({ invitations }: { invitations: Invitation[] }) {
+  const [me, ...others] = useMemo(() => invitations, [invitations]);
+  const [roles, setRoles] = useState<Command[]>([
+    {
+      value: "의장",
+      label: "의장",
+    },
+    {
+      value: "회의자",
+      label: "회의자",
+    },
+    {
+      value: "서기",
+      label: "서기",
+    },
+  ]);
+  return (
+    <>
+      <Combobox commands={roles} defaultValue={"의장"} />
+      <Table>
+        <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
+          현재까지 초대된 목록이에요.
+        </TableCaption>
+
+        <TableHeader className="sticky top-0 bg-white z-10">
+          <TableRow>
+            <TableHead>성함</TableHead>
+            <TableHead>전화번호</TableHead>
+            <TableHead className="text-right">역할</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          <TableRow className="h-[60px] relative">
+            <TableCell className="font-medium">
+              {me.name}
+              <Badge className="align-bottom">
+                <Award size={14} />
+              </Badge>
+            </TableCell>
+            <TableCell>{formatPhone(me.phone)}</TableCell>
+            <TableCell className="text-right">
+              <Combobox commands={roles} defaultValue={"의장"} />
+            </TableCell>
+          </TableRow>
+
+          {others.map((invitation, idx) => (
+            <TableRow key={invitation.phone} className="relative h-[60px] z-0">
+              <TableCell className="font-medium">
+                <span className="animate-fadein">{invitation.name}</span>
+              </TableCell>
+              <TableCell>
+                <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
+              </TableCell>
+              <TableCell className="text-right">
+                <Combobox commands={roles} defaultValue={"회의자"} />
+              </TableCell>
+            </TableRow>
+          ))}
+
+          <TableRow className="sr-only">
+            <TableCell></TableCell>
+          </TableRow>
+        </TableBody>
+        <TableFooter className="sticky bottom-[36px] bg-muted">
+          <TableRow>
+            <TableCell colSpan={2}>총 인원 수</TableCell>
+            <TableCell className="text-right">{invitations.length}명</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </>
+  );
+}
+
 export default function RoomInit() {
   const steps = {
     invitePerson: 1,
     chooseRole: 2,
     authorizeRole: 3,
   } as const;
-  const stepDescription = {
-    [steps.invitePerson]:
-      "QR코드를 전송할 사람을 입력해주세요.\n인원은 방을 개설한 후 언제든 새로 추가할 수 있어요.",
-    [steps.chooseRole]:
-      "QR코드를 전송할 사람을 입력해주세요.\n인원은 방을 개설한 후 언제든 새로 추가할 수 있어요.",
-    [steps.authorizeRole]:
-      "QR코드를 전송할 사람을 입력해주세요.\n인원은 방을 개설한 후 언제든 새로 추가할 수 있어요.",
+  const stepInfo = {
+    [steps.invitePerson]: {
+      title: "초대 전송하기",
+      description:
+        "QR코드를 전송할 사람을 입력해주세요.\n인원은 방을 개설한 후 언제든 새로 추가할 수 있어요.",
+    },
+    [steps.chooseRole]: {
+      title: "역할 분담하기",
+      description:
+        "각자의 역할을 분담해주세요.\n다음 단계에서 역할마다 투표권을 다르게 부여할 수 있어요.",
+    },
+    [steps.authorizeRole]: {
+      title: "투표권 부여하기",
+      description: "역할마다 투표권을 다르게 부여할 수 있어요.",
+    },
   };
   type Step = (typeof steps)[keyof typeof steps];
 
@@ -333,26 +417,50 @@ export default function RoomInit() {
 
   return (
     <div className="py-10 px-4 flex flex-col items-center h-screen gap-10">
-      <header className="w-full flex flex-col items-center gap-2">
-        <h1>방 이름</h1>
-        <p className="text-center">{`${step} / ${Object.keys(steps).length}`} 초대 전송하기</p>
-        <Progress
-          value={(step / Object.keys(steps).length) * 100}
-          className="w-[60%]"
-          aria-label="방 만들기 진행 과정"
-        />
+      <header className="w-full flex items-center gap-2 px-4">
+        <Button
+          onClick={() =>
+            setStep((prev): Step => (prev === 1 ? (prev as Step) : ((prev - 1) as Step)))
+          }
+          disabled={step === steps.invitePerson}
+        >
+          <ChevronLeft className="h-4 w-4" />
+          이전 단계로
+        </Button>
+
+        <div className="flex flex-col gap-2 flex-1">
+          <h2 className="scroll-m-20 text-xl font-semibold tracking-tight text-center">방 이름</h2>
+          <Progress
+            value={(step / Object.keys(steps).length) * 100}
+            className="w-[60%] m-auto"
+            aria-label="방 만들기 진행 과정"
+          />
+          <p className="text-center text-sm text-muted-foreground">
+            {`${step} / ${Object.keys(steps).length}`} {stepInfo[step].title}
+          </p>
+        </div>
+
+        <Button
+          onClick={() =>
+            setStep((prev): Step => (prev === 3 ? (prev as Step) : ((prev + 1) as Step)))
+          }
+        >
+          다음 단계로
+          <ChevronRight className="h-4 w-4" />
+        </Button>
       </header>
+
+      <div>
+        {stepInfo[step].description.split("\n").map((text, idx) => (
+          <p className="text-center" key={idx}>
+            {text}
+          </p>
+        ))}
+      </div>
 
       {/* step 1 */}
       {step === steps.invitePerson && (
         <>
-          <div>
-            {stepDescription[step].split("\n").map((text, idx) => (
-              <p className="text-center" key={idx}>
-                {text}
-              </p>
-            ))}
-          </div>
           <div className="flex w-full gap-4 flex-grow">
             <div className="flex-1">
               <InvitationForm invitations={invitations} setInvitations={setInvitations} />
@@ -365,14 +473,14 @@ export default function RoomInit() {
         </>
       )}
 
-      {/* <Button
-        className="w-full py-6"
-        onClick={() =>
-          setStep((prev): Step => (prev === 3 ? (prev as Step) : ((prev + 1) as Step)))
-        }
-      >
-        다음 단계로
-      </Button> */}
+      {/* step 2 */}
+      {step === steps.chooseRole && (
+        <>
+          <div className="w-full">
+            <RoleTable invitations={invitations} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
