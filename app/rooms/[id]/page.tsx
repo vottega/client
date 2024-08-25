@@ -128,7 +128,7 @@ export function InvitationForm({
           <Button type="submit">추가하기</Button>
           {notification === "success" && (
             <CircleCheck
-              color="green"
+              color="hsl(var(--green))"
               strokeDasharray={200}
               className="[stroke-dashoffset:250] fill-mode-forwards animate-draw"
             />
@@ -413,10 +413,16 @@ export function RoleTable({
 export function RoleAuthorization({
   roles,
   setRoles,
+  participants,
 }: {
   roles: Roles;
   setRoles: Dispatch<SetStateAction<Roles>>;
+  participants: Participant[];
 }) {
+  const selectedRoles = useMemo(
+    () => new Set(participants.map((participant) => participant.role)),
+    [participants],
+  );
   const onCheckedChange = (checked: CheckedState, role: string) => {
     setRoles((prev) => {
       const nextRoles = new Map(prev);
@@ -431,16 +437,16 @@ export function RoleAuthorization({
   };
 
   return (
-    <ul className="grid grid-cols-2 gap-4">
-      {[...roles].map(([label, role]) => (
-        <li key={role.value}>
+    <ul className="grid grid-cols-3 gap-4">
+      {[...selectedRoles].map((role) => (
+        <li key={role}>
           <ButtonLabeledCheckbox
-            id={role.value}
-            label={label}
+            id={role}
+            label={role}
             onCheckedChange={(checked) => {
-              onCheckedChange(checked, role.value);
+              onCheckedChange(checked, role);
             }}
-            checked={roles.get(label)?.canVote}
+            checked={roles.get(role)?.canVote}
           />
         </li>
       ))}
@@ -461,14 +467,26 @@ export function ButtonLabeledCheckbox({
 }) {
   type ButtonVariant = NonNullable<Parameters<typeof buttonVariants>[0]>["variant"];
   const [labelVariant, setLabelVariant] = useState<ButtonVariant>(checked ? "default" : "outline");
+  const cnLabel = useMemo(
+    () =>
+      checked
+        ? "bg-[hsl(var(--blue))] hover:bg-[hsl(var(--blue))]/90"
+        : "hover:bg-[hsl(var(--blue-accent))] text-[hsl(var(--blue-accent-foreground))]",
+    [checked],
+  );
   return (
     <>
       <Label
         htmlFor={id}
-        className={cn(buttonVariants({ variant: labelVariant }), "w-full cursor-pointer")}
+        className={cn(
+          buttonVariants({
+            variant: labelVariant,
+            className: cnLabel,
+          }),
+          "w-full cursor-pointer",
+        )}
       >
         {label}
-        <CircleCheck color="hsl(var(--background))" strokeWidth={1} />
       </Label>
       <Checkbox
         className="sr-only"
@@ -488,68 +506,50 @@ export function ButtonLabeledCheckbox({
 }
 
 export function AuthorizationTable({
-  roles,
   participants,
+  tableCaption,
+  authorized,
 }: {
-  roles: Roles;
   participants: Participant[];
+  tableCaption?: string;
+  authorized?: boolean;
 }) {
-  const [me, ...others] = useMemo(() => participants, [participants]);
   return (
-    <>
-      <Table>
-        <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
-          현재까지 초대된 목록이에요.
-        </TableCaption>
+    <Table className={authorized ? "bg-[hsl(var(--green))]/5" : "bg-[hsl(var(--red))]/5"}>
+      <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
+        {tableCaption || "현재까지 초대된 목록이에요."}
+      </TableCaption>
 
-        <TableHeader className="sticky top-0 bg-white z-10">
-          <TableRow>
-            <TableHead>성함</TableHead>
-            <TableHead>역할</TableHead>
-            <TableHead className="text-right">투표권</TableHead>
-          </TableRow>
-        </TableHeader>
+      <TableHeader className="sticky top-0 bg-white z-10">
+        <TableRow>
+          <TableHead>성함</TableHead>
+          <TableHead className="text-right">역할</TableHead>
+        </TableRow>
+      </TableHeader>
 
-        <TableBody>
-          <TableRow className="h-[60px] relative">
+      <TableBody>
+        {participants.map((participant) => (
+          <TableRow key={participant.phone} className="relative h-[60px] z-0">
             <TableCell className="font-medium">
-              {me.name}
-              <Badge className="align-bottom">
-                <Award size={14} />
-              </Badge>
+              <span className="animate-fadein">{participant.name}</span>
             </TableCell>
-            <TableCell>{me.role}</TableCell>
             <TableCell className="text-right">
-              {roles.get(me.role)?.canVote ? "가능" : "불가"}
+              <span className="animate-fadein">{participant.role}</span>
             </TableCell>
           </TableRow>
+        ))}
 
-          {others.map((other, idx) => (
-            <TableRow key={other.phone} className="relative h-[60px] z-0">
-              <TableCell className="font-medium">
-                <span className="animate-fadein">{other.name}</span>
-              </TableCell>
-              <TableCell>
-                <span className="animate-fadein">{other.role}</span>
-              </TableCell>
-              <TableCell className="text-right">
-                {roles.get(other.role)?.canVote ? "가능" : "불가"}
-              </TableCell>
-            </TableRow>
-          ))}
-
-          <TableRow className="sr-only">
-            <TableCell></TableCell>
-          </TableRow>
-        </TableBody>
-        <TableFooter className="sticky bottom-[36px] bg-muted">
-          <TableRow>
-            <TableCell colSpan={2}>총 인원 수</TableCell>
-            <TableCell className="text-right">{participants.length}명</TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
-    </>
+        <TableRow className="sr-only">
+          <TableCell></TableCell>
+        </TableRow>
+      </TableBody>
+      <TableFooter className="sticky bottom-[36px] bg-muted">
+        <TableRow>
+          <TableCell colSpan={1}>총 인원 수</TableCell>
+          <TableCell className="text-right">{participants.length}명</TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
   );
 }
 
@@ -586,9 +586,22 @@ export default function RoomInit() {
     },
   ]);
   const [roles, setRoles] = useState<Roles>(ROLES);
+  const [voters, nonVoters] = useMemo(
+    () =>
+      participants.reduce<[Participant[], Participant[]]>(
+        ([voters, nonVoters], participant) => {
+          const canVote = roles.get(participant.role)!.canVote;
+          return canVote
+            ? [[...voters, participant], nonVoters]
+            : [voters, [...nonVoters, participant]];
+        },
+        [[], []],
+      ),
+    [participants, roles],
+  );
 
   return (
-    <div className="py-10 px-4 flex flex-col items-center h-screen gap-10">
+    <div className="py-10 px-4 flex flex-col items-center h-screen gap-8">
       <header className="w-full flex items-center gap-2 px-4">
         <Button
           onClick={() => setStep((prev) => Math.max(prev - 1, 1) as Step)}
@@ -611,7 +624,7 @@ export default function RoomInit() {
         </div>
 
         <Button onClick={() => setStep((prev) => Math.min(prev + 1, 3) as Step)}>
-          다음 단계로
+          {step === 3 ? "방 개설하기" : "다음 단계로"}
           <ChevronRight className="h-4 w-4" />
         </Button>
       </header>
@@ -624,10 +637,10 @@ export default function RoomInit() {
         ))}
       </div>
 
-      {/* step 1 */}
-      {step === steps.invitePerson && (
-        <>
-          <div className="flex w-full gap-4 flex-grow">
+      <div className="flex flex-col w-full gap-4">
+        {/* step 1 */}
+        {step === steps.invitePerson && (
+          <div className="flex gap-4">
             <div className="flex-1">
               <InvitationForm participants={participants} setParticipants={setParticipants} />
             </div>
@@ -636,31 +649,37 @@ export default function RoomInit() {
               <ParticipantTable participants={participants} setParticipants={setParticipants} />
             </div>
           </div>
-        </>
-      )}
+        )}
 
-      {/* step 2 */}
-      {step === steps.chooseRole && (
-        <>
-          <div className="w-full">
+        {/* step 2 */}
+        {step === steps.chooseRole && (
+          <>
             <RoleTable
               participants={participants}
               setParticipants={setParticipants}
               roles={roles}
             />
-          </div>
-        </>
-      )}
+          </>
+        )}
 
-      {/* step 3 */}
-      {step === steps.authorizeRole && (
-        <>
-          <div className="w-full">
-            <RoleAuthorization roles={roles} setRoles={setRoles} />
-            <AuthorizationTable roles={roles} participants={participants} />
-          </div>
-        </>
-      )}
+        {/* step 3 */}
+        {step === steps.authorizeRole && (
+          <>
+            <RoleAuthorization roles={roles} setRoles={setRoles} participants={participants} />
+            <div className="flex gap-4">
+              <AuthorizationTable
+                participants={voters}
+                tableCaption="투표가 가능한 인원이에요."
+                authorized={true}
+              />
+              <AuthorizationTable
+                participants={nonVoters}
+                tableCaption="투표가 가능하지 않은 인원이에요."
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
