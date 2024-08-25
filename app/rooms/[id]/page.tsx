@@ -1,9 +1,9 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Combobox, Command } from "@/components/ui/combobox";
+import { Combobox, Data } from "@/components/ui/combobox";
 import {
   Form,
   FormControl,
@@ -28,11 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatPhone, phoneRegex } from "@/lib/utils";
+import { ROLES } from "@/constants/role";
+import { cn, formatPhone, phoneRegex } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { Award, ChevronLeft, ChevronRight, CircleCheck, CircleX, Trash2 } from "lucide-react";
-import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { Dispatch, MouseEvent, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -50,18 +51,22 @@ const FormSchema = z.object({
 });
 
 type Invitation = z.infer<typeof FormSchema>;
-
+type Role = {
+  value: string;
+  canVote: boolean;
+};
+type Roles = Map<string, Role>;
 type Participant = Invitation & {
   affiliation?: string;
-  role?: string;
+  role: string;
 };
 
 export function InvitationForm({
-  invitations,
-  setInvitations,
+  participants,
+  setParticipants,
 }: {
-  invitations: Invitation[];
-  setInvitations: any;
+  participants: Participant[];
+  setParticipants: Dispatch<SetStateAction<Participant[]>>;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -74,11 +79,12 @@ export function InvitationForm({
   const [notification, setNotification] = useState<"idle" | "success" | "fail">("idle");
   const [animate, setAnimate] = useState<boolean>(true);
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    if (invitations.find(({ phone }) => phone === data.phone)) {
+  function onSubmit(data: Invitation) {
+    if (participants.find(({ phone }) => phone === data.phone)) {
       setNotification("fail");
     } else {
-      setInvitations((prev: Invitation[]) => [...prev, data]);
+      const newData: Participant = { ...data, role: "회의자" };
+      setParticipants((prev: Participant[]) => [...prev, newData]);
       setNotification("success");
     }
 
@@ -146,15 +152,15 @@ export function InvitationForm({
   );
 }
 
-export function InvitationTable({
-  invitations,
-  setInvitations,
+export function ParticipantTable({
+  participants,
+  setParticipants,
 }: {
-  invitations: Invitation[];
-  setInvitations: any;
+  participants: Participant[];
+  setParticipants: Dispatch<SetStateAction<Participant[]>>;
 }) {
-  const [me, ...others] = useMemo(() => invitations, [invitations]);
-  const prevInvitationsLength = useRef<number>(1);
+  const [me, ...others] = useMemo(() => participants, [participants]);
+  const prevparticipantsLength = useRef<number>(1);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const selectedCount = useMemo(() => selected.size, [selected]);
   const skeletonFill = useMemo(() => Math.max(3 - others.length, 0), [others]);
@@ -163,15 +169,15 @@ export function InvitationTable({
   const checkboxes = useRef<Map<string, HTMLButtonElement>>(new Map());
 
   useEffect(() => {
-    if (invitations.length > prevInvitationsLength.current) {
+    if (participants.length > prevparticipantsLength.current) {
       tBody.current?.lastElementChild?.scrollIntoView({ behavior: "smooth" });
     }
-    prevInvitationsLength.current = invitations.length;
-  }, [invitations]);
+    prevparticipantsLength.current = participants.length;
+  }, [participants]);
 
   const onClickDeleteButton = (e: MouseEvent<HTMLButtonElement>) => {
-    setInvitations((invitations: Invitation[]) =>
-      invitations.filter((_, idx) => !selected.has(idx)),
+    setParticipants((participants: Participant[]) =>
+      participants.filter((_, idx) => !selected.has(idx)),
     );
     setSelected(new Set());
     checkboxSelectAll.current?.ariaChecked === "true" && checkboxSelectAll.current?.click();
@@ -248,8 +254,8 @@ export function InvitationTable({
             <TableCell className="text-right">{formatPhone(me.phone)}</TableCell>
           </TableRow>
 
-          {others.map((invitation, idx) => (
-            <TableRow key={invitation.phone} className="relative h-[60px] z-0">
+          {others.map((Participant, idx) => (
+            <TableRow key={Participant.phone} className="relative h-[60px] z-0">
               <TableCell>
                 <Checkbox
                   className="align-text-bottom"
@@ -257,32 +263,32 @@ export function InvitationTable({
                   onCheckedChange={(checked) => {
                     onCheckedChange(checked, idx + 1);
                   }}
-                  id={invitation.phone}
+                  id={Participant.phone}
                   ref={(checkbox) => {
                     // TODO: do sth on every rerender, to many calls maybe?
                     if (checkbox) {
-                      checkboxes.current.set(invitation.phone, checkbox);
+                      checkboxes.current.set(Participant.phone, checkbox);
                     } else {
-                      checkboxes.current.delete(invitation.phone);
+                      checkboxes.current.delete(Participant.phone);
                     }
                   }}
                 />
                 <Label
-                  htmlFor={invitation.phone}
+                  htmlFor={Participant.phone}
                   className="block w-full h-[60px] absolute bottom-0 left-0 cursor-pointer"
                 ></Label>
               </TableCell>
               <TableCell className="font-medium">
-                <span className="animate-fadein">{invitation.name}</span>
+                <span className="animate-fadein">{Participant.name}</span>
               </TableCell>
               <TableCell className="text-right">
-                <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
+                <span className="animate-fadein">{formatPhone(Participant.phone)}</span>
               </TableCell>
             </TableRow>
           ))}
 
           {[...Array(skeletonFill)].map((_, idx) => (
-            <TableRow key={invitations.length + idx + 1} className="relative h-[60px] z-0">
+            <TableRow key={participants.length + idx + 1} className="relative h-[60px] z-0">
               <TableCell></TableCell>
               <TableCell>
                 <Skeleton className="h-6 w-10" />
@@ -300,7 +306,7 @@ export function InvitationTable({
         <TableFooter className="sticky bottom-[36px] bg-muted">
           <TableRow>
             <TableCell colSpan={2}>총 인원 수</TableCell>
-            <TableCell className="text-right">{invitations.length}명</TableCell>
+            <TableCell className="text-right">{participants.length}명</TableCell>
           </TableRow>
         </TableFooter>
       </Table>
@@ -308,22 +314,34 @@ export function InvitationTable({
   );
 }
 
-export function RoleTable({ invitations }: { invitations: Invitation[] }) {
-  const [me, ...others] = useMemo(() => invitations, [invitations]);
-  const [roles, setRoles] = useState<Command[]>([
-    {
-      value: "의장",
-      label: "의장",
-    },
-    {
-      value: "회의자",
-      label: "회의자",
-    },
-    {
-      value: "서기",
-      label: "서기",
-    },
-  ]);
+export function RoleTable({
+  participants,
+  setParticipants,
+  roles,
+}: {
+  participants: Participant[];
+  setParticipants: Dispatch<SetStateAction<Participant[]>>;
+  roles: Roles;
+}) {
+  const [me, ...others] = useMemo(() => participants, [participants]);
+  const datas = useMemo<Data[]>(
+    () =>
+      [...roles].map(([_, { value }]) => ({
+        label: value,
+        value,
+      })),
+    [roles],
+  );
+  // TODO: 인원 검색
+
+  const onRoleChange = (role: string, idx: number) => {
+    console.assert(idx in participants, "배열이 제대로 관리되고 있지 않음");
+    setParticipants((prev) => {
+      const nextParticipants = [...prev];
+      nextParticipants[idx].role = role;
+      return nextParticipants;
+    });
+  };
   return (
     <Table>
       <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
@@ -348,20 +366,32 @@ export function RoleTable({ invitations }: { invitations: Invitation[] }) {
           </TableCell>
           <TableCell>{formatPhone(me.phone)}</TableCell>
           <TableCell className="text-right">
-            <Combobox commands={roles} defaultValue={"의장"} />
+            <Combobox
+              datas={datas}
+              defaultValue={me.role}
+              onValueChange={(value: string) => {
+                onRoleChange(value, 0);
+              }}
+            />
           </TableCell>
         </TableRow>
 
-        {others.map((invitation, idx) => (
-          <TableRow key={invitation.phone} className="relative h-[60px] z-0">
+        {others.map((other, idx) => (
+          <TableRow key={other.phone} className="relative h-[60px] z-0">
             <TableCell className="font-medium">
-              <span className="animate-fadein">{invitation.name}</span>
+              <span className="animate-fadein">{other.name}</span>
             </TableCell>
             <TableCell>
-              <span className="animate-fadein">{formatPhone(invitation.phone)}</span>
+              <span className="animate-fadein">{formatPhone(other.phone)}</span>
             </TableCell>
             <TableCell className="text-right">
-              <Combobox commands={roles} defaultValue={"회의자"} />
+              <Combobox
+                datas={datas}
+                defaultValue={other.role}
+                onValueChange={(value: string) => {
+                  onRoleChange(value, idx + 1);
+                }}
+              />
             </TableCell>
           </TableRow>
         ))}
@@ -373,10 +403,153 @@ export function RoleTable({ invitations }: { invitations: Invitation[] }) {
       <TableFooter className="sticky bottom-[36px] bg-muted">
         <TableRow>
           <TableCell colSpan={2}>총 인원 수</TableCell>
-          <TableCell className="text-right">{invitations.length}명</TableCell>
+          <TableCell className="text-right">{participants.length}명</TableCell>
         </TableRow>
       </TableFooter>
     </Table>
+  );
+}
+
+export function RoleAuthorization({
+  roles,
+  setRoles,
+}: {
+  roles: Roles;
+  setRoles: Dispatch<SetStateAction<Roles>>;
+}) {
+  const onCheckedChange = (checked: CheckedState, role: string) => {
+    setRoles((prev) => {
+      const nextRoles = new Map(prev);
+      const target = nextRoles.get(role);
+      const canVote = checked === true;
+      if (target) {
+        target.canVote = canVote;
+        console.log("canVote changed to: ", target.canVote);
+      }
+      return nextRoles;
+    });
+  };
+
+  return (
+    <ul className="grid grid-cols-2 gap-4">
+      {[...roles].map(([label, role]) => (
+        <li key={role.value}>
+          <ButtonLabeledCheckbox
+            id={role.value}
+            label={label}
+            onCheckedChange={(checked) => {
+              onCheckedChange(checked, role.value);
+            }}
+            checked={roles.get(label)?.canVote}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function ButtonLabeledCheckbox({
+  id,
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  checked?: CheckedState;
+  onCheckedChange: (checked: CheckedState) => void;
+}) {
+  type ButtonVariant = NonNullable<Parameters<typeof buttonVariants>[0]>["variant"];
+  const [labelVariant, setLabelVariant] = useState<ButtonVariant>(checked ? "default" : "outline");
+  return (
+    <>
+      <Label
+        htmlFor={id}
+        className={cn(buttonVariants({ variant: labelVariant }), "w-full cursor-pointer")}
+      >
+        {label}
+        <CircleCheck color="hsl(var(--background))" strokeWidth={1} />
+      </Label>
+      <Checkbox
+        className="sr-only"
+        id={id}
+        onCheckedChange={(checked) => {
+          onCheckedChange(checked);
+          if (checked) {
+            setLabelVariant("default");
+          } else {
+            setLabelVariant("outline");
+          }
+        }}
+        checked={checked}
+      />
+    </>
+  );
+}
+
+export function AuthorizationTable({
+  roles,
+  participants,
+}: {
+  roles: Roles;
+  participants: Participant[];
+}) {
+  const [me, ...others] = useMemo(() => participants, [participants]);
+  return (
+    <>
+      <Table>
+        <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
+          현재까지 초대된 목록이에요.
+        </TableCaption>
+
+        <TableHeader className="sticky top-0 bg-white z-10">
+          <TableRow>
+            <TableHead>성함</TableHead>
+            <TableHead>역할</TableHead>
+            <TableHead className="text-right">투표권</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
+          <TableRow className="h-[60px] relative">
+            <TableCell className="font-medium">
+              {me.name}
+              <Badge className="align-bottom">
+                <Award size={14} />
+              </Badge>
+            </TableCell>
+            <TableCell>{me.role}</TableCell>
+            <TableCell className="text-right">
+              {roles.get(me.role)?.canVote ? "가능" : "불가"}
+            </TableCell>
+          </TableRow>
+
+          {others.map((other, idx) => (
+            <TableRow key={other.phone} className="relative h-[60px] z-0">
+              <TableCell className="font-medium">
+                <span className="animate-fadein">{other.name}</span>
+              </TableCell>
+              <TableCell>
+                <span className="animate-fadein">{other.role}</span>
+              </TableCell>
+              <TableCell className="text-right">
+                {roles.get(other.role)?.canVote ? "가능" : "불가"}
+              </TableCell>
+            </TableRow>
+          ))}
+
+          <TableRow className="sr-only">
+            <TableCell></TableCell>
+          </TableRow>
+        </TableBody>
+        <TableFooter className="sticky bottom-[36px] bg-muted">
+          <TableRow>
+            <TableCell colSpan={2}>총 인원 수</TableCell>
+            <TableCell className="text-right">{participants.length}명</TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </>
   );
 }
 
@@ -405,20 +578,20 @@ export default function RoomInit() {
   type Step = (typeof steps)[keyof typeof steps];
 
   const [step, setStep] = useState<Step>(steps.invitePerson);
-  const [invitations, setInvitations] = useState<Invitation[]>([
+  const [participants, setParticipants] = useState<Participant[]>([
     {
       name: "류기현",
       phone: "01087654321",
+      role: "의장",
     },
   ]);
+  const [roles, setRoles] = useState<Roles>(ROLES);
 
   return (
     <div className="py-10 px-4 flex flex-col items-center h-screen gap-10">
       <header className="w-full flex items-center gap-2 px-4">
         <Button
-          onClick={() =>
-            setStep((prev): Step => (prev === 1 ? (prev as Step) : ((prev - 1) as Step)))
-          }
+          onClick={() => setStep((prev) => Math.max(prev - 1, 1) as Step)}
           disabled={step === steps.invitePerson}
         >
           <ChevronLeft className="h-4 w-4" />
@@ -437,11 +610,7 @@ export default function RoomInit() {
           </p>
         </div>
 
-        <Button
-          onClick={() =>
-            setStep((prev): Step => (prev === 3 ? (prev as Step) : ((prev + 1) as Step)))
-          }
-        >
+        <Button onClick={() => setStep((prev) => Math.min(prev + 1, 3) as Step)}>
           다음 단계로
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -460,11 +629,11 @@ export default function RoomInit() {
         <>
           <div className="flex w-full gap-4 flex-grow">
             <div className="flex-1">
-              <InvitationForm invitations={invitations} setInvitations={setInvitations} />
+              <InvitationForm participants={participants} setParticipants={setParticipants} />
             </div>
             <Separator orientation="vertical" />
             <div className="flex-1 flex flex-col">
-              <InvitationTable invitations={invitations} setInvitations={setInvitations} />
+              <ParticipantTable participants={participants} setParticipants={setParticipants} />
             </div>
           </div>
         </>
@@ -474,7 +643,21 @@ export default function RoomInit() {
       {step === steps.chooseRole && (
         <>
           <div className="w-full">
-            <RoleTable invitations={invitations} />
+            <RoleTable
+              participants={participants}
+              setParticipants={setParticipants}
+              roles={roles}
+            />
+          </div>
+        </>
+      )}
+
+      {/* step 3 */}
+      {step === steps.authorizeRole && (
+        <>
+          <div className="w-full">
+            <RoleAuthorization roles={roles} setRoles={setRoles} />
+            <AuthorizationTable roles={roles} participants={participants} />
           </div>
         </>
       )}
