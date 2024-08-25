@@ -15,17 +15,19 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-export type Command = {
+export type Data = {
   value: string;
   label: string;
 };
-
+// TODO: 커맨드 포커스는 현재 선택된 항목 기준으로 설정되도록 변경
 export function Combobox({
-  commands,
+  datas,
   defaultValue,
+  onValueChange,
 }: {
-  commands: Command[];
+  datas: Data[];
   defaultValue?: string;
+  onValueChange?: any;
 }) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(defaultValue ?? "");
@@ -40,7 +42,7 @@ export function Combobox({
           aria-expanded={open}
           className="w-[120px] justify-between"
         >
-          {value ? commands.find((command) => command.value === value)?.label : "역할 선택"}
+          {value ? datas.find((data) => data.value === value)?.label : "역할 선택"}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -57,22 +59,23 @@ export function Combobox({
           </CommandEmpty>
           <CommandList>
             <CommandGroup>
-              {commands.map((command) => (
+              {datas.map((data) => (
                 <CommandItem
-                  key={command.value}
-                  value={command.value}
+                  key={data.value}
+                  value={data.value}
                   onSelect={(currentValue) => {
-                    setValue(currentValue === value ? "" : currentValue);
+                    setValue(currentValue);
                     setOpen(false);
+                    onValueChange(currentValue);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      value === command.value ? "opacity-100" : "opacity-0",
+                      value === data.value ? "opacity-100" : "opacity-0",
                     )}
                   />
-                  {command.label}
+                  {data.label}
                 </CommandItem>
               ))}
             </CommandGroup>
