@@ -1,9 +1,50 @@
 "use client";
 
+import Link from "next/link";
+import {
+  Activity,
+  ArrowUpRight,
+  CircleUser,
+  CreditCard,
+  DollarSign,
+  Menu,
+  Package2,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Combobox, Data } from "@/components/ui/combobox";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { DialogTrigger } from "@radix-ui/react-dialog";
 import {
   Form,
   FormControl,
@@ -11,675 +52,378 @@ import {
   FormField,
   FormItem,
   FormLabel,
-  FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { ROLES } from "@/constants/role";
-import { cn, formatPhone, phoneRegex } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckedState } from "@radix-ui/react-checkbox";
-import { Award, ChevronLeft, ChevronRight, CircleCheck, CircleX, Trash2 } from "lucide-react";
-import { Dispatch, MouseEvent, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-const FormSchema = z.object({
-  name: z
-    .string({
-      required_error: "이름을 입력해주세요.",
-    })
-    .min(2, { message: "이름은 최소 2자 이상이어야 합니다." }),
-  phone: z
-    .string({
-      required_error: "번호를 입력해주세요.",
-    })
-    .regex(phoneRegex, { message: "유효하지 않은 전화번호 형식입니다. (예시: 01012345678)" }),
-});
-
-type Invitation = z.infer<typeof FormSchema>;
-type Role = {
-  value: string;
-  canVote: boolean;
-};
-type Roles = Map<string, Role>;
-type Participant = Invitation & {
-  affiliation?: string;
-  role: string;
-};
-
-export function InvitationForm({
-  participants,
-  setParticipants,
-}: {
-  participants: Participant[];
-  setParticipants: Dispatch<SetStateAction<Participant[]>>;
-}) {
+export default function Dashboard() {
+  const router = useRouter();
+  const FormSchema = z.object({
+    title: z.string({
+      required_error: "안건명을 입력해주세요.",
+    }),
+  });
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      name: "",
-      phone: "",
+      title: "",
     },
   });
 
-  const [notification, setNotification] = useState<"idle" | "success" | "fail">("idle");
-  const [animate, setAnimate] = useState<boolean>(true);
-
-  function onSubmit(data: Invitation) {
-    if (participants.find(({ phone }) => phone === data.phone)) {
-      setNotification("fail");
-    } else {
-      const newData: Participant = { ...data, role: "회의자" };
-      setParticipants((prev: Participant[]) => [...prev, newData]);
-      setNotification("success");
-    }
-
-    setAnimate(true);
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    // TODO: 통신
+    const voteId = 1;
+    router.push(`/vote/${voteId}`);
   }
-
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>성함</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="성함을 입력해주세요." autoFocus />
-              </FormControl>
-              <FormDescription className="sr-only">성함을 입력해주세요.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>전화번호</FormLabel>
-              <FormControl>
-                <Input type="tel" {...field} placeholder="전화번호를 입력해주세요." />
-              </FormControl>
-              <FormDescription>
-                전화번호가 없으면 추후 다른 방법으로 초대할 수 있어요.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex gap-4 items-center">
-          <Button type="submit">추가하기</Button>
-          {notification === "success" && (
-            <CircleCheck
-              color="hsl(var(--green))"
-              strokeDasharray={200}
-              className="[stroke-dashoffset:250] fill-mode-forwards animate-draw"
-            />
-          )}
-          {notification === "fail" && (
-            <CircleX
-              color="hsl(var(--destructive))"
-              className={`fill-mode-forwards ${animate && "animate-bounce-horizontal"}`}
-              onAnimationEnd={() => setAnimate(false)}
-            />
-          )}
-        </div>
-
-        <p
-          className={`text-sm font-medium text-destructive transition-opacity ${notification === "fail" ? "visible opacity-100" : "invisible opacity-0"}`}
-        >
-          이미 등록된 전화번호예요. 전화번호를 확인해주세요.
-        </p>
-      </form>
-    </Form>
-  );
-}
-
-export function ParticipantTable({
-  participants,
-  setParticipants,
-}: {
-  participants: Participant[];
-  setParticipants: Dispatch<SetStateAction<Participant[]>>;
-}) {
-  const [me, ...others] = useMemo(() => participants, [participants]);
-  const prevparticipantsLength = useRef<number>(1);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
-  const selectedCount = useMemo(() => selected.size, [selected]);
-  const skeletonFill = useMemo(() => Math.max(3 - others.length, 0), [others]);
-  const tBody = useRef<HTMLTableSectionElement>(null);
-  const checkboxSelectAll = useRef<HTMLButtonElement>(null);
-  const checkboxes = useRef<Map<string, HTMLButtonElement>>(new Map());
-
-  useEffect(() => {
-    if (participants.length > prevparticipantsLength.current) {
-      tBody.current?.lastElementChild?.scrollIntoView({ behavior: "smooth" });
-    }
-    prevparticipantsLength.current = participants.length;
-  }, [participants]);
-
-  const onClickDeleteButton = (e: MouseEvent<HTMLButtonElement>) => {
-    setParticipants((participants: Participant[]) =>
-      participants.filter((_, idx) => !selected.has(idx)),
-    );
-    setSelected(new Set());
-    checkboxSelectAll.current?.ariaChecked === "true" && checkboxSelectAll.current?.click();
-  };
-  const onCheckedChange = (checked: CheckedState, idx: number) => {
-    if (checked) {
-      setSelected((prev) => {
-        const newSet = new Set(prev);
-        newSet.add(idx);
-        return newSet;
-      });
-    } else {
-      setSelected((prev) => {
-        const newSet = new Set(prev);
-        newSet.delete(idx);
-        return newSet;
-      });
-    }
-  };
-  const toggleSelectAll = (checked: CheckedState) => {
-    if (checked) {
-      setSelected(new Set(Array.from(others.keys()).map((key) => key + 1)));
-      checkboxes.current.forEach((checkbox) => checkbox.ariaChecked !== "true" && checkbox.click());
-    } else {
-      setSelected(new Set());
-      checkboxes.current.forEach((checkbox) => checkbox.ariaChecked === "true" && checkbox.click());
-    }
-  };
-
-  return (
-    <>
-      <div className="flex justify-between items-center pl-4 border-b">
-        <span className="text-sm">{selectedCount} 개 선택됨</span>
-        <Button
-          variant={"ghost"}
-          size={"sm"}
-          className="text-destructive hover:text-destructive"
-          onClick={onClickDeleteButton}
-        >
-          삭제하기
-          <Trash2 size={16} color="hsl(var(--destructive))" />
-        </Button>
-      </div>
-
-      <Table>
-        <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
-          현재까지 초대된 목록이에요.
-        </TableCaption>
-
-        <TableHeader className="sticky top-0 bg-white z-10">
-          <TableRow>
-            <TableHead>
-              <Checkbox
-                className="align-text-bottom"
-                aria-label="전체 행 선택"
-                onCheckedChange={toggleSelectAll}
-                ref={checkboxSelectAll}
+    <div className="flex min-h-screen w-full flex-col">
+      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <Link href="#" className="flex items-center gap-2 text-lg font-semibold md:text-base">
+            <Package2 className="h-6 w-6" />
+            <span className="sr-only">Acme Inc</span>
+          </Link>
+          <Link href="#" className="text-foreground transition-colors hover:text-foreground">
+            Dashboard
+          </Link>
+          <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+            Orders
+          </Link>
+          <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+            Products
+          </Link>
+          <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+            Customers
+          </Link>
+          <Link href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+            Analytics
+          </Link>
+        </nav>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <nav className="grid gap-6 text-lg font-medium">
+              <Link href="#" className="flex items-center gap-2 text-lg font-semibold">
+                <Package2 className="h-6 w-6" />
+                <span className="sr-only">Acme Inc</span>
+              </Link>
+              <Link href="#" className="hover:text-foreground">
+                Dashboard
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-foreground">
+                Orders
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-foreground">
+                Products
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-foreground">
+                Customers
+              </Link>
+              <Link href="#" className="text-muted-foreground hover:text-foreground">
+                Analytics
+              </Link>
+            </nav>
+          </SheetContent>
+        </Sheet>
+        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <form className="ml-auto flex-1 sm:flex-initial">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search products..."
+                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
               />
-            </TableHead>
-            <TableHead>성함</TableHead>
-            <TableHead className="text-right">전화번호</TableHead>
-          </TableRow>
-        </TableHeader>
-
-        <TableBody ref={tBody}>
-          <TableRow className="h-[60px] relative">
-            <TableCell></TableCell>
-            <TableCell className="font-medium">
-              {me.name}
-              <Badge className="align-bottom">
-                <Award size={14} />
-              </Badge>
-            </TableCell>
-            <TableCell className="text-right">{formatPhone(me.phone)}</TableCell>
-          </TableRow>
-
-          {others.map((Participant, idx) => (
-            <TableRow key={Participant.phone} className="relative h-[60px] z-0">
-              <TableCell>
-                <Checkbox
-                  className="align-text-bottom"
-                  aria-label="행 선택"
-                  onCheckedChange={(checked) => {
-                    onCheckedChange(checked, idx + 1);
-                  }}
-                  id={Participant.phone}
-                  ref={(checkbox) => {
-                    // TODO: do sth on every rerender, to many calls maybe?
-                    if (checkbox) {
-                      checkboxes.current.set(Participant.phone, checkbox);
-                    } else {
-                      checkboxes.current.delete(Participant.phone);
-                    }
-                  }}
-                />
-                <Label
-                  htmlFor={Participant.phone}
-                  className="block w-full h-[60px] absolute bottom-0 left-0 cursor-pointer"
-                ></Label>
-              </TableCell>
-              <TableCell className="font-medium">
-                <span className="animate-fadein">{Participant.name}</span>
-              </TableCell>
-              <TableCell className="text-right">
-                <span className="animate-fadein">{formatPhone(Participant.phone)}</span>
-              </TableCell>
-            </TableRow>
-          ))}
-
-          {[...Array(skeletonFill)].map((_, idx) => (
-            <TableRow key={participants.length + idx + 1} className="relative h-[60px] z-0">
-              <TableCell></TableCell>
-              <TableCell>
-                <Skeleton className="h-6 w-10" />
-              </TableCell>
-              <TableCell className="text-right">
-                <Skeleton className="h-6 w-28 ml-auto" />
-              </TableCell>
-            </TableRow>
-          ))}
-
-          <TableRow className="sr-only">
-            <TableCell></TableCell>
-          </TableRow>
-        </TableBody>
-        <TableFooter className="sticky bottom-[36px] bg-muted">
-          <TableRow>
-            <TableCell colSpan={2}>총 인원 수</TableCell>
-            <TableCell className="text-right">{participants.length}명</TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
-    </>
-  );
-}
-
-export function RoleTable({
-  participants,
-  setParticipants,
-  roles,
-}: {
-  participants: Participant[];
-  setParticipants: Dispatch<SetStateAction<Participant[]>>;
-  roles: Roles;
-}) {
-  const [me, ...others] = useMemo(() => participants, [participants]);
-  const datas = useMemo<Data[]>(
-    () =>
-      [...roles].map(([_, { value }]) => ({
-        label: value,
-        value,
-      })),
-    [roles],
-  );
-  // TODO: 인원 검색
-
-  const onRoleChange = (role: string, idx: number) => {
-    console.assert(idx in participants, "배열이 제대로 관리되고 있지 않음");
-    setParticipants((prev) => {
-      const nextParticipants = [...prev];
-      nextParticipants[idx].role = role;
-      return nextParticipants;
-    });
-  };
-  return (
-    <Table>
-      <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
-        현재까지 초대된 목록이에요.
-      </TableCaption>
-
-      <TableHeader className="sticky top-0 bg-white z-10">
-        <TableRow>
-          <TableHead>성함</TableHead>
-          <TableHead>전화번호</TableHead>
-          <TableHead className="text-right">역할</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        <TableRow className="h-[60px] relative">
-          <TableCell className="font-medium">
-            {me.name}
-            <Badge className="align-bottom">
-              <Award size={14} />
-            </Badge>
-          </TableCell>
-          <TableCell>{formatPhone(me.phone)}</TableCell>
-          <TableCell className="text-right">
-            <Combobox
-              datas={datas}
-              defaultValue={me.role}
-              onValueChange={(value: string) => {
-                onRoleChange(value, 0);
-              }}
-            />
-          </TableCell>
-        </TableRow>
-
-        {others.map((other, idx) => (
-          <TableRow key={other.phone} className="relative h-[60px] z-0">
-            <TableCell className="font-medium">
-              <span className="animate-fadein">{other.name}</span>
-            </TableCell>
-            <TableCell>
-              <span className="animate-fadein">{formatPhone(other.phone)}</span>
-            </TableCell>
-            <TableCell className="text-right">
-              <Combobox
-                datas={datas}
-                defaultValue={other.role}
-                onValueChange={(value: string) => {
-                  onRoleChange(value, idx + 1);
-                }}
-              />
-            </TableCell>
-          </TableRow>
-        ))}
-
-        <TableRow className="sr-only">
-          <TableCell></TableCell>
-        </TableRow>
-      </TableBody>
-      <TableFooter className="sticky bottom-[36px] bg-muted">
-        <TableRow>
-          <TableCell colSpan={2}>총 인원 수</TableCell>
-          <TableCell className="text-right">{participants.length}명</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
-  );
-}
-
-export function RoleAuthorization({
-  roles,
-  setRoles,
-  participants,
-}: {
-  roles: Roles;
-  setRoles: Dispatch<SetStateAction<Roles>>;
-  participants: Participant[];
-}) {
-  const selectedRoles = useMemo(
-    () => new Set(participants.map((participant) => participant.role)),
-    [participants],
-  );
-  const onCheckedChange = (checked: CheckedState, role: string) => {
-    setRoles((prev) => {
-      const nextRoles = new Map(prev);
-      const target = nextRoles.get(role);
-      const canVote = checked === true;
-      if (target) {
-        target.canVote = canVote;
-        console.log("canVote changed to: ", target.canVote);
-      }
-      return nextRoles;
-    });
-  };
-
-  return (
-    <ul className="grid grid-cols-3 gap-4">
-      {[...selectedRoles].map((role) => (
-        <li key={role}>
-          <ButtonLabeledCheckbox
-            id={role}
-            label={role}
-            onCheckedChange={(checked) => {
-              onCheckedChange(checked, role);
-            }}
-            checked={roles.get(role)?.canVote}
-          />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-export function ButtonLabeledCheckbox({
-  id,
-  label,
-  checked,
-  onCheckedChange,
-}: {
-  id: string;
-  label: string;
-  checked?: CheckedState;
-  onCheckedChange: (checked: CheckedState) => void;
-}) {
-  type ButtonVariant = NonNullable<Parameters<typeof buttonVariants>[0]>["variant"];
-  const [labelVariant, setLabelVariant] = useState<ButtonVariant>(checked ? "default" : "outline");
-  const cnLabel = useMemo(
-    () =>
-      checked
-        ? "bg-[hsl(var(--blue))] hover:bg-[hsl(var(--blue))]/90"
-        : "hover:bg-[hsl(var(--blue-accent))] text-[hsl(var(--blue-accent-foreground))]",
-    [checked],
-  );
-  return (
-    <>
-      <Label
-        htmlFor={id}
-        className={cn(
-          buttonVariants({
-            variant: labelVariant,
-            className: cnLabel,
-          }),
-          "w-full cursor-pointer",
-        )}
-      >
-        {label}
-      </Label>
-      <Checkbox
-        className="sr-only"
-        id={id}
-        onCheckedChange={(checked) => {
-          onCheckedChange(checked);
-          if (checked) {
-            setLabelVariant("default");
-          } else {
-            setLabelVariant("outline");
-          }
-        }}
-        checked={checked}
-      />
-    </>
-  );
-}
-
-export function AuthorizationTable({
-  participants,
-  tableCaption,
-  authorized,
-}: {
-  participants: Participant[];
-  tableCaption?: string;
-  authorized?: boolean;
-}) {
-  return (
-    <Table className={authorized ? "bg-[hsl(var(--green))]/5" : "bg-[hsl(var(--red))]/5"}>
-      <TableCaption className="sticky bottom-0 bg-white mt-0 pt-4 z-10">
-        {tableCaption || "현재까지 초대된 목록이에요."}
-      </TableCaption>
-
-      <TableHeader className="sticky top-0 bg-white z-10">
-        <TableRow>
-          <TableHead>성함</TableHead>
-          <TableHead className="text-right">역할</TableHead>
-        </TableRow>
-      </TableHeader>
-
-      <TableBody>
-        {participants.map((participant) => (
-          <TableRow key={participant.phone} className="relative h-[60px] z-0">
-            <TableCell className="font-medium">
-              <span className="animate-fadein">{participant.name}</span>
-            </TableCell>
-            <TableCell className="text-right">
-              <span className="animate-fadein">{participant.role}</span>
-            </TableCell>
-          </TableRow>
-        ))}
-
-        <TableRow className="sr-only">
-          <TableCell></TableCell>
-        </TableRow>
-      </TableBody>
-      <TableFooter className="sticky bottom-[36px] bg-muted">
-        <TableRow>
-          <TableCell colSpan={1}>총 인원 수</TableCell>
-          <TableCell className="text-right">{participants.length}명</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
-  );
-}
-
-export default function RoomInit() {
-  const steps = {
-    invitePerson: 1,
-    chooseRole: 2,
-    authorizeRole: 3,
-  } as const;
-  const stepInfo = {
-    [steps.invitePerson]: {
-      title: "초대 전송하기",
-      description:
-        "QR코드를 전송할 사람을 입력해주세요.\n인원은 방을 개설한 후 언제든 새로 추가할 수 있어요.",
-    },
-    [steps.chooseRole]: {
-      title: "역할 분담하기",
-      description:
-        "각자의 역할을 분담해주세요.\n다음 단계에서 역할마다 투표권을 다르게 부여할 수 있어요.",
-    },
-    [steps.authorizeRole]: {
-      title: "투표권 부여하기",
-      description: "역할마다 투표권을 다르게 부여할 수 있어요.",
-    },
-  };
-  type Step = (typeof steps)[keyof typeof steps];
-
-  const [step, setStep] = useState<Step>(steps.invitePerson);
-  const [participants, setParticipants] = useState<Participant[]>([
-    {
-      name: "류기현",
-      phone: "01087654321",
-      role: "의장",
-    },
-  ]);
-  const [roles, setRoles] = useState<Roles>(ROLES);
-  const [voters, nonVoters] = useMemo(
-    () =>
-      participants.reduce<[Participant[], Participant[]]>(
-        ([voters, nonVoters], participant) => {
-          const canVote = roles.get(participant.role)!.canVote;
-          return canVote
-            ? [[...voters, participant], nonVoters]
-            : [voters, [...nonVoters, participant]];
-        },
-        [[], []],
-      ),
-    [participants, roles],
-  );
-
-  return (
-    <div className="py-10 px-4 flex flex-col items-center h-screen gap-8">
-      <header className="w-full flex items-center gap-2 px-4">
-        <Button
-          onClick={() => setStep((prev) => Math.max(prev - 1, 1) as Step)}
-          disabled={step === steps.invitePerson}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          이전 단계로
-        </Button>
-
-        <div className="flex flex-col gap-2 flex-1">
-          <h2 className="scroll-m-20 text-xl font-semibold tracking-tight text-center">방 이름</h2>
-          <Progress
-            value={(step / Object.keys(steps).length) * 100}
-            className="w-[60%] m-auto"
-            aria-label="방 만들기 진행 과정"
-          />
-          <p className="text-center text-sm text-muted-foreground">
-            {`${step} / ${Object.keys(steps).length}`} {stepInfo[step].title}
-          </p>
+            </div>
+          </form>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full">
+                <CircleUser className="h-5 w-5" />
+                <span className="sr-only">Toggle user menu</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Logout</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-
-        <Button onClick={() => setStep((prev) => Math.min(prev + 1, 3) as Step)}>
-          {step === 3 ? "방 개설하기" : "다음 단계로"}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
       </header>
-
-      <div>
-        {stepInfo[step].description.split("\n").map((text, idx) => (
-          <p className="text-center" key={idx}>
-            {text}
-          </p>
-        ))}
-      </div>
-
-      <div className="flex flex-col w-full gap-4">
-        {/* step 1 */}
-        {step === steps.invitePerson && (
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <InvitationForm participants={participants} setParticipants={setParticipants} />
-            </div>
-            <Separator orientation="vertical" />
-            <div className="flex-1 flex flex-col">
-              <ParticipantTable participants={participants} setParticipants={setParticipants} />
-            </div>
-          </div>
-        )}
-
-        {/* step 2 */}
-        {step === steps.chooseRole && (
-          <>
-            <RoleTable
-              participants={participants}
-              setParticipants={setParticipants}
-              roles={roles}
-            />
-          </>
-        )}
-
-        {/* step 3 */}
-        {step === steps.authorizeRole && (
-          <>
-            <RoleAuthorization roles={roles} setRoles={setRoles} participants={participants} />
-            <div className="flex gap-4">
-              <AuthorizationTable
-                participants={voters}
-                tableCaption="투표가 가능한 인원이에요."
-                authorized={true}
-              />
-              <AuthorizationTable
-                participants={nonVoters}
-                tableCaption="투표가 가능하지 않은 인원이에요."
-              />
-            </div>
-          </>
-        )}
-      </div>
+      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+          <Card x-chunk="dashboard-01-chunk-0">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">총 안건</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">2 개</div>
+              <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+            </CardContent>
+          </Card>
+          <Card x-chunk="dashboard-01-chunk-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">인원 관리</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">17 명</div>
+              <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+            </CardContent>
+          </Card>
+          <Card x-chunk="dashboard-01-chunk-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Sales</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+12,234</div>
+              <p className="text-xs text-muted-foreground">+19% from last month</p>
+            </CardContent>
+          </Card>
+          <Card x-chunk="dashboard-01-chunk-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Now</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+573</div>
+              <p className="text-xs text-muted-foreground">+201 since last hour</p>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3">
+          <Card className="xl:col-span-2" x-chunk="dashboard-01-chunk-4">
+            <CardHeader className="flex flex-row items-center">
+              <div className="grid gap-2">
+                <CardTitle>안건 및 투표</CardTitle>
+                <CardDescription>최근 진행한 투표입니다.</CardDescription>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="ml-auto gap-1">
+                    투표 생성하기
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>투표 생성하기</DialogTitle>
+                    <DialogDescription>
+                      기본적인 정보를 입력해 투표를 생성해주세요.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                          <FormItem className="grid grid-cols-4 items-center gap-4 space-y-0">
+                            <FormLabel className="text-right">안건 제목</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                placeholder="안건 제목을 입력해주세요."
+                                className="col-span-3"
+                              />
+                            </FormControl>
+                            <FormDescription className="sr-only">
+                              안건 제목을 입력해주세요.
+                            </FormDescription>
+                          </FormItem>
+                        )}
+                      />
+                      <DialogFooter>
+                        <Button type="submit">생성하기</Button>
+                      </DialogFooter>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead className="hidden xl:table-column">Type</TableHead>
+                    <TableHead className="hidden xl:table-column">Status</TableHead>
+                    <TableHead className="hidden xl:table-column">Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Liam Johnson</div>
+                      <div className="hidden text-sm text-muted-foreground md:inline">
+                        liam@example.com
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-column">Sale</TableCell>
+                    <TableCell className="hidden xl:table-column">
+                      <Badge className="text-xs" variant="outline">
+                        Approved
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                      2023-06-23
+                    </TableCell>
+                    <TableCell className="text-right">$250.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Olivia Smith</div>
+                      <div className="hidden text-sm text-muted-foreground md:inline">
+                        olivia@example.com
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-column">Refund</TableCell>
+                    <TableCell className="hidden xl:table-column">
+                      <Badge className="text-xs" variant="outline">
+                        Declined
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                      2023-06-24
+                    </TableCell>
+                    <TableCell className="text-right">$150.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Noah Williams</div>
+                      <div className="hidden text-sm text-muted-foreground md:inline">
+                        noah@example.com
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-column">Subscription</TableCell>
+                    <TableCell className="hidden xl:table-column">
+                      <Badge className="text-xs" variant="outline">
+                        Approved
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                      2023-06-25
+                    </TableCell>
+                    <TableCell className="text-right">$350.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Emma Brown</div>
+                      <div className="hidden text-sm text-muted-foreground md:inline">
+                        emma@example.com
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-column">Sale</TableCell>
+                    <TableCell className="hidden xl:table-column">
+                      <Badge className="text-xs" variant="outline">
+                        Approved
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                      2023-06-26
+                    </TableCell>
+                    <TableCell className="text-right">$450.00</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>
+                      <div className="font-medium">Liam Johnson</div>
+                      <div className="hidden text-sm text-muted-foreground md:inline">
+                        liam@example.com
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden xl:table-column">Sale</TableCell>
+                    <TableCell className="hidden xl:table-column">
+                      <Badge className="text-xs" variant="outline">
+                        Approved
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell lg:hidden xl:table-column">
+                      2023-06-27
+                    </TableCell>
+                    <TableCell className="text-right">$550.00</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+          <Card x-chunk="dashboard-01-chunk-5">
+            <CardHeader>
+              <CardTitle>Recent Sales</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-8">
+              <div className="flex items-center gap-4">
+                <Avatar className="hidden h-9 w-9 sm:flex">
+                  <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                  <AvatarFallback>OM</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">Olivia Martin</p>
+                  <p className="text-sm text-muted-foreground">olivia.martin@email.com</p>
+                </div>
+                <div className="ml-auto font-medium">+$1,999.00</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Avatar className="hidden h-9 w-9 sm:flex">
+                  <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                  <AvatarFallback>JL</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">Jackson Lee</p>
+                  <p className="text-sm text-muted-foreground">jackson.lee@email.com</p>
+                </div>
+                <div className="ml-auto font-medium">+$39.00</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Avatar className="hidden h-9 w-9 sm:flex">
+                  <AvatarImage src="/avatars/03.png" alt="Avatar" />
+                  <AvatarFallback>IN</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">Isabella Nguyen</p>
+                  <p className="text-sm text-muted-foreground">isabella.nguyen@email.com</p>
+                </div>
+                <div className="ml-auto font-medium">+$299.00</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Avatar className="hidden h-9 w-9 sm:flex">
+                  <AvatarImage src="/avatars/04.png" alt="Avatar" />
+                  <AvatarFallback>WK</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">William Kim</p>
+                  <p className="text-sm text-muted-foreground">will@email.com</p>
+                </div>
+                <div className="ml-auto font-medium">+$99.00</div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Avatar className="hidden h-9 w-9 sm:flex">
+                  <AvatarImage src="/avatars/05.png" alt="Avatar" />
+                  <AvatarFallback>SD</AvatarFallback>
+                </Avatar>
+                <div className="grid gap-1">
+                  <p className="text-sm font-medium leading-none">Sofia Davis</p>
+                  <p className="text-sm text-muted-foreground">sofia.davis@email.com</p>
+                </div>
+                <div className="ml-auto font-medium">+$39.00</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }

@@ -67,7 +67,7 @@ export default function Dashboard() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const roomId = 1;
-    router.push(`/rooms/${roomId}`);
+    router.push(`/rooms/${roomId}/setting`);
   }
 
   return (
