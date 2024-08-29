@@ -33,7 +33,7 @@ import { cn, formatPhone, phoneRegex } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { Award, ChevronLeft, ChevronRight, CircleCheck, CircleX, Trash2 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Dispatch, MouseEvent, SetStateAction, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -431,7 +431,6 @@ export function RoleAuthorization({
       const canVote = checked === true;
       if (target) {
         target.canVote = canVote;
-        console.log("canVote changed to: ", target.canVote);
       }
       return nextRoles;
     });
