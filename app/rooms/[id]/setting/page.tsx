@@ -608,7 +608,7 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
   };
 
   return (
-    <div className="py-10 px-4 flex flex-col items-center h-screen gap-8">
+    <div className="flex flex-col items-center gap-8 flex-1">
       <header className="w-full flex items-center gap-2 px-4">
         <Button
           onClick={() => setStep((prev) => Math.max(prev - 1, 1) as Step)}
@@ -651,15 +651,15 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
         ))}
       </div>
 
-      <div className="flex flex-col w-full gap-4">
+      <div className="flex flex-col w-full gap-4 flex-1">
         {/* step 1 */}
         {step === steps.invitePerson && (
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-1">
             <div className="flex-1">
               <InvitationForm participants={participants} setParticipants={setParticipants} />
             </div>
-            <Separator orientation="vertical" />
-            <div className="flex-1 flex flex-col">
+            <Separator orientation="vertical" className="h-[stretch]" />
+            <div className="flex-1 flex flex-col min-h-0">
               <ParticipantTable participants={participants} setParticipants={setParticipants} />
             </div>
           </div>
@@ -680,7 +680,7 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
         {step === steps.authorizeRole && (
           <>
             <RoleAuthorization roles={roles} setRoles={setRoles} participants={participants} />
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-1">
               <AuthorizationTable
                 participants={voters}
                 tableCaption="투표가 가능한 인원이에요."

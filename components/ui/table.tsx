@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 // TODO: 높이 고정값 수정 필요
 const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
   ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto flex h-[600px]">
+    <div className="relative w-full overflow-auto flex-1 flex tall:max-h-[450px]">
       <table ref={ref} className={cn("w-full caption-bottom text-sm", className)} {...props} />
     </div>
   ),

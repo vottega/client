@@ -92,6 +92,9 @@ const config = {
         draw: "draw 2s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "bounce-horizontal": "bounce-horizontal 0.5s 0.25s",
       },
+      screens: {
+        tall: { raw: "(min-height: 800px)" },
+      },
     },
   },
   plugins: [require("tailwindcss-animate")],
