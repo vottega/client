@@ -152,7 +152,7 @@ export default function Dashboard() {
               </TableHeader>
               <TableBody>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-01</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -165,7 +165,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-02</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -178,7 +178,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-03</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -191,7 +191,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-04</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -204,7 +204,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-05</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -217,7 +217,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-06</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
@@ -230,7 +230,7 @@ export default function Dashboard() {
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className="">2023-06-23</TableCell>
+                  <TableCell className="">2023-06-07</TableCell>
                   <TableCell>
                     <div className="font-medium">
                       개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안

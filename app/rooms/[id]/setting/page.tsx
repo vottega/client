@@ -65,9 +65,11 @@ type Participant = Invitation & {
 export function InvitationForm({
   participants,
   setParticipants,
+  className,
 }: {
   participants: Participant[];
   setParticipants: Dispatch<SetStateAction<Participant[]>>;
+  className?: string;
 }) {
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -93,72 +95,76 @@ export function InvitationForm({
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>성함</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="성함을 입력해주세요." autoFocus />
-              </FormControl>
-              <FormDescription className="sr-only">성함을 입력해주세요.</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>전화번호</FormLabel>
-              <FormControl>
-                <Input type="tel" {...field} placeholder="전화번호를 입력해주세요." />
-              </FormControl>
-              <FormDescription>
-                전화번호가 없으면 추후 다른 방법으로 초대할 수 있어요.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex gap-4 items-center">
-          <Button type="submit">추가하기</Button>
-          {notification === "success" && (
-            <CircleCheck
-              color="hsl(var(--green))"
-              strokeDasharray={200}
-              className="[stroke-dashoffset:250] fill-mode-forwards animate-draw"
-            />
-          )}
-          {notification === "fail" && (
-            <CircleX
-              color="hsl(var(--destructive))"
-              className={`fill-mode-forwards ${animate && "animate-bounce-horizontal"}`}
-              onAnimationEnd={() => setAnimate(false)}
-            />
-          )}
-        </div>
+    <div className={cn(className)}>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>성함</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="성함을 입력해주세요." autoFocus />
+                </FormControl>
+                <FormDescription className="sr-only">성함을 입력해주세요.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="phone"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>전화번호</FormLabel>
+                <FormControl>
+                  <Input type="tel" {...field} placeholder="전화번호를 입력해주세요." />
+                </FormControl>
+                <FormDescription>
+                  전화번호가 없으면 추후 다른 방법으로 초대할 수 있어요.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <div className="flex gap-4 items-center">
+            <Button type="submit">추가하기</Button>
+            {notification === "success" && (
+              <CircleCheck
+                color="hsl(var(--green))"
+                strokeDasharray={200}
+                className="[stroke-dashoffset:250] fill-mode-forwards animate-draw"
+              />
+            )}
+            {notification === "fail" && (
+              <CircleX
+                color="hsl(var(--destructive))"
+                className={`fill-mode-forwards ${animate && "animate-bounce-horizontal"}`}
+                onAnimationEnd={() => setAnimate(false)}
+              />
+            )}
+          </div>
 
-        <p
-          className={`text-sm font-medium text-destructive transition-opacity ${notification === "fail" ? "visible opacity-100" : "invisible opacity-0"}`}
-        >
-          이미 등록된 전화번호예요. 전화번호를 확인해주세요.
-        </p>
-      </form>
-    </Form>
+          <p
+            className={`text-sm font-medium text-destructive transition-opacity ${notification === "fail" ? "visible opacity-100" : "invisible opacity-0"}`}
+          >
+            이미 등록된 전화번호예요. 전화번호를 확인해주세요.
+          </p>
+        </form>
+      </Form>
+    </div>
   );
 }
 
 export function ParticipantTable({
   participants,
   setParticipants,
+  className,
 }: {
   participants: Participant[];
   setParticipants: Dispatch<SetStateAction<Participant[]>>;
+  className?: string;
 }) {
   const [me, ...others] = useMemo(() => participants, [participants]);
   const prevparticipantsLength = useRef<number>(1);
@@ -209,7 +215,7 @@ export function ParticipantTable({
   };
 
   return (
-    <>
+    <div className={cn("flex flex-col", className)}>
       <div className="flex justify-between items-center pl-4 border-b">
         <span className="text-sm">{selectedCount} 개 선택됨</span>
         <Button
@@ -311,7 +317,7 @@ export function ParticipantTable({
           </TableRow>
         </TableFooter>
       </Table>
-    </>
+    </div>
   );
 }
 
@@ -651,36 +657,40 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
         ))}
       </div>
 
-      <div className="flex flex-col w-full gap-4 flex-1">
+      <div className="flex flex-col w-full gap-4 flex-grow">
         {/* step 1 */}
         {step === steps.invitePerson && (
-          <div className="flex gap-4 flex-1">
-            <div className="flex-1">
-              <InvitationForm participants={participants} setParticipants={setParticipants} />
-            </div>
+          <div className="flex gap-4 flex-grow h-0">
+            <InvitationForm
+              participants={participants}
+              setParticipants={setParticipants}
+              className="flex-1"
+            />
             <Separator orientation="vertical" className="h-[stretch]" />
-            <div className="flex-1 flex flex-col min-h-0">
-              <ParticipantTable participants={participants} setParticipants={setParticipants} />
-            </div>
+            <ParticipantTable
+              participants={participants}
+              setParticipants={setParticipants}
+              className="flex-1"
+            />
           </div>
         )}
 
         {/* step 2 */}
         {step === steps.chooseRole && (
-          <>
+          <div className="flex flex-grow h-0">
             <RoleTable
               participants={participants}
               setParticipants={setParticipants}
               roles={roles}
             />
-          </>
+          </div>
         )}
 
         {/* step 3 */}
         {step === steps.authorizeRole && (
           <>
             <RoleAuthorization roles={roles} setRoles={setRoles} participants={participants} />
-            <div className="flex gap-4 flex-1">
+            <div className="flex gap-4 flex-grow h-0">
               <AuthorizationTable
                 participants={voters}
                 tableCaption="투표가 가능한 인원이에요."
