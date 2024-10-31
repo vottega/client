@@ -57,7 +57,7 @@ export default function Dashboard() {
     // router.push(`/vote/${voteId}`);
   }
   return (
-    <div className="flex w-full flex-col gap-8 flex-grow">
+    <div className="flex w-full flex-col gap-4 md:gap-8 flex-grow">
       <div className="grid grid-cols-2 gap-8">
         <Card x-chunk="dashboard-01-chunk-0">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -80,7 +80,7 @@ export default function Dashboard() {
       </div>
       <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3 flex-grow h-0">
         <Card className="xl:col-span-2 overflow-y-auto" x-chunk="dashboard-01-chunk-4">
-          <CardHeader className="flex flex-row items-center sticky">
+          <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-white">
             <div className="grid gap-2">
               <CardTitle>안건 및 투표</CardTitle>
               <CardDescription>최근 진행한 투표입니다.</CardDescription>
@@ -247,8 +247,13 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         <Card className="overflow-y-auto" x-chunk="dashboard-01-chunk-5">
-          <CardHeader>
-            <CardTitle>접속 인원</CardTitle>
+          <CardHeader className="flex-row gap-4 space-y-0 justify-between sticky top-0 z-10 bg-white">
+            <CardTitle>현재 접속 인원</CardTitle>
+            <div className="flex gap-2">
+              <Badge className="text-base" variant={"outline"}>
+                11명 / 20명
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="grid gap-8 grid-cols-2">
             <div className="flex items-center gap-4">
