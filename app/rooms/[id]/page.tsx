@@ -37,6 +37,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -78,7 +79,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2 xl:grid-cols-3 flex-grow h-0">
+      <div className="grid gap-4 grid-rows-2 lg:grid-rows-none md:gap-8 lg:grid-cols-2 xl:grid-cols-3 flex-grow h-0">
         <Card className="xl:col-span-2 overflow-y-auto" x-chunk="dashboard-01-chunk-4">
           <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-white">
             <div className="grid gap-2">
@@ -255,97 +256,131 @@ export default function Dashboard() {
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="grid gap-8 grid-cols-2">
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                <AvatarFallback>민균</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">윤민균</p>
-                <p className="text-sm text-muted-foreground">공과대학 컴퓨터과학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Avatar className="hidden h-9 w-9 sm:flex">
-                <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                <AvatarFallback>기현</AvatarFallback>
-              </Avatar>
-              <div className="grid gap-1">
-                <p className="text-sm font-medium leading-none">류기현</p>
-                <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-              </div>
-            </div>
+          <CardContent>
+            <Tabs defaultValue="online">
+              <TabsList className="w-full grid grid-cols-2 mb-4">
+                <TabsTrigger value="online">온라인</TabsTrigger>
+                <TabsTrigger value="offline">오프라인</TabsTrigger>
+              </TabsList>
+              <TabsContent value="online">
+                <div className="grid gap-8 grid-cols-2">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                      <AvatarFallback>민균</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">윤민균</p>
+                      <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+              <TabsContent value="offline">
+                <div className="grid gap-8 grid-cols-2">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                      <AvatarFallback>민균</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">윤민균</p>
+                      <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="hidden h-9 w-9 sm:flex">
+                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
+                      <AvatarFallback>기현</AvatarFallback>
+                    </Avatar>
+                    <div className="grid gap-1">
+                      <p className="text-sm font-medium leading-none">류기현</p>
+                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
