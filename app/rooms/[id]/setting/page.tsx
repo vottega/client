@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Main } from "@/components/ui/main";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -614,7 +615,7 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 flex-1">
+    <Main>
       <header className="w-full flex items-center gap-2 px-4">
         <Button
           onClick={() => setStep((prev) => Math.max(prev - 1, 1) as Step)}
@@ -704,6 +705,6 @@ export default function RoomInit({ params: { id } }: { params: { id: string } })
           </>
         )}
       </div>
-    </div>
+    </Main>
   );
 }

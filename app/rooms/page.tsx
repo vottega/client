@@ -24,8 +24,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { Header } from "@/components/ui/header";
 
-export default function Dashboard() {
+export default function Rooms() {
   const router = useRouter();
   const FormSchema = z.object({
     title: z.string({
@@ -46,6 +47,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <Header />
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">회의실</h1>
       </div>
