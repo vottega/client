@@ -5,15 +5,20 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
-  DollarSign,
   LogOut,
   Plus,
   Sparkles,
-  Users,
+  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -25,6 +30,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -34,20 +48,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { DialogTrigger } from "@radix-ui/react-dialog";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Main } from "@/components/ui/main";
+import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -62,24 +64,24 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Main } from "@/components/ui/main";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { DialogTrigger } from "@radix-ui/react-dialog";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { ChangeEvent, FormEvent, KeyboardEvent, useCallback, useRef, useState } from "react";
 
 const sidebarRightData = {
   user: {
@@ -109,7 +111,7 @@ export default function Room() {
   }
   return (
     <SidebarProvider>
-      <SidebarInset>
+      <SidebarInset className="max-w-full">
         <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 bg-background">
           <div className="flex flex-1 items-center gap-2 px-3">
             <SidebarTrigger />
@@ -455,13 +457,13 @@ export default function Room() {
                 </CardContent>
               </Card>
             </div> */}
-            <Card className="grow-[2]">
+            <Card className="grow-[2] flex flex-col max-w-full">
               <CardHeader>
                 <CardTitle>속기</CardTitle>
                 <CardDescription>회의 속기가 이루어지는 공간이에요.</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Skeleton className="w-full h-[20vh]" />
+              <CardContent className="flex-grow flex h-0">
+                <Shorthand className="w-full overflow-y-auto" />
               </CardContent>
             </Card>
             <Card>
@@ -478,6 +480,81 @@ export default function Room() {
       </SidebarInset>
       <SidebarRight />
     </SidebarProvider>
+  );
+}
+
+type Block = {
+  id: number;
+};
+
+function Shorthand({ className }: { className?: string }) {
+  const [blocks, setBlocks] = useState<Block[]>([]);
+  const handleBlockOnEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      setBlocks((prev) => {
+        const newBlock = { id: Date.now() };
+        return [...prev, newBlock];
+      });
+    }
+  };
+  const latestBlockId = useRef<number>();
+
+  return (
+    <article className={cn("p-6 border-muted border-2", className)}>
+      <h1
+        className="text-2xl font-semibold leading-none tracking-tight"
+        contentEditable
+        suppressContentEditableWarning
+      >
+        논의 안건 가.
+      </h1>
+      {blocks.map(({ id }) => (
+        <ShorthandBlock key={id}>
+          <Block
+            placeholder="발언 내용을 입력해주세요..."
+            className=""
+            blockId={0}
+            onKeyDown={handleBlockOnEnterDown}
+          />
+        </ShorthandBlock>
+      ))}
+    </article>
+  );
+}
+
+function ShorthandBlock({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <Button className="absolute top-1 -left-6" variant="ghost" size="icon-sm">
+        <X color="hsl(var(--muted-foreground))" />
+      </Button>
+      <input
+        className="w-16 inline border-b-2 border-muted m-0 align-top h-[34px]"
+        placeholder="발언자"
+      />
+      {children}
+    </div>
+  );
+}
+
+interface BlockProps extends React.HTMLAttributes<HTMLDivElement> {
+  placeholder: string;
+  blockId: number;
+}
+
+function Block({ placeholder, blockId, className, ...props }: BlockProps) {
+  return (
+    <div
+      contentEditable
+      data-placeholder={placeholder}
+      className={cn(
+        "inline-block w-[calc(100%-64px)] empty:after:content-[attr(data-placeholder)] px-[2px] py-[3px] border-2 border-muted whitespace-pre-wrap [word-break:break-word]",
+        className,
+      )}
+      {...props}
+      suppressContentEditableWarning
+    ></div>
   );
 }
 

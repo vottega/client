@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Header } from "@/components/ui/header";
+import { Main } from "@/components/ui/main";
 
 export default function Rooms() {
   const router = useRouter();
@@ -48,55 +49,61 @@ export default function Rooms() {
   return (
     <>
       <Header />
-      <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl">회의실</h1>
-      </div>
-      <div
-        className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm"
-        x-chunk="dashboard-02-chunk-1"
-      >
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h3 className="text-2xl font-bold tracking-tight">아직 만든 회의실이 없어요.</h3>
-          <p className="text-sm text-muted-foreground">회의실을 만들면 투표를 시작할 수 있어요.</p>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="mt-4">회의실 만들기</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>회의실 만들기</DialogTitle>
-                <DialogDescription>기본적인 정보를 입력해 회의실을 만들어주세요.</DialogDescription>
-              </DialogHeader>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem className="grid grid-cols-4 items-center gap-4 space-y-0">
-                        <FormLabel className="text-right">회의실 이름</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="회의실 이름을 입력해주세요."
-                            className="col-span-3"
-                          />
-                        </FormControl>
-                        <FormDescription className="sr-only">
-                          회의실 이름을 입력해주세요.
-                        </FormDescription>
-                      </FormItem>
-                    )}
-                  />
-                  <DialogFooter>
-                    <Button type="submit">만들기</Button>
-                  </DialogFooter>
-                </form>
-              </Form>
-            </DialogContent>
-          </Dialog>
+      <Main>
+        <div className="flex items-center">
+          <h2 className="text-lg font-semibold md:text-2xl">회의실</h2>
         </div>
-      </div>
+        <div
+          className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm"
+          x-chunk="dashboard-02-chunk-1"
+        >
+          <div className="flex flex-col items-center gap-1 text-center">
+            <h3 className="text-2xl font-bold tracking-tight">아직 만든 회의실이 없어요.</h3>
+            <p className="text-sm text-muted-foreground">
+              회의실을 만들면 투표를 시작할 수 있어요.
+            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="mt-4">회의실 만들기</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>회의실 만들기</DialogTitle>
+                  <DialogDescription>
+                    기본적인 정보를 입력해 회의실을 만들어주세요.
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem className="grid grid-cols-4 items-center gap-4 space-y-0">
+                          <FormLabel className="text-right">회의실 이름</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="회의실 이름을 입력해주세요."
+                              className="col-span-3"
+                            />
+                          </FormControl>
+                          <FormDescription className="sr-only">
+                            회의실 이름을 입력해주세요.
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                    <DialogFooter>
+                      <Button type="submit">만들기</Button>
+                    </DialogFooter>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </Main>
     </>
   );
 }
