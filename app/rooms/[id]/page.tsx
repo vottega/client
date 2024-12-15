@@ -1,16 +1,9 @@
 "use client";
 
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Plus,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Plus, Sparkles } from "lucide-react";
 
+import { Editor } from "@/components/liveblocks/Editor";
+import { Status } from "@/components/liveblocks/Status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -79,9 +72,8 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { ChangeEvent, FormEvent, KeyboardEvent, useCallback, useRef, useState } from "react";
+import { Room } from "./Room";
+import { Avatars } from "@/components/liveblocks/Avatars";
 
 const sidebarRightData = {
   user: {
@@ -91,7 +83,8 @@ const sidebarRightData = {
   },
 };
 
-export default function Room() {
+export default function Rooms({ params: { pageId } }: { params: { pageId: string } }) {
+  console.log(pageId);
   const router = useRouter();
   const FormSchema = z.object({
     agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
@@ -462,8 +455,8 @@ export default function Room() {
                 <CardTitle>속기</CardTitle>
                 <CardDescription>회의 속기가 이루어지는 공간이에요.</CardDescription>
               </CardHeader>
-              <CardContent className="flex-grow flex h-0">
-                <Shorthand className="w-full overflow-y-auto" />
+              <CardContent className="flex-grow h-0">
+                <Shorthand pageId={pageId} />
               </CardContent>
             </Card>
             <Card>
@@ -483,78 +476,20 @@ export default function Room() {
   );
 }
 
-type Block = {
-  id: number;
-};
-
-function Shorthand({ className }: { className?: string }) {
-  const [blocks, setBlocks] = useState<Block[]>([]);
-  const handleBlockOnEnterDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      setBlocks((prev) => {
-        const newBlock = { id: Date.now() };
-        return [...prev, newBlock];
-      });
-    }
-  };
-  const latestBlockId = useRef<number>();
-
+function Shorthand({ pageId }: { pageId: string }) {
   return (
-    <article className={cn("p-6 border-muted border-2", className)}>
-      <h1
-        className="text-2xl font-semibold leading-none tracking-tight"
-        contentEditable
-        suppressContentEditableWarning
-      >
-        논의 안건 가.
-      </h1>
-      {blocks.map(({ id }) => (
-        <ShorthandBlock key={id}>
-          <Block
-            placeholder="발언 내용을 입력해주세요..."
-            className=""
-            blockId={0}
-            onKeyDown={handleBlockOnEnterDown}
-          />
-        </ShorthandBlock>
-      ))}
-    </article>
-  );
-}
+    <Room pageId={pageId}>
+      {/* Sticky header */}
+      <div className="sticky top-0 left-0 right-0 h-[60px] flex items-center justify-between px-4 z-20">
+        <div className="absolute top-3 left-3">
+          <Status />
+        </div>
+        <div />
+        <Avatars />
+      </div>
 
-function ShorthandBlock({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="relative">
-      <Button className="absolute top-1 -left-6" variant="ghost" size="icon-sm">
-        <X color="hsl(var(--muted-foreground))" />
-      </Button>
-      <input
-        className="w-16 inline border-b-2 border-muted m-0 align-top h-[34px]"
-        placeholder="발언자"
-      />
-      {children}
-    </div>
-  );
-}
-
-interface BlockProps extends React.HTMLAttributes<HTMLDivElement> {
-  placeholder: string;
-  blockId: number;
-}
-
-function Block({ placeholder, blockId, className, ...props }: BlockProps) {
-  return (
-    <div
-      contentEditable
-      data-placeholder={placeholder}
-      className={cn(
-        "inline-block w-[calc(100%-64px)] empty:after:content-[attr(data-placeholder)] px-[2px] py-[3px] border-2 border-muted whitespace-pre-wrap [word-break:break-word]",
-        className,
-      )}
-      {...props}
-      suppressContentEditableWarning
-    ></div>
+      <Editor />
+    </Room>
   );
 }
 
