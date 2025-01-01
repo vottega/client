@@ -1,7 +1,18 @@
 "use client";
 
-import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Plus, Sparkles } from "lucide-react";
+import {
+  BadgeCheck,
+  Bell,
+  ChevronsUpDown,
+  CreditCard,
+  LogOut,
+  Plus,
+  Sparkles,
+  Users,
+} from "lucide-react";
 
+import { Room } from "@/app/rooms/[id]/Room";
+import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -72,8 +83,8 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Room } from "./Room";
-import { Avatars } from "@/components/liveblocks/Avatars";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useMemo, useState } from "react";
 
 const sidebarRightData = {
   user: {
@@ -122,334 +133,6 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
         {/* contents */}
         <Main>
           <div className="flex w-full flex-col gap-4 md:gap-8 flex-grow">
-            {/* <div className="grid grid-cols-2 gap-8">
-              <Card x-chunk="dashboard-01-chunk-0">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">총 안건</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">2 개</div>
-                </CardContent>
-              </Card>
-              <Card x-chunk="dashboard-01-chunk-1">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">인원 관리</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">17 명</div>
-                </CardContent>
-              </Card>
-            </div> */}
-            {/* <div className="grid gap-4 grid-rows-2 lg:grid-rows-none md:gap-8 lg:grid-cols-2 xl:grid-cols-3 flex-grow h-0">
-              <Card className="xl:col-span-2 overflow-y-auto" x-chunk="dashboard-01-chunk-4">
-                <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-white">
-                  <div className="grid gap-2">
-                    <CardTitle>안건 및 투표</CardTitle>
-                    <CardDescription>최근 진행한 투표입니다.</CardDescription>
-                  </div>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="ml-auto gap-1">
-                        투표 생성하기
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                        <DialogTitle>투표 생성하기</DialogTitle>
-                        <DialogDescription>
-                          기본적인 정보를 입력해 투표를 생성해주세요.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                          <FormField
-                            control={form.control}
-                            name="agendaName"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>안건명</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="안건 제목을 입력해주세요." />
-                                </FormControl>
-                                <FormDescription>
-                                  예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
-                                  논의의 안
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                            rules={{ required: true }}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="voteContent"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>표결 내용</FormLabel>
-                                <FormControl>
-                                  <Input {...field} placeholder="표결 내용을 입력해주세요." />
-                                </FormControl>
-                                <FormDescription>
-                                  예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해
-                                  공개한다.
-                                </FormDescription>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          ></FormField>
-                          <DialogFooter>
-                            <Button type="submit">생성하기</Button>
-                          </DialogFooter>
-                        </form>
-                      </Form>
-                    </DialogContent>
-                  </Dialog>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="">날짜</TableHead>
-                        <TableHead>안건명</TableHead>
-                        <TableHead className="text-right">상태</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      <TableRow>
-                        <TableCell className="">2023-06-01</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-02</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-03</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-04</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-05</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-06</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="">2023-06-07</TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Badge className="text-xs" variant="outline">
-                            투표 전
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-              <Card className="overflow-y-auto" x-chunk="dashboard-01-chunk-5">
-                <CardHeader className="flex-row gap-4 space-y-0 justify-between sticky top-0 z-10 bg-white">
-                  <CardTitle>현재 접속 인원</CardTitle>
-                  <div className="flex gap-2">
-                    <Badge className="text-base" variant={"outline"}>
-                      11명 / 20명
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="online">
-                    <TabsList className="w-full grid grid-cols-2 mb-4">
-                      <TabsTrigger value="online">온라인</TabsTrigger>
-                      <TabsTrigger value="offline">오프라인</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="online">
-                      <div className="grid gap-8 grid-cols-2">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                            <AvatarFallback>민균</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">윤민균</p>
-                            <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="offline">
-                      <div className="grid gap-8 grid-cols-2">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                            <AvatarFallback>민균</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">윤민균</p>
-                            <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-            </div> */}
             <Card className="grow-[2] flex flex-col max-w-full">
               <CardHeader>
                 <CardTitle>속기</CardTitle>
@@ -475,7 +158,6 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
     </SidebarProvider>
   );
 }
-
 function Shorthand({ pageId }: { pageId: string }) {
   return (
     <Room pageId={pageId}>
@@ -492,9 +174,10 @@ function Shorthand({ pageId }: { pageId: string }) {
     </Room>
   );
 }
-
 function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter();
+  const [votes, setVotes] = useState([]);
+  const skeletonFill = useMemo(() => Math.max(3 - votes.length, 0), [votes]);
   const FormSchema = z.object({
     agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
     voteContent: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
@@ -517,10 +200,10 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="h-16 border-b border-sidebar-border">
         <NavUser user={sidebarRightData.user} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-0">
         <SidebarSeparator className="mx-0" />
-        <Card className="xl:col-span-2 overflow-y-auto" x-chunk="dashboard-01-chunk-4">
-          <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-white">
+        <div className="flex flex-col flex-grow h-0">
+          <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-sidebar px-4">
             <div className="grid gap-2">
               <CardTitle>안건 및 투표</CardTitle>
               <CardDescription>최근 진행한 투표입니다.</CardDescription>
@@ -528,7 +211,7 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <Dialog>
               <DialogTrigger asChild>
                 <Button size="sm" className="ml-auto gap-1">
-                  투표 생성하기
+                  투표 생성
                   <Plus className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
@@ -581,22 +264,30 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </DialogContent>
             </Dialog>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="">날짜</TableHead>
-                  <TableHead>안건명</TableHead>
-                  <TableHead className="text-right">상태</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="">2023-06-01</TableCell>
-                  <TableCell>
-                    <div className="font-medium">
-                      개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안
-                    </div>
+          <Table>
+            <TableHeader className="sticky top-0 bg-sidebar z-10">
+              <TableRow>
+                <TableHead>안건명</TableHead>
+                <TableHead className="text-right">상태</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 2 }).map((_, idx) => (
+                <TableRow key={idx} className="h-0">
+                  <TableCell className="font-medium">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-overflow">
+                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의
+                            안
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>2023-06-26</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
                   <TableCell className="text-right">
                     <Badge className="text-xs" variant="outline">
@@ -604,157 +295,88 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     </Badge>
                   </TableCell>
                 </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+              ))}
+              {[...Array(skeletonFill)].map((_, idx) => (
+                <TableRow key={votes.length + idx + 1} className="relative h-[73px] z-0">
+                  <TableCell>
+                    <Skeleton className="h-[40px] w-full" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Skeleton className="h-[40px] w-full ml-auto" />
+                  </TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="sr-only">
+                <TableCell></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
 
         <SidebarSeparator className="mx-0" />
-
-        <Card className="overflow-y-auto" x-chunk="dashboard-01-chunk-5">
-          <CardHeader className="flex-row gap-4 space-y-0 justify-between sticky top-0 z-10 bg-white">
-            <CardTitle>현재 접속 인원</CardTitle>
-            <div className="flex gap-2">
-              <Badge className="text-base" variant={"outline"}>
-                11명 / 20명
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="online">
-              <TabsList className="w-full grid grid-cols-2 mb-4">
-                <TabsTrigger value="online">온라인</TabsTrigger>
-                <TabsTrigger value="offline">오프라인</TabsTrigger>
-              </TabsList>
-              <TabsContent value="online">
-                <div className="grid gap-8 grid-cols-2">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                      <AvatarFallback>민균</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">윤민균</p>
-                      <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-              <TabsContent value="offline">
-                <div className="grid gap-8 grid-cols-2">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                      <AvatarFallback>민균</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">윤민균</p>
-                      <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <Avatar className="hidden h-9 w-9 sm:flex">
-                      <AvatarImage src="/avatars/02.png" alt="Avatar" />
-                      <AvatarFallback>기현</AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <p className="text-sm font-medium leading-none">류기현</p>
-                      <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton>
-              <Plus />
-              <span>New Calendar</span>
-            </SidebarMenuButton>
+            <Dialog>
+              <DialogTrigger asChild>
+                <SidebarMenuButton>
+                  <Users />
+                  <span>현재 접속 인원</span>
+                </SidebarMenuButton>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>현재 접속 인원</DialogTitle>
+                  <div className="flex justify-between">
+                    <DialogDescription className="flex justify-between items-center">
+                      현재 접속 인원은 실시간으로 업데이트 됩니다.
+                    </DialogDescription>
+                    <Badge className="text-base" variant={"outline"}>
+                      11명 / 20명
+                    </Badge>
+                  </div>
+                </DialogHeader>
+                <Tabs defaultValue="online">
+                  <TabsList className="w-full grid grid-cols-2 mb-4">
+                    <TabsTrigger value="online">온라인</TabsTrigger>
+                    <TabsTrigger value="offline">오프라인</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="online">
+                    <div className="grid gap-8 grid-cols-2 h-[318px] overflow-y-scroll">
+                      {Array.from({ length: 10 }).map((_, idx) => (
+                        <div className="flex items-center gap-4 h-fit" key={idx}>
+                          <Avatar className="hidden h-9 w-9 sm:flex">
+                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                            <AvatarFallback>민균</AvatarFallback>
+                          </Avatar>
+                          <div className="grid gap-1">
+                            <p className="text-sm font-medium leading-none">윤민균</p>
+                            <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="offline">
+                    <div className="grid gap-8 grid-cols-2 h-[318px] overflow-y-scroll">
+                      {Array.from({ length: 20 }).map((_, idx) => (
+                        <div key={idx} className="flex items-center gap-4 h-fit">
+                          <Avatar className="hidden h-9 w-9 sm:flex">
+                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
+                            <AvatarFallback>기현</AvatarFallback>
+                          </Avatar>
+                          <div className="grid gap-1">
+                            <p className="text-sm font-medium leading-none">류기현</p>
+                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
