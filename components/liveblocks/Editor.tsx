@@ -71,7 +71,7 @@ export function Editor() {
               {/* The floating threads that appear on mobile */}
               {threads ? <FloatingThreads threads={threads} className="block xl:hidden" /> : null}
 
-              <div className="xl:mr-[200px]">
+              <div className="xl:mr-[200px] editor">
                 <div className="relative max-w-[740px] w-full mx-auto pb-[400px] p-8">
                   <div className="absolute left-full -ml-8">
                     {/* The anchored threads in the sidebar, on desktop */}
