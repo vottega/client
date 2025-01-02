@@ -127,6 +127,10 @@ const config = {
             "timing-function": "ease-in",
           },
         },
+        "caret-blink": {
+          "0%,70%,100%": { opacity: "1" },
+          "20%,50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s 'ease-out'",
@@ -134,6 +138,7 @@ const config = {
         fadein: "fadein 0.5s ease-in-out",
         draw: "draw 2s cubic-bezier(0.4, 0, 0.2, 1) forwards",
         "bounce-horizontal": "bounce-horizontal 0.5s 0.25s",
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
       screens: {
         tall: {

@@ -85,6 +85,15 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMemo, useState } from "react";
+import { Label } from "@/components/ui/label";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 
 const sidebarRightData = {
   user: {
@@ -181,10 +190,25 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const FormSchema = z.object({
     agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
     voteContent: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
+    requiredAttendance: z.number().int().min(0, { message: "출석 필요 인원은 0명 이상입니다." }),
+    proceduralQuorum: z.string().min(2, { message: "의사정족수를 입력해주세요." }),
+    votingQuorum: z.string().min(2, { message: "의결정족수를 입력해주세요." }),
+    startTime: z.string().datetime({ message: "시작 시간을 입력해주세요.", local: true }),
+    startNow: z.boolean().default(true).optional(),
+    secretBallot: z.boolean().default(false).optional(),
   });
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
-    defaultValues: { agendaName: "", voteContent: "" },
+    defaultValues: {
+      agendaName: "",
+      voteContent: "",
+      requiredAttendance: 0,
+      proceduralQuorum: "11",
+      votingQuorum: "12",
+      startTime: new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
+      startNow: true,
+      secretBallot: false,
+    },
   });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
@@ -203,10 +227,10 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="gap-0">
         <SidebarSeparator className="mx-0" />
         <div className="flex flex-col flex-grow h-0">
-          <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-sidebar px-4">
-            <div className="grid gap-2">
-              <CardTitle>안건 및 투표</CardTitle>
-              <CardDescription>최근 진행한 투표입니다.</CardDescription>
+          <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-sidebar p-4">
+            <div className="grid">
+              <CardTitle className="text-xl">안건 및 투표</CardTitle>
+              <CardDescription>최근 진행한 10건의 투표예요.</CardDescription>
             </div>
             <Dialog>
               <DialogTrigger asChild>
@@ -215,10 +239,9 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[425px] h-fit overflow-y-scroll">
                 <DialogHeader>
                   <DialogTitle>투표 생성하기</DialogTitle>
-                  <DialogDescription>기본적인 정보를 입력해 투표를 생성해주세요.</DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -229,13 +252,12 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <FormItem>
                           <FormLabel>안건명</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="안건 제목을 입력해주세요." />
+                            <Textarea
+                              {...field}
+                              placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
+                            논의의 안"
+                            />
                           </FormControl>
-                          <FormDescription>
-                            예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
-                            논의의 안
-                          </FormDescription>
-                          <FormMessage />
                         </FormItem>
                       )}
                       rules={{ required: true }}
@@ -247,15 +269,150 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <FormItem>
                           <FormLabel>표결 내용</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="표결 내용을 입력해주세요." />
+                            <Textarea
+                              {...field}
+                              placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
+                            />
                           </FormControl>
-                          <FormDescription>
-                            예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.
-                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="requiredAttendance"
+                      render={({ field }) => (
+                        <FormItem className="flex justify-between items-center space-y-0">
+                          <div className="flex flex-col">
+                            <FormLabel>출석 필요 인원</FormLabel>
+                            <FormMessage />
+                          </div>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              className="w-[102px]"
+                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="proceduralQuorum"
+                      render={({ field }) => (
+                        <FormItem className="flex justify-between items-center space-y-0">
+                          <div className="flex flex-col gap-2">
+                            <FormLabel>의사정족수</FormLabel>
+                            <FormDescription>
+                              <Badge>10명</Badge> 이상 출석해야 회의를 진행할 수 있음
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <InputOTP
+                              maxLength={2}
+                              value={field.value}
+                              onChange={(value) => field.onChange(value)}
+                            >
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                              </InputOTPGroup>
+                              <span>/</span>
+                              <InputOTPGroup>
+                                <InputOTPSlot index={1} />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="votingQuorum"
+                      render={({ field }) => (
+                        <FormItem className="flex justify-between items-center space-y-0">
+                          <div className="flex flex-col gap-2">
+                            <FormLabel>의결정족수</FormLabel>
+                            <FormDescription>
+                              <Badge>10명</Badge> 이상 찬성해야 안건을 가결할 수 있음
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <InputOTP
+                              maxLength={2}
+                              value={field.value}
+                              onChange={(value) => field.onChange(value)}
+                            >
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                              </InputOTPGroup>
+                              <span>/</span>
+                              <InputOTPGroup>
+                                <InputOTPSlot index={1} />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-between items-center">
+                      <FormField
+                        control={form.control}
+                        name="startTime"
+                        render={({ field }) => (
+                          <FormItem className="flex justify-between items-center space-y-0">
+                            <FormLabel className="mr-4">시작 시간</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="datetime-local"
+                                {...field}
+                                className="w-fit"
+                                onChange={(e) => {
+                                  field.onChange(e.target.value + ":00");
+                                }}
+                                disabled={form.watch("startNow")}
+                                min={field.value}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="startNow"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="mr-1">바로 시작</FormLabel>
+                            <FormControl>
+                              <Checkbox
+                                className="align-text-bottom"
+                                checked={field.value}
+                                onCheckedChange={(checked) => field.onChange(checked)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    <FormField
+                      control={form.control}
+                      name="secretBallot"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="mr-1">무기명</FormLabel>
+                          <FormControl>
+                            <Checkbox
+                              className="align-text-bottom"
+                              checked={field.value}
+                              onCheckedChange={(checked) => field.onChange(checked)}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
-                    ></FormField>
+                    />
                     <DialogFooter>
                       <Button type="submit">생성하기</Button>
                     </DialogFooter>
@@ -273,28 +430,57 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </TableHeader>
             <TableBody>
               {Array.from({ length: 2 }).map((_, idx) => (
-                <TableRow key={idx} className="h-0">
-                  <TableCell className="font-medium">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="text-overflow">
-                            개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의
-                            안
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>2023-06-26</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge className="text-xs" variant="outline">
-                      투표 전
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                <Dialog key={idx}>
+                  <DialogTrigger asChild>
+                    <TableRow key={idx} className="h-0">
+                      <TableCell className="font-medium">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-overflow">
+                                개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
+                                논의의 안
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>2023-06-26</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge className="text-xs" variant="outline">
+                          투표 전
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>투표 정보</DialogTitle>
+                      <DialogDescription>
+                        Make changes to your profile here. Click save when you&apos;re done.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">
+                          Name
+                        </Label>
+                        <Input id="name" value="Pedro Duarte" className="col-span-3" />
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="username" className="text-right">
+                          Username
+                        </Label>
+                        <Input id="username" value="@peduarte" className="col-span-3" />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit">Save changes</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               ))}
               {[...Array(skeletonFill)].map((_, idx) => (
                 <TableRow key={votes.length + idx + 1} className="relative h-[73px] z-0">
