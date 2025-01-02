@@ -328,19 +328,14 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>현재 접속 인원</DialogTitle>
-                  <div className="flex justify-between">
-                    <DialogDescription className="flex justify-between items-center">
-                      현재 접속 인원은 실시간으로 업데이트 됩니다.
-                    </DialogDescription>
-                    <Badge className="text-base" variant={"outline"}>
-                      11명 / 20명
-                    </Badge>
-                  </div>
+                  <DialogDescription className="flex justify-between items-center">
+                    현재 접속 인원은 실시간으로 업데이트 됩니다.
+                  </DialogDescription>
                 </DialogHeader>
                 <Tabs defaultValue="online">
                   <TabsList className="w-full grid grid-cols-2 mb-4">
-                    <TabsTrigger value="online">온라인</TabsTrigger>
-                    <TabsTrigger value="offline">오프라인</TabsTrigger>
+                    <TabsTrigger value="online">온라인 (11)</TabsTrigger>
+                    <TabsTrigger value="offline">오프라인 (9)</TabsTrigger>
                   </TabsList>
                   <TabsContent value="online">
                     <div className="grid gap-8 grid-cols-2 h-[318px] overflow-y-scroll">
