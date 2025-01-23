@@ -20,11 +20,14 @@ import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -51,9 +54,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Header } from "@/components/ui/header";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Label } from "@/components/ui/label";
 import { Main } from "@/components/ui/main";
-import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -78,22 +83,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useMemo, useState } from "react";
-import { Label } from "@/components/ui/label";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSeparator,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 
 const sidebarRightData = {
   user: {
@@ -125,19 +122,23 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
   return (
     <SidebarProvider>
       <SidebarInset className="max-w-full">
-        <header className="sticky top-0 flex h-14 shrink-0 items-center gap-2 bg-background">
-          <div className="flex flex-1 items-center gap-2 px-3">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="line-clamp-1">회의실 이름</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          </div>
-        </header>
+        <Header>
+          <Header.Logo />
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink className="line-clamp-1" href="/rooms">
+                  내 회의실
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="line-clamp-1">회의실 이름</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          <SidebarTrigger className="-mr-1 ml-auto rotate-180" />
+        </Header>
 
         {/* contents */}
         <Main>
@@ -163,7 +164,8 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
           </div>
         </Main>
       </SidebarInset>
-      <SidebarRight />
+
+      <SidebarRight side="right" />
     </SidebarProvider>
   );
 }
@@ -220,7 +222,7 @@ function SidebarRight({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }
 
   return (
-    <Sidebar collapsible="none" className="sticky hidden lg:flex top-0 h-svh border-l" {...props}>
+    <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
       <SidebarHeader className="h-16 border-b border-sidebar-border">
         <NavUser user={sidebarRightData.user} />
       </SidebarHeader>
