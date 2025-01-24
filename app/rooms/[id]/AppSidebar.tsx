@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  ArrowUpRight,
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  LogOut,
-  MoveUpRight,
-  Plus,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Bell, ChevronsUpDown, LogOut, Plus, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +35,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Label } from "@/components/ui/label";
 import {
   Sidebar,
   SidebarContent,
@@ -85,36 +75,6 @@ const sidebarRightData = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [votes, setVotes] = useState([]);
   const skeletonFill = useMemo(() => Math.max(3 - votes.length, 0), [votes]);
-  const FormSchema = z.object({
-    agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
-    voteContent: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
-    requiredAttendance: z.number().int().min(0, { message: "출석 필요 인원은 0명 이상입니다." }),
-    proceduralQuorum: z.string().min(2, { message: "의사정족수를 입력해주세요." }),
-    votingQuorum: z.string().min(2, { message: "의결정족수를 입력해주세요." }),
-    startTime: z.string().datetime({ message: "시작 시간을 입력해주세요.", local: true }),
-    startNow: z.boolean().default(true).optional(),
-    secretBallot: z.boolean().default(false).optional(),
-  });
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: {
-      agendaName: "",
-      voteContent: "",
-      requiredAttendance: 0,
-      proceduralQuorum: "11",
-      votingQuorum: "12",
-      startTime: new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
-      startNow: true,
-      secretBallot: false,
-    },
-  });
-
-  function onSubmit(data: z.infer<typeof FormSchema>) {
-    // TODO: 통신
-    console.log(data);
-
-    const voteId = 1;
-  }
 
   return (
     <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
@@ -139,181 +99,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DialogHeader>
                   <DialogTitle>투표 생성하기</DialogTitle>
                 </DialogHeader>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="agendaName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>안건명</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
-                            논의의 안"
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                      rules={{ required: true }}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="voteContent"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>표결 내용</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              {...field}
-                              placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="requiredAttendance"
-                      render={({ field }) => (
-                        <FormItem className="flex justify-between items-center space-y-0">
-                          <div className="flex flex-col">
-                            <FormLabel>출석 필요 인원</FormLabel>
-                            <FormMessage />
-                          </div>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              className="w-[102px]"
-                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                            />
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="proceduralQuorum"
-                      render={({ field }) => (
-                        <FormItem className="flex justify-between items-center space-y-0">
-                          <div className="flex flex-col gap-2">
-                            <FormLabel>의사정족수</FormLabel>
-                            <FormDescription>
-                              <Badge>10명</Badge> 이상 출석해야 회의를 진행할 수 있음
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <InputOTP
-                              maxLength={2}
-                              value={field.value}
-                              onChange={(value) => field.onChange(value)}
-                            >
-                              <InputOTPGroup>
-                                <InputOTPSlot index={0} />
-                              </InputOTPGroup>
-                              <span>/</span>
-                              <InputOTPGroup>
-                                <InputOTPSlot index={1} />
-                              </InputOTPGroup>
-                            </InputOTP>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="votingQuorum"
-                      render={({ field }) => (
-                        <FormItem className="flex justify-between items-center space-y-0">
-                          <div className="flex flex-col gap-2">
-                            <FormLabel>의결정족수</FormLabel>
-                            <FormDescription>
-                              <Badge>10명</Badge> 이상 찬성해야 안건을 가결할 수 있음
-                            </FormDescription>
-                          </div>
-                          <FormControl>
-                            <InputOTP
-                              maxLength={2}
-                              value={field.value}
-                              onChange={(value) => field.onChange(value)}
-                            >
-                              <InputOTPGroup>
-                                <InputOTPSlot index={0} />
-                              </InputOTPGroup>
-                              <span>/</span>
-                              <InputOTPGroup>
-                                <InputOTPSlot index={1} />
-                              </InputOTPGroup>
-                            </InputOTP>
-                          </FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <div className="flex justify-between items-center">
-                      <FormField
-                        control={form.control}
-                        name="startTime"
-                        render={({ field }) => (
-                          <FormItem className="flex justify-between items-center space-y-0">
-                            <FormLabel className="mr-4">시작 시간</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="datetime-local"
-                                {...field}
-                                className="w-fit"
-                                onChange={(e) => {
-                                  field.onChange(e.target.value + ":00");
-                                }}
-                                disabled={form.watch("startNow")}
-                                min={field.value}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="startNow"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="mr-1">바로 시작</FormLabel>
-                            <FormControl>
-                              <Checkbox
-                                className="align-text-bottom"
-                                checked={field.value}
-                                onCheckedChange={(checked) => field.onChange(checked)}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    <FormField
-                      control={form.control}
-                      name="secretBallot"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="mr-1">무기명</FormLabel>
-                          <FormControl>
-                            <Checkbox
-                              className="align-text-bottom"
-                              checked={field.value}
-                              onCheckedChange={(checked) => field.onChange(checked)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <DialogFooter>
-                      <Button type="submit">생성하기</Button>
-                    </DialogFooter>
-                  </form>
-                </Form>
+                <CreateVoteForm />
               </DialogContent>
             </Dialog>
           </CardHeader>
@@ -354,27 +140,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
                       <DialogTitle>투표 정보</DialogTitle>
-                      <DialogDescription>
-                        Make changes to your profile here. Click save when you&apos;re done.
-                      </DialogDescription>
                     </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">
-                          Name
-                        </Label>
-                        <Input id="name" value="Pedro Duarte" className="col-span-3" />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="username" className="text-right">
-                          Username
-                        </Label>
-                        <Input id="username" value="@peduarte" className="col-span-3" />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit">Save changes</Button>
-                    </DialogFooter>
+                    <CreateVoteForm />
                   </DialogContent>
                 </Dialog>
               ))}
@@ -532,5 +299,235 @@ function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
+  );
+}
+
+function CreateVoteForm() {
+  const FormSchema = z.object({
+    agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
+    voteContent: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
+    requiredAttendance: z.number().int().min(0, { message: "출석 필요 인원은 0명 이상입니다." }),
+    proceduralQuorum: z.string().min(2, { message: "의사정족수를 입력해주세요." }),
+    votingQuorum: z.string().min(2, { message: "의결정족수를 입력해주세요." }),
+    startTime: z.string().datetime({ message: "시작 시간을 입력해주세요.", local: true }),
+    startNow: z.boolean().default(true).optional(),
+    secretBallot: z.boolean().default(false).optional(),
+  });
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: {
+      agendaName: "",
+      voteContent: "",
+      requiredAttendance: 0,
+      // TODO: input otp > custom fraction input으로 전환
+      proceduralQuorum: "11",
+      votingQuorum: "12",
+      startTime: new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
+      startNow: true,
+      secretBallot: false,
+    },
+  });
+
+  function onSubmit(data: z.infer<typeof FormSchema>) {
+    // TODO: 통신
+    console.log(data);
+
+    const voteId = 1;
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="agendaName"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>안건명</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
+                            논의의 안"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+          rules={{ required: true }}
+        />
+        <FormField
+          control={form.control}
+          name="voteContent"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>표결 내용</FormLabel>
+              <FormControl>
+                <Textarea
+                  {...field}
+                  placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="requiredAttendance"
+          render={({ field }) => (
+            <FormItem className="flex justify-between items-center space-y-0">
+              <div className="flex flex-col">
+                <FormLabel>출석 필요 인원</FormLabel>
+                <FormMessage />
+              </div>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="number"
+                  className="w-[102px]"
+                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="proceduralQuorum"
+          render={({ field }) => (
+            <FormItem className="flex justify-between items-center space-y-0">
+              <div className="flex flex-col gap-2">
+                <FormLabel>의사정족수</FormLabel>
+                <FormDescription>
+                  <Badge>10명</Badge> 이상 출석해야 회의를 진행할 수 있음
+                </FormDescription>
+              </div>
+              <FormControl>
+                <InputOTP
+                  maxLength={2}
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                  </InputOTPGroup>
+                  <span>/</span>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={1} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="votingQuorum"
+          render={({ field }) => (
+            <FormItem className="flex justify-between items-center space-y-0">
+              <div className="flex flex-col gap-2">
+                <FormLabel>의결정족수</FormLabel>
+                <FormDescription>
+                  <Badge>10명</Badge> 이상 찬성해야 안건을 가결할 수 있음
+                </FormDescription>
+              </div>
+              <FormControl>
+                <InputOTP
+                  maxLength={2}
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                  </InputOTPGroup>
+                  <span>/</span>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={1} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-between items-center">
+          <FormField
+            control={form.control}
+            name="startTime"
+            render={({ field }) => (
+              <FormItem className="flex justify-between items-center space-y-0">
+                <FormLabel className="mr-4">시작 시간</FormLabel>
+                <FormControl>
+                  <Input
+                    type="datetime-local"
+                    {...field}
+                    className="w-fit"
+                    onChange={(e) => {
+                      field.onChange(e.target.value + ":00");
+                    }}
+                    disabled={form.watch("startNow")}
+                    min={field.value}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="startNow"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="mr-1">바로 시작</FormLabel>
+                <FormControl>
+                  <Checkbox
+                    className="align-text-bottom"
+                    checked={field.value}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const currentKST = new Date();
+                        const offset = 9 * 60; // KST는 UTC+9
+                        currentKST.setMinutes(
+                          currentKST.getMinutes() + currentKST.getTimezoneOffset() + offset,
+                        );
+
+                        const year = currentKST.getFullYear();
+                        const month = String(currentKST.getMonth() + 1).padStart(2, "0");
+                        const date = String(currentKST.getDate()).padStart(2, "0");
+                        const hours = String(currentKST.getHours()).padStart(2, "0");
+                        const minutes = String(currentKST.getMinutes()).padStart(2, "0");
+
+                        const formattedTime = `${year}-${month}-${date}T${hours}:${minutes}`;
+                        form.setValue("startTime", formattedTime);
+                      }
+                      field.onChange(checked);
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <FormField
+          control={form.control}
+          name="secretBallot"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="mr-1">무기명</FormLabel>
+              <FormControl>
+                <Checkbox
+                  className="align-text-bottom"
+                  checked={field.value}
+                  onCheckedChange={(checked) => field.onChange(checked)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <DialogFooter>
+          <Button type="submit">생성하기</Button>
+        </DialogFooter>
+      </form>
+    </Form>
   );
 }
