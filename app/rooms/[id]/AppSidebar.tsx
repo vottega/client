@@ -58,13 +58,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Vote, VoteSchema } from "@/constants/vote";
+import { useRoomContext } from "@/hooks/useRoomContext";
+import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
-import { Vote, VoteSchema } from "@/constants/vote";
 
 const sidebarRightData = {
   user: {
@@ -80,12 +81,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       agendaName: "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
       voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
       requiredAttendance: 0,
-      proceduralQuorum: "14",
+      proceduralQuorum: "24",
       votingQuorum: "12",
       startTime: "2025-01-24T14:00:00",
       startNow: false,
       secretBallot: true,
-      isFinished: true,
+      isFinished: false,
     },
     {
       agendaName:
@@ -97,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       startTime: "2025-01-24T14:00:00",
       startNow: false,
       secretBallot: false,
-      isFinished: true,
+      isFinished: false,
     },
     {
       agendaName: "중앙운영위원회 대응 논의의 안",
@@ -108,7 +109,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       startTime: "2025-01-24T14:00:00",
       startNow: false,
       secretBallot: false,
-      isFinished: false,
+      isFinished: true,
     },
   ]);
   const skeletonFill = useMemo(() => Math.max(5 - votes.length, 0), [votes]);
@@ -132,7 +133,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <Plus className="h-4 w-4" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px] h-fit overflow-y-scroll">
+              <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>투표 생성하기</DialogTitle>
                 </DialogHeader>
@@ -381,11 +382,29 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
     },
   });
 
+  const ratioToQuorum = useCallback((ratio: string) => {
+    const [numerator, denominator] = ratio.split("").map((str) => parseInt(str));
+
+    if (numerator > denominator) {
+      return partcipantCount;
+    }
+
+    return Math.ceil(partcipantCount * (numerator / denominator));
+  }, []);
+
   function onSubmit(data: z.infer<typeof VoteSchema>) {
     if (data.startNow) {
       data.startTime = getKoreanTimeWithZeroSecond();
     }
+    data.proceduralQuorum = ratioToQuorum(data.proceduralQuorum).toString();
+    data.votingQuorum = ratioToQuorum(data.votingQuorum).toString();
   }
+
+  const { participants } = useRoomContext();
+
+  const partcipantCount = 20;
+
+  const quorumRatioPattern = "^[1-9]+$";
 
   return (
     <Form {...form}>
@@ -453,7 +472,7 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
                 <FormLabel>의사정족수</FormLabel>
                 <FormDescription>
                   <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    10명
+                    {ratioToQuorum(field.value)}명
                   </span>{" "}
                   이상 출석해야 회의를 진행할 수 있음
                 </FormDescription>
@@ -464,6 +483,7 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
                   disabled={existingVote?.isFinished}
+                  pattern={quorumRatioPattern}
                 >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
@@ -486,7 +506,7 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
                 <FormLabel>의결정족수</FormLabel>
                 <FormDescription>
                   <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    10명
+                    {ratioToQuorum(field.value)}명
                   </span>{" "}
                   이상 찬성해야 안건을 가결할 수 있음
                 </FormDescription>
@@ -497,6 +517,7 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
                   disabled={existingVote?.isFinished}
+                  pattern={quorumRatioPattern}
                 >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
