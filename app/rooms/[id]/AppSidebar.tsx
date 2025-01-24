@@ -123,7 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <CardHeader className="flex flex-row items-center sticky top-0 z-10 bg-sidebar p-4 md:py-6">
             <div className="grid">
               <CardTitle className="text-xl">안건 및 투표</CardTitle>
-              <CardDescription>최근 진행한 10건의 투표예요.</CardDescription>
+              <CardDescription>최근 진행한 투표예요.</CardDescription>
             </div>
             <Dialog>
               <DialogTrigger asChild>
@@ -165,7 +165,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </TooltipProvider>
                       </TableCell>
                       <TableCell className="text-right pl-0 pr-2">
-                        <Badge className="text-xs whitespace-nowrap" variant="outline">
+                        <Badge
+                          className="text-xs whitespace-nowrap"
+                          variant={vote.isFinished ? "default" : "outline"}
+                        >
                           {vote.isFinished ? "완료" : "대기"}
                         </Badge>
                       </TableCell>
@@ -449,7 +452,10 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
               <div className="flex flex-col gap-2">
                 <FormLabel>의사정족수</FormLabel>
                 <FormDescription>
-                  <Badge>10명</Badge> 이상 출석해야 회의를 진행할 수 있음
+                  <span className="text-primary text-base font-semibold border-b-2 border-primary">
+                    10명
+                  </span>{" "}
+                  이상 출석해야 회의를 진행할 수 있음
                 </FormDescription>
               </div>
               <FormControl>
@@ -479,7 +485,10 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
               <div className="flex flex-col gap-2">
                 <FormLabel>의결정족수</FormLabel>
                 <FormDescription>
-                  <Badge>10명</Badge> 이상 찬성해야 안건을 가결할 수 있음
+                  <span className="text-primary text-base font-semibold border-b-2 border-primary">
+                    10명
+                  </span>{" "}
+                  이상 찬성해야 안건을 가결할 수 있음
                 </FormDescription>
               </div>
               <FormControl>
