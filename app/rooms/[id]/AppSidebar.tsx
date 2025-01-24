@@ -63,6 +63,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 
 const sidebarRightData = {
   user: {
@@ -322,7 +323,7 @@ function CreateVoteForm() {
       // TODO: input otp > custom fraction input으로 전환
       proceduralQuorum: "11",
       votingQuorum: "12",
-      startTime: new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16),
+      startTime: getKoreanTimeWithZeroSecond(),
       startNow: true,
       secretBallot: false,
     },
@@ -483,20 +484,7 @@ function CreateVoteForm() {
                     checked={field.value}
                     onCheckedChange={(checked) => {
                       if (checked) {
-                        const currentKST = new Date();
-                        const offset = 9 * 60; // KST는 UTC+9
-                        currentKST.setMinutes(
-                          currentKST.getMinutes() + currentKST.getTimezoneOffset() + offset,
-                        );
-
-                        const year = currentKST.getFullYear();
-                        const month = String(currentKST.getMonth() + 1).padStart(2, "0");
-                        const date = String(currentKST.getDate()).padStart(2, "0");
-                        const hours = String(currentKST.getHours()).padStart(2, "0");
-                        const minutes = String(currentKST.getMinutes()).padStart(2, "0");
-
-                        const formattedTime = `${year}-${month}-${date}T${hours}:${minutes}`;
-                        form.setValue("startTime", formattedTime);
+                        form.setValue("startTime", getKoreanTimeWithZeroSecond());
                       }
                       field.onChange(checked);
                     }}

@@ -15,3 +15,10 @@ export const formatPhone = (phone: string): string => {
   const breakpoint = phone.length === 11 ? 7 : 6;
   return `${phone.slice(0, 3)}-${phone.slice(3, breakpoint)}-${phone.slice(breakpoint)}`;
 };
+
+export const getKoreanTimeWithZeroSecond = () => {
+  const zeroSecond = ":00";
+  return (
+    new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16) + zeroSecond
+  );
+};
