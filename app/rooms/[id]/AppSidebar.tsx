@@ -64,18 +64,54 @@ import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
+import { Vote, VoteSchema } from "@/constants/vote";
 
 const sidebarRightData = {
   user: {
     name: "류기현",
-    email: "khryu0610@naver.com",
+    email: "example@example.com",
     avatar: "/avatars/shadcn.jpg",
   },
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [votes, setVotes] = useState([]);
-  const skeletonFill = useMemo(() => Math.max(3 - votes.length, 0), [votes]);
+  const [votes, setVotes] = useState<Vote[]>([
+    {
+      agendaName: "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
+      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
+      requiredAttendance: 0,
+      proceduralQuorum: "14",
+      votingQuorum: "12",
+      startTime: "2025-01-24T14:00:00",
+      startNow: false,
+      secretBallot: true,
+      isFinished: true,
+    },
+    {
+      agendaName:
+        "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
+      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
+      requiredAttendance: 0,
+      proceduralQuorum: "12",
+      votingQuorum: "12",
+      startTime: "2025-01-24T14:00:00",
+      startNow: false,
+      secretBallot: false,
+      isFinished: true,
+    },
+    {
+      agendaName: "중앙운영위원회 대응 논의의 안",
+      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
+      requiredAttendance: 0,
+      proceduralQuorum: "12",
+      votingQuorum: "12",
+      startTime: "2025-01-24T14:00:00",
+      startNow: false,
+      secretBallot: false,
+      isFinished: false,
+    },
+  ]);
+  const skeletonFill = useMemo(() => Math.max(5 - votes.length, 0), [votes]);
 
   return (
     <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
@@ -100,7 +136,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DialogHeader>
                   <DialogTitle>투표 생성하기</DialogTitle>
                 </DialogHeader>
-                <CreateVoteForm />
+                <VoteForm />
               </DialogContent>
             </Dialog>
           </CardHeader>
@@ -112,7 +148,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {Array.from({ length: 2 }).map((_, idx) => (
+              {votes.map((vote, idx) => (
                 <Dialog key={idx}>
                   <DialogTrigger asChild>
                     <TableRow key={idx} className="h-0 cursor-pointer">
@@ -120,29 +156,47 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <span className="text-overflow">
-                                개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
-                                논의의 안
-                              </span>
+                              <span className="text-overflow">{vote.agendaName}</span>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>2023-06-26</p>
+                              <p>{vote.startTime.slice(0, 10)}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
                       </TableCell>
                       <TableCell className="text-right pl-0 pr-2">
                         <Badge className="text-xs whitespace-nowrap" variant="outline">
-                          투표 전
+                          {vote.isFinished ? "완료" : "대기"}
                         </Badge>
                       </TableCell>
                     </TableRow>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader>
+                    <DialogHeader className="flex-row items-center gap-2">
                       <DialogTitle>투표 정보</DialogTitle>
+                      <DialogDescription>
+                        {vote.isFinished
+                          ? "완료된 투표 정보와 결과를 조회할 수 있어요"
+                          : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
+                      </DialogDescription>
                     </DialogHeader>
-                    <CreateVoteForm />
+                    {vote.isFinished ? (
+                      <Tabs defaultValue="info">
+                        <TabsList className="w-full grid grid-cols-2 mb-4">
+                          <TabsTrigger value="info">투표 정보</TabsTrigger>
+                          <TabsTrigger value="result">투표 결과</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="info">
+                          <VoteInfo vote={vote} />
+                        </TabsContent>
+                        <TabsContent value="result">
+                          {/* TODO: 투표 결과 */}
+                          <p>투표 결과</p>
+                        </TabsContent>
+                      </Tabs>
+                    ) : (
+                      <VoteInfo vote={vote} />
+                    )}
                   </DialogContent>
                 </Dialog>
               ))}
@@ -151,8 +205,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <TableCell>
                     <Skeleton className="h-[40px] w-full" />
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="h-[40px] w-full ml-auto" />
+                  <TableCell className="text-right pl-0 pr-2">
+                    <Skeleton className="h-[22px] w-full rounded-full" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -303,19 +357,13 @@ function NavUser({
   );
 }
 
-function CreateVoteForm() {
-  const FormSchema = z.object({
-    agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
-    voteContent: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
-    requiredAttendance: z.number().int().min(0, { message: "출석 필요 인원은 0명 이상입니다." }),
-    proceduralQuorum: z.string().min(2, { message: "의사정족수를 입력해주세요." }),
-    votingQuorum: z.string().min(2, { message: "의결정족수를 입력해주세요." }),
-    startTime: z.string().datetime({ message: "시작 시간을 입력해주세요.", local: true }),
-    startNow: z.boolean().default(true).optional(),
-    secretBallot: z.boolean().default(false).optional(),
-  });
-  const form = useForm<z.infer<typeof FormSchema>>({
-    resolver: zodResolver(FormSchema),
+function VoteInfo({ vote }: { vote: Vote }) {
+  return <VoteForm existingVote={vote} />;
+}
+
+function VoteForm({ existingVote }: { existingVote?: Vote }) {
+  const form = useForm<z.infer<typeof VoteSchema>>({
+    resolver: zodResolver(VoteSchema),
     defaultValues: {
       agendaName: "",
       voteContent: "",
@@ -326,10 +374,11 @@ function CreateVoteForm() {
       startTime: getKoreanTimeWithZeroSecond(),
       startNow: true,
       secretBallot: false,
+      ...existingVote,
     },
   });
 
-  function onSubmit(data: z.infer<typeof FormSchema>) {
+  function onSubmit(data: z.infer<typeof VoteSchema>) {
     // TODO: 통신
     console.log(data);
 
@@ -348,8 +397,8 @@ function CreateVoteForm() {
               <FormControl>
                 <Textarea
                   {...field}
-                  placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응
-                            논의의 안"
+                  placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안"
+                  disabled={existingVote?.isFinished}
                 />
               </FormControl>
             </FormItem>
@@ -366,6 +415,7 @@ function CreateVoteForm() {
                 <Textarea
                   {...field}
                   placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
+                  disabled={existingVote?.isFinished}
                 />
               </FormControl>
             </FormItem>
@@ -386,6 +436,7 @@ function CreateVoteForm() {
                   type="number"
                   className="w-[102px]"
                   onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                  disabled={existingVote?.isFinished}
                 />
               </FormControl>
             </FormItem>
@@ -407,6 +458,7 @@ function CreateVoteForm() {
                   maxLength={2}
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
+                  disabled={existingVote?.isFinished}
                 >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
@@ -436,6 +488,7 @@ function CreateVoteForm() {
                   maxLength={2}
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
+                  disabled={existingVote?.isFinished}
                 >
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
@@ -464,7 +517,7 @@ function CreateVoteForm() {
                     onChange={(e) => {
                       field.onChange(e.target.value + ":00");
                     }}
-                    disabled={form.watch("startNow")}
+                    disabled={existingVote?.isFinished || form.watch("startNow")}
                     min={field.value}
                   />
                 </FormControl>
@@ -472,28 +525,30 @@ function CreateVoteForm() {
               </FormItem>
             )}
           />
-          <FormField
-            control={form.control}
-            name="startNow"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="mr-1">바로 시작</FormLabel>
-                <FormControl>
-                  <Checkbox
-                    className="align-text-bottom"
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        form.setValue("startTime", getKoreanTimeWithZeroSecond());
-                      }
-                      field.onChange(checked);
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {!existingVote?.isFinished && (
+            <FormField
+              control={form.control}
+              name="startNow"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="mr-1">바로 시작</FormLabel>
+                  <FormControl>
+                    <Checkbox
+                      className="align-text-bottom"
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          form.setValue("startTime", getKoreanTimeWithZeroSecond());
+                        }
+                        field.onChange(checked);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
         <FormField
           control={form.control}
@@ -506,15 +561,18 @@ function CreateVoteForm() {
                   className="align-text-bottom"
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(checked)}
+                  disabled={existingVote?.isFinished}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <DialogFooter>
-          <Button type="submit">생성하기</Button>
-        </DialogFooter>
+        {!existingVote?.isFinished && (
+          <DialogFooter>
+            <Button type="submit">{existingVote ? "수정하기" : "생성하기"}</Button>
+          </DialogFooter>
+        )}
       </form>
     </Form>
   );
