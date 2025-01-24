@@ -379,10 +379,9 @@ function VoteForm({ existingVote }: { existingVote?: Vote }) {
   });
 
   function onSubmit(data: z.infer<typeof VoteSchema>) {
-    // TODO: 통신
-    console.log(data);
-
-    const voteId = 1;
+    if (data.startNow) {
+      data.startTime = getKoreanTimeWithZeroSecond();
+    }
   }
 
   return (
