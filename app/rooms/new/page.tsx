@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Data } from "@/components/ui/combobox";
 import { DialogFooter } from "@/components/ui/dialog";
 import {
   Form,
@@ -11,6 +10,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { TheHeader } from "@/components/ui/header";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,6 @@ import {
   HTMLAttributes,
   KeyboardEvent,
   SetStateAction,
-  useMemo,
   useState,
 } from "react";
 import { useForm } from "react-hook-form";
@@ -36,9 +35,7 @@ import { z } from "zod";
 export default function Page() {
   const router = useRouter();
   const FormSchema = z.object({
-    roomName: z.string({
-      required_error: "회의실 이름을 입력해주세요.",
-    }),
+    roomName: z.string().min(1, { message: "회의실 이름을 입력해주세요." }),
     participantRoleList: z.array(
       z.object({
         value: z.string(),
@@ -60,14 +57,6 @@ export default function Page() {
     router.push(`/rooms/${roomId}`);
   }
 
-  const datas = useMemo<Data[]>(
-    () =>
-      ["부의장", "보조 서기", "타임키퍼"]
-        .filter((label) => !roles.has(label))
-        .map((label) => ({ label, value: label })),
-    [roles],
-  );
-
   return (
     <>
       <TheHeader />
@@ -87,6 +76,7 @@ export default function Page() {
                     <FormControl>
                       <Input {...field} placeholder="회의실 이름을 입력해주세요." />
                     </FormControl>
+                    <FormMessage />
                     <FormDescription className="sr-only">
                       회의실 이름을 입력해주세요.
                     </FormDescription>
@@ -96,7 +86,7 @@ export default function Page() {
               <FormField
                 control={form.control}
                 name="participantRoleList"
-                render={({ field }) => (
+                render={() => (
                   <FormItem>
                     <FormLabel className="text-right">참가자 역할</FormLabel>
                     <FormDescription>
