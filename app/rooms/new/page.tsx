@@ -1,5 +1,7 @@
 "use client";
 
+import { APIErrorResponse } from "@/app/api/types";
+import { CreateRoomRequest, CreateRoomResponse } from "@/app/api/types/room";
 import { RoleList } from "@/app/rooms/RoleList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +20,17 @@ import { Input } from "@/components/ui/input";
 import { ROLES, Roles } from "@/constants/role";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+  Dispatch,
+  forwardRef,
+  HTMLAttributes,
+  KeyboardEvent,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
+import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 
 export default function Page() {
@@ -28,7 +39,7 @@ export default function Page() {
     roomName: z.string().min(1, { message: "회의실 이름을 입력해주세요." }),
     participantRoleList: z.array(
       z.object({
-        value: z.string(),
+        role: z.string(),
         canVote: z.boolean(),
       }),
     ),
@@ -42,10 +53,42 @@ export default function Page() {
   });
   const [roles, setRoles] = useState<Roles>(ROLES);
 
+  const createRoom = async (url: string, { arg }: { arg: CreateRoomRequest }) => {
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify(arg),
+    });
+
+    const data: CreateRoomResponse | APIErrorResponse = await response.json();
+
+    if (!response.ok) {
+      // 에러처리
+    }
+
+    return data as CreateRoomResponse;
+  };
+
+  // TODO: 에러/로딩 처리, 미들웨어 작성
+  const { trigger, data } = useSWRMutation<
+    CreateRoomResponse,
+    any,
+    string,
+    CreateRoomRequest,
+    CreateRoomResponse
+  >("http://localhost:8080/api/room", createRoom);
+
   function onSubmit(data: z.infer<typeof FormSchema>) {
-    const roomId = 1;
-    router.push(`/rooms/${roomId}`);
+    const newData: typeof data = { ...data, participantRoleList: [...roles.values()] };
+    const createRoomRequestBody = { ...newData, ownerId: 1 };
+    trigger(createRoomRequestBody);
   }
+
+  useEffect(() => {
+    if (data) {
+      console.log(data);
+      router.push(`/rooms/${data.id}`);
+    }
+  }, [data, router]);
 
   return (
     <>
