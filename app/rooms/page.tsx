@@ -20,12 +20,12 @@ import {
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
+import { TheHeader } from "@/components/ui/header";
+import { Main } from "@/components/ui/main";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Header } from "@/components/ui/header";
-import { Main } from "@/components/ui/main";
 
 export default function Rooms() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function Rooms() {
 
   return (
     <>
-      <Header />
+      <TheHeader />
       <Main>
         <div className="flex items-center">
           <h2 className="text-lg font-semibold md:text-2xl">회의실</h2>

@@ -1,3 +1,4 @@
+import { TheHeader } from "@/components/ui/header";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -5,7 +6,6 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { Header } from "@/components/ui/header";
 
 export function NavigationMenuDemo() {
   return (
@@ -34,7 +34,7 @@ export function NavigationMenuDemo() {
 export default function Page() {
   return (
     <div>
-      <Header />
+      <TheHeader />
       <header className="flex">
         <NavigationMenuDemo />
       </header>

@@ -7,9 +7,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { CircleUser, Menu, Package2 } from "lucide-react";
-import Link from "next/link";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -17,16 +14,33 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { CircleUser, Menu, Package2 } from "lucide-react";
+import Link from "next/link";
 
-function Header() {
+function Header({ children }: { children?: React.ReactNode }) {
   return (
     <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-      <h1 className="hidden md:block">
-        <Link href="/">
-          <Package2 className="h-6 w-6" />
-        </Link>
-        <span className="sr-only">vottega</span>
-      </h1>
+      {children}
+    </header>
+  );
+}
+
+Header.Logo = function Logo({ className }: { className?: string }) {
+  return (
+    <h1 className={className}>
+      <Link href="/">
+        <Package2 className="h-6 w-6" />
+      </Link>
+      <span className="sr-only">vottega</span>
+    </h1>
+  );
+};
+
+function TheHeader() {
+  return (
+    <Header>
+      <Header.Logo className="hidden md:block" />
       <NavigationMenu className="hidden md:flex">
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -80,8 +94,8 @@ function Header() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </header>
+    </Header>
   );
 }
 
-export { Header };
+export { Header, TheHeader };
