@@ -1,17 +1,10 @@
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
+import { RoomHeader } from "@/app/rooms/[id]/Header";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
 import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,9 +14,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Header } from "@/components/ui/header";
 import { Main } from "@/components/ui/main";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Plus } from "lucide-react";
 
 export default function Rooms({ params: { pageId } }: { params: { pageId: string } }) {
@@ -31,23 +23,7 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
   return (
     <SidebarProvider>
       <SidebarInset className="max-w-full">
-        <Header>
-          <Header.Logo />
-          <Breadcrumb>
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink className="line-clamp-1" href="/rooms">
-                  내 회의실
-                </BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage className="line-clamp-1">회의실 이름</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <SidebarTrigger className="-mr-1 ml-auto rotate-180" />
-        </Header>
+        <RoomHeader sidebarSide="right" />
 
         {/* contents */}
         <Main>
