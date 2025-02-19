@@ -234,7 +234,8 @@ const AddRoleBadge = forwardRef<
   const [newRole, setNewRole] = useState("");
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === "Enter" && newRole !== "") {
-      setShowInput(false);
+      e.preventDefault();
+
       setRoles((prev) => {
         const nextRoles = new Map(prev);
         if (nextRoles.has(newRole)) return nextRoles;
@@ -251,7 +252,7 @@ const AddRoleBadge = forwardRef<
 
   return (
     <BaseBadge
-      className="hover:bg-accent hover:text-accent-foreground h-[54px] px-4 rounded-lg cursor-pointer border-dashed"
+      className={`${!showInput && "hover:bg-accent hover:text-accent-foreground border-dashed"} ${showInput && "border-primary"} h-[54px] px-4 rounded-lg cursor-pointer`}
       ref={ref}
       {...props}
       onClick={() => setShowInput(true)}
@@ -259,12 +260,13 @@ const AddRoleBadge = forwardRef<
       <Plus size={16} />
       {showInput ? (
         <Input
-          className="w-[200px] h-[30px]"
+          className="w-[200px] h-[30px] px-0 border-transparent focus-visible:ring-[initial]"
           placeholder="예: 부의장, 보조 서기, 타임키퍼"
           onChange={(e) => setNewRole(e.target.value)}
           value={newRole}
           onKeyDown={handleKeyDown}
           autoFocus
+          onBlur={() => setShowInput(false)}
         />
       ) : (
         "역할 추가"
