@@ -88,9 +88,9 @@ export default function Page() {
                 name="participantRoleList"
                 render={() => (
                   <FormItem>
-                    <FormLabel className="text-right">참가자 역할</FormLabel>
+                    <FormLabel className="text-right">참여자 역할</FormLabel>
                     <FormDescription>
-                      스위치 버튼으로 참가자 역할의 투표권 여부를 조정할 수 있어요.
+                      스위치 버튼으로 참여자 역할의 투표권 여부를 조정할 수 있어요.
                     </FormDescription>
                     <FormControl>
                       <Card>
@@ -233,16 +233,23 @@ const AddRoleBadge = forwardRef<
   const [showInput, setShowInput] = useState(false);
   const [newRole, setNewRole] = useState("");
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter" && newRole !== "") {
+    // @ts-expect-error NOTE: 한글 입력 시 keyDown 이벤트가 두 번 발생하는 이슈
+    if (e.isComposing || e.keyCode === 229) return;
+
+    if (e.key === "Enter") {
       e.preventDefault();
 
-      setRoles((prev) => {
-        const nextRoles = new Map(prev);
-        if (nextRoles.has(newRole)) return nextRoles;
-        nextRoles.set(newRole, { value: newRole, canVote: true });
-        return nextRoles;
-      });
-      setNewRole("");
+      if (newRole !== "") {
+        setRoles((prev) => {
+          const nextRoles = new Map(prev);
+          if (nextRoles.has(newRole)) return nextRoles;
+          nextRoles.set(newRole, { value: newRole, canVote: true });
+          return nextRoles;
+        });
+        setNewRole("");
+      } else {
+        setShowInput(false);
+      }
     }
 
     if (e.key === "Escape") {
