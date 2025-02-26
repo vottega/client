@@ -194,7 +194,7 @@ const RoleBadgeWithCanVoteSwitch = ({
   };
 
   return (
-    <RoleBadge className="h-[54px] px-4 rounded-lg relative justify-between" variant={variant}>
+    <RoleBadge className="h-[54px] px-4 rounded-lg justify-between" variant={variant}>
       <div className="flex items-center gap-2">
         {isDefaultRole ? (
           <Shield size={16} color="hsl(var(--primary))" />
