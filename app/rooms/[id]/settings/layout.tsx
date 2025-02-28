@@ -36,7 +36,7 @@ const items = [
     icon: Settings,
   },
   {
-    title: "참가자",
+    title: "참여자",
     url: "participants",
     icon: UserCog,
   },
