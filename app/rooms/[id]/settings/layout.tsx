@@ -14,7 +14,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Settings, UserCog, Vote } from "lucide-react";
+import { IdCard, Settings, UserCog, Vote } from "lucide-react";
 import Link from "next/link";
 
 export default async function Layout({
@@ -57,6 +57,11 @@ const items = [
   {
     title: "역할",
     url: "roles",
+    icon: IdCard,
+  },
+  {
+    title: "투표",
+    url: "votes",
     icon: Vote,
   },
 ];
