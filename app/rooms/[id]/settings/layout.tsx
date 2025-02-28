@@ -1,4 +1,4 @@
-import { RoomHeader } from "@/app/rooms/[id]/Header";
+import { BreadcrumbHeader } from "@/components/ui/BreadcrumbHeader";
 import { Main } from "@/components/ui/main";
 import {
   Sidebar,
@@ -17,12 +17,26 @@ import {
 import { Settings, UserCog, Vote } from "lucide-react";
 import Link from "next/link";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
+}) {
+  const { id: roomId } = await params;
+
   return (
     <SidebarProvider>
       <RoomSettingsSidebar />
       <SidebarInset className="max-w-full">
-        <RoomHeader />
+        <BreadcrumbHeader
+          breadcrumbs={[
+            { label: "내 회의실", href: "/rooms" },
+            { label: "회의실 이름", href: `/rooms/${roomId}` },
+            { label: "설정" },
+          ]}
+        />
         <Main>{children}</Main>
       </SidebarInset>
     </SidebarProvider>

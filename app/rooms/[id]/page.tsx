@@ -1,10 +1,10 @@
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
-import { RoomHeader } from "@/app/rooms/[id]/Header";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
 import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
+import { BreadcrumbHeader } from "@/components/ui/BreadcrumbHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,7 +23,10 @@ export default function Rooms({ params: { pageId } }: { params: { pageId: string
   return (
     <SidebarProvider>
       <SidebarInset className="max-w-full">
-        <RoomHeader sidebarSide="right" />
+        <BreadcrumbHeader
+          sidebarSide="right"
+          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: "회의실 이름" }]}
+        />
 
         {/* contents */}
         <Main>
