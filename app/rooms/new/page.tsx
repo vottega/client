@@ -64,7 +64,7 @@ export default function Page() {
                   <FormItem>
                     <FormLabel className="text-right">회의실 이름</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="회의실 이름을 입력해주세요." />
+                      <Input {...field} placeholder="회의실 이름을 입력해주세요." autoFocus />
                     </FormControl>
                     <FormMessage />
                     <FormDescription className="sr-only">
