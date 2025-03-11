@@ -15,12 +15,20 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 import { CircleUser, Menu, Package2 } from "lucide-react";
 import Link from "next/link";
+import { HTMLAttributes } from "react";
 
-function Header({ children }: { children?: React.ReactNode }) {
+function Header({ children, className, ...props }: HTMLAttributes<HTMLHeadElement>) {
   return (
-    <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+    <header
+      className={cn(
+        "sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </header>
   );
@@ -39,7 +47,7 @@ Header.Logo = function Logo({ className }: { className?: string }) {
 
 function TheHeader() {
   return (
-    <Header>
+    <Header className="z-40">
       <Header.Logo className="hidden md:block" />
       <NavigationMenu className="hidden md:flex">
         <NavigationMenuList>
