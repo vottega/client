@@ -361,11 +361,11 @@ function NavUser({
   );
 }
 
-function VoteInfo({ vote }: { vote: Vote }) {
+export function VoteInfo({ vote }: { vote: Vote }) {
   return <VoteForm existingVote={vote} />;
 }
 
-function VoteForm({ existingVote }: { existingVote?: Vote }) {
+export function VoteForm({ existingVote }: { existingVote?: Vote }) {
   const form = useForm<z.infer<typeof VoteSchema>>({
     resolver: zodResolver(VoteSchema),
     defaultValues: {
