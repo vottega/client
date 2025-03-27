@@ -1,4 +1,4 @@
-import { Participant } from "@/app/api/types/participant";
+import { ParticipantResponseDTO, ParticipantRoleDTO } from "@/app/api/types/participant";
 import { Role } from "@/constants/role";
 
 export type CreateRoomRequest = {
@@ -7,13 +7,13 @@ export type CreateRoomRequest = {
   participantRoleList: Role[];
 };
 
-export type CreateRoomResponse = {
+export type RoomResponseDTO = {
   id: number;
   name: string;
   ownerId: number;
   status: RoomStatus;
-  participants: Participant[];
-  roles: Role[];
+  participants: ParticipantResponseDTO[];
+  roles: ParticipantRoleDTO[];
   createdAt: string;
   lastUpdatedAt: string;
   startedAt: string | null;
