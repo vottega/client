@@ -1,32 +1,41 @@
+import { UUID } from "crypto";
 import { z } from "zod";
+
+export const FractionSchema = z
+  .object({
+    /** 분자 */
+    numerator: z.number().int(),
+    /** 분모 */
+    denominator: z.number().int(),
+  })
+  .refine((fraction) => fraction.denominator !== 0, {
+    message: "분모는 0이 될 수 없습니다.",
+    path: ["denominator"],
+  });
+
+export type FractionVO = z.infer<typeof FractionSchema>;
 
 export const VoteSchema = z.object({
   agendaName: z.string().min(1, { message: "안건명을 입력해주세요." }),
   voteName: z.string().min(1, { message: "표결 내용을 입력해주세요." }),
+  /** 의결정족수 */
+  passRate: FractionSchema,
+  isSecret: z.boolean().default(false).nullable(),
+  reservedStartTime: z
+    .string()
+    .datetime({ message: "시작 시간을 입력해주세요.", local: true })
+    .nullable(),
   minParticipantNumber: z
     .number()
     .int()
     .min(0, { message: "출석 필요 인원은 0명 이상입니다." })
     .nullable(),
-  minParticipantRate: z.string().min(2, { message: "의사정족수를 입력해주세요." }),
-  passRate: z.string().min(2, { message: "의결정족수를 입력해주세요." }),
-  reservedStartTime: z
-    .string()
-    .datetime({ message: "시작 시간을 입력해주세요.", local: true })
-    .nullable(),
+  /** 의사정족수 */
+  minParticipantRate: FractionSchema,
   startNow: z.boolean().default(true),
-  isSecret: z.boolean().default(false).nullable(),
 });
 
-export type FractionVO = {
-  numerator: number;
-  denominator: number;
-};
-
-export interface VoteRequestDTO extends Omit<z.infer<typeof VoteSchema>, "passRate" | "startNow"> {
-  passRateNumerator: number | null;
-  passRateDenominator: number | null;
-}
+export interface VoteRequestDTO extends Omit<z.infer<typeof VoteSchema>, "startNow"> {}
 
 export interface Vote extends z.infer<typeof VoteSchema> {
   isFinished: boolean;
