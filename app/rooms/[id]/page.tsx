@@ -1,6 +1,6 @@
 "use client";
 
-import { APIErrorResponse } from "@/app/api/types";
+import { APIErrorResponse } from "@/app/api/types/error";
 import { RoomResponseDTO } from "@/app/api/types/room";
 import { ParticipantResponseDTO, RoomEventType } from "@/app/api/types/sse-server.dto";
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";

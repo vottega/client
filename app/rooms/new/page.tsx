@@ -1,6 +1,6 @@
 "use client";
 
-import { APIError, APIErrorResponse } from "@/app/api/types";
+import { APIError, APIErrorResponse } from "@/app/api/types/error";
 import { CreateRoomRequest, RoomResponseDTO } from "@/app/api/types/room";
 import { ParticipantInfoDTO } from "@/app/api/types/room-service.dto";
 import { RoleList } from "@/app/rooms/RoleList";
