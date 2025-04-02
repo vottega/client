@@ -1,7 +1,7 @@
 "use client";
 
 import { APIErrorResponse } from "@/app/api/types/error";
-import { RoomResponseDTO } from "@/app/api/types/room";
+import { RoomResponseDTO } from "@/app/api/types/room-service.dto";
 import { ParticipantResponseDTO, RoomEventType } from "@/app/api/types/sse-server.dto";
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
 import { Room } from "@/app/rooms/[id]/Room";
