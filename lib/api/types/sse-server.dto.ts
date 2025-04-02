@@ -3,6 +3,7 @@ import {
   VotePaperType,
   VoteResponseDTO as VoteResponseDTOFromVote,
 } from "@/lib/api/types/vote-service.dto";
+import { UUID } from "crypto";
 
 export interface FractionVO {
   numerator: number;
@@ -10,8 +11,7 @@ export interface FractionVO {
 }
 
 export interface ParticipantResponseDTO {
-  /** UUID */
-  id: string;
+  id: UUID;
   name: string | null;
   roomId: number;
   position: string | null;
@@ -52,8 +52,7 @@ export interface VotePaperDTO {
   votePaperId: number;
   voteId: number;
   roomId: number;
-  /** UUID */
-  userId: string;
+  userId: UUID;
   userName: string;
   votePaperType: VotePaperType;
   createdAt: string;

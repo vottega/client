@@ -1,3 +1,5 @@
+import { UUID } from "crypto";
+
 export type ClientRole = "USER" | "PARTICIPANT";
 
 export interface CreateRoomRequestDTO {
@@ -14,8 +16,7 @@ export interface ParticipantInfoDTO {
 }
 
 export interface ParticipantResponseDTO {
-  /** UUID */
-  id: string;
+  id: UUID;
   name: string;
   roomId: number;
   position: string | null;

@@ -81,8 +81,7 @@ export interface VotePaperDTO {
   votePaperId: number;
   voteId: number;
   roomId: number;
-  /** UUID */
-  userId: string;
+  userId: UUID;
   userName: string;
   votePaperType: VotePaperType;
   createdAt: string;
