@@ -8,7 +8,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Header } from "@/components/ui/header";
+import { BaseHeader } from "@/components/Header.Base";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Fragment, memo, useMemo } from "react";
@@ -26,7 +26,7 @@ export const BreadcrumbHeader = ({ breadcrumbs = [], sidebarSide = "left" }: Roo
   const sidebarTriggerStyle = sidebarSide === "left" ? "" : "order-2 -mr-1 ml-auto rotate-180";
 
   return (
-    <Header className="relative">
+    <BaseHeader className="relative">
       {((!isMobile && !open) || (isMobile && !openMobile)) && (
         <SidebarTrigger className={sidebarTriggerStyle} />
       )}
@@ -42,7 +42,7 @@ export const BreadcrumbHeader = ({ breadcrumbs = [], sidebarSide = "left" }: Roo
           ))}
         </BreadcrumbList>
       </Breadcrumb>
-    </Header>
+    </BaseHeader>
   );
 };
 

@@ -1,5 +1,5 @@
 import { RoomSettingsSidebar } from "@/app/rooms/[id]/settings/Sidebar";
-import { BreadcrumbHeader } from "@/components/ui/BreadcrumbHeader";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 

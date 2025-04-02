@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { TheHeader } from "@/components/ui/header";
+import TheHeader from "@/components/TheHeader";
 import { Input } from "@/components/ui/input";
 import { Roles, ROLES } from "@/constants/role";
 import { zodResolver } from "@hookform/resolvers/zod";

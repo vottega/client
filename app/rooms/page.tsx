@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { TheHeader } from "@/components/ui/header";
+import TheHeader from "@/components/TheHeader";
 import { Main } from "@/components/ui/main";
 import Link from "next/link";
 

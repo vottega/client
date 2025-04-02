@@ -9,7 +9,7 @@ import { VoteList } from "@/app/rooms/[id]/VoteList";
 import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
-import { BreadcrumbHeader } from "@/components/ui/BreadcrumbHeader";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

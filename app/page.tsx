@@ -1,4 +1,4 @@
-import { TheHeader } from "@/components/ui/header";
+import TheHeader from "@/components/TheHeader";
 import {
   NavigationMenu,
   NavigationMenuItem,
