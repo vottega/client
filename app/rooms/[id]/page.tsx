@@ -1,8 +1,8 @@
 "use client";
 
-import { APIErrorResponse } from "@/app/api/types/error";
-import { RoomResponseDTO } from "@/app/api/types/room-service.dto";
-import { ParticipantResponseDTO, RoomEventType } from "@/app/api/types/sse-server.dto";
+import { APIErrorResponse } from "@/lib/api/types/error";
+import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
+import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
@@ -61,7 +61,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     data: room,
     error: roomError,
     isLoading: isRoomLoading,
-  } = useSWR(`http://localhost:8082/api/room/${roomId}`, getRoom);
+  } = useSWR(`http://localhost:8080/api/room/${roomId}`, getRoom);
 
   useEffect(() => {
     if (sseResponse) {

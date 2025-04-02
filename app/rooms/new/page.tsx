@@ -1,11 +1,11 @@
 "use client";
 
-import { APIError, APIErrorResponse } from "@/app/api/types/error";
+import { APIError, APIErrorResponse } from "@/lib/api/types/error";
 import {
   CreateRoomRequestDTO,
   RoomResponseDTO,
   ParticipantInfoDTO,
-} from "@/app/api/types/room-service.dto";
+} from "@/lib/api/types/room-service.dto";
 import { RoleList } from "@/app/rooms/RoleList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -102,7 +102,7 @@ export default function Page() {
     data: roomData,
     error,
   } = useSWRMutation<RoomResponseDTO, APIError, string, CreateRoomRequestDTO, RoomResponseDTO>(
-    "http://localhost:8082/api/room",
+    "http://localhost:8080/api/room",
     createRoomFetcher,
   );
 
@@ -111,7 +111,7 @@ export default function Page() {
     APIError,
     () => string | null
   >(
-    () => (roomData?.id ? `http://localhost:8082/api/room/${roomData.id}/participants` : null),
+    () => (roomData?.id ? `http://localhost:8080/api/room/${roomData.id}/participants` : null),
     registerMeFetcher,
   );
 

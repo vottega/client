@@ -1,8 +1,8 @@
-import { RoomStatus } from "@/app/api/types/room-service.dto";
+import { RoomStatus } from "@/lib/api/types/room-service.dto";
 import {
   VotePaperType,
   VoteResponseDTO as VoteResponseDTOFromVote,
-} from "@/app/api/types/vote-service.dto";
+} from "@/lib/api/types/vote-service.dto";
 
 export interface FractionVO {
   numerator: number;
