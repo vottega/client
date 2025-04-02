@@ -6,10 +6,10 @@ import { ParticipantResponseDTO, RoomEventType } from "@/app/api/types/sse-serve
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
-import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -22,7 +22,8 @@ import {
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useSSE } from "@/hooks/useSSE";
-import { Plus } from "lucide-react";
+import { Plus, Settings } from "lucide-react";
+import Link from "next/link";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
@@ -97,7 +98,15 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
         <BreadcrumbHeader
           sidebarSide="right"
           breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: room?.name }]}
-        />
+          showLogo
+        >
+          <Button variant="ghost" asChild size="icon">
+            <Link href={`/rooms/${roomId}/settings`}>
+              <Settings />
+              <span className="sr-only">설정</span>
+            </Link>
+          </Button>
+        </BreadcrumbHeader>
 
         {/* contents */}
         <Main>

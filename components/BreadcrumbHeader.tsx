@@ -1,5 +1,6 @@
 "use client";
 
+import { BaseHeader } from "@/components/Header.Base";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -8,29 +9,35 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { BaseHeader } from "@/components/Header.Base";
 import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Fragment, memo, useMemo } from "react";
+import { Fragment, HTMLAttributes, memo } from "react";
 
-interface RoomHeaderProps {
+interface RoomHeaderProps extends HTMLAttributes<HTMLHeadElement> {
   breadcrumbs?: {
     label?: string;
     href?: string;
   }[];
   sidebarSide?: "left" | "right";
+  showLogo?: boolean;
 }
 
-export const BreadcrumbHeader = ({ breadcrumbs = [], sidebarSide = "left" }: RoomHeaderProps) => {
+export const BreadcrumbHeader = ({
+  breadcrumbs = [],
+  sidebarSide = "left",
+  showLogo = false,
+  children,
+}: RoomHeaderProps) => {
   const { open, openMobile, isMobile } = useSidebar();
   const sidebarTriggerStyle = sidebarSide === "left" ? "" : "order-2 -mr-1 ml-auto rotate-180";
 
   return (
-    <BaseHeader className="relative">
+    <BaseHeader>
       {((!isMobile && !open) || (isMobile && !openMobile)) && (
         <SidebarTrigger className={sidebarTriggerStyle} />
       )}
-      <Breadcrumb>
+      {showLogo && <BaseHeader.Logo />}
+      <Breadcrumb className="w-full">
         <BreadcrumbList>
           {breadcrumbs.map(({ label, href }, idx) => (
             <Fragment key={idx}>
@@ -42,6 +49,7 @@ export const BreadcrumbHeader = ({ breadcrumbs = [], sidebarSide = "left" }: Roo
           ))}
         </BreadcrumbList>
       </Breadcrumb>
+      {children}
     </BaseHeader>
   );
 };
