@@ -96,7 +96,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
       <SidebarInset className="max-w-full">
         <BreadcrumbHeader
           sidebarSide="right"
-          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: "회의실 이름" }]}
+          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: room?.name }]}
         />
 
         {/* contents */}
