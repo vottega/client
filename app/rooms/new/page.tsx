@@ -1,12 +1,7 @@
 "use client";
 
-import { APIError, APIErrorResponse } from "@/lib/api/types/error";
-import {
-  CreateRoomRequestDTO,
-  RoomResponseDTO,
-  ParticipantInfoDTO,
-} from "@/lib/api/types/room-service.dto";
 import { RoleList } from "@/app/rooms/RoleList";
+import TheHeader from "@/components/TheHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -19,9 +14,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import TheHeader from "@/components/TheHeader";
 import { Input } from "@/components/ui/input";
 import { Roles, ROLES } from "@/constants/role";
+import { customFetch } from "@/lib/api/fetcher";
+import {
+  CreateRoomRequestDTO,
+  ParticipantInfoDTO,
+  RoomResponseDTO,
+} from "@/lib/api/types/room-service.dto";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -50,65 +50,38 @@ export default function Page() {
   });
   const [roles, setRoles] = useState<Roles>(ROLES);
 
-  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequestDTO }) => {
-    const headers = new Headers();
-    headers.set("Content-Type", "application/json");
+  const me: ParticipantInfoDTO = {
+    name: "류기현",
+    phoneNumber: "01011551144",
+    position: "연 대 컴 과",
+    role: "의장",
+  };
 
-    const response = await fetch(url, {
+  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequestDTO }) =>
+    customFetch<RoomResponseDTO>(url, {
       method: "POST",
       body: JSON.stringify(arg),
-      headers,
     });
 
-    const data: RoomResponseDTO | APIErrorResponse = await response.json();
-
-    if (!response.ok) {
-      // TODO: 에러처리 및 에러UI
-      throw new Error();
-    }
-
-    return data as RoomResponseDTO;
-  };
-
-  const registerMeFetcher = async (url: string) => {
-    const headers = new Headers();
-    headers.set("Content-Type", "application/json");
-
-    const me: ParticipantInfoDTO = {
-      name: "류기현",
-      phoneNumber: "01011551144",
-      position: "연 대 컴 과",
-      role: "의장",
-    };
-
-    const response = await fetch(url, {
+  const registerMeFetcher = async (url: string) =>
+    customFetch<RoomResponseDTO>(url, {
       method: "PUT",
       body: JSON.stringify([me]),
-      headers,
     });
-
-    const data: RoomResponseDTO | APIErrorResponse = await response.json();
-
-    if (!response.ok) {
-      throw new APIError(JSON.stringify(response.body), response.status);
-    }
-
-    return data as RoomResponseDTO;
-  };
 
   // TODO: 에러/로딩 처리, 미들웨어 작성
   const {
     trigger: createRoom,
     data: roomData,
     error,
-  } = useSWRMutation<RoomResponseDTO, APIError, string, CreateRoomRequestDTO, RoomResponseDTO>(
+  } = useSWRMutation<RoomResponseDTO, Error, string, CreateRoomRequestDTO, RoomResponseDTO>(
     "http://localhost:8080/api/room",
     createRoomFetcher,
   );
 
   const { error: registerError, data: registerData } = useSWR<
     RoomResponseDTO,
-    APIError,
+    Error,
     () => string | null
   >(
     () => (roomData?.id ? `http://localhost:8080/api/room/${roomData.id}/participants` : null),
