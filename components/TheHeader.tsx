@@ -1,3 +1,4 @@
+import { BaseHeader } from "@/components/Header.Base";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,40 +16,13 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
 import { CircleUser, Menu, Package2 } from "lucide-react";
 import Link from "next/link";
-import { HTMLAttributes } from "react";
 
-function Header({ children, className, ...props }: HTMLAttributes<HTMLHeadElement>) {
+export default function TheHeader() {
   return (
-    <header
-      className={cn(
-        "sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </header>
-  );
-}
-
-Header.Logo = function Logo({ className }: { className?: string }) {
-  return (
-    <h1 className={className}>
-      <Link href="/">
-        <Package2 className="h-6 w-6" />
-      </Link>
-      <span className="sr-only">vottega</span>
-    </h1>
-  );
-};
-
-function TheHeader() {
-  return (
-    <Header className="z-40">
-      <Header.Logo className="hidden md:block" />
+    <BaseHeader className="z-40">
+      <BaseHeader.Logo className="hidden md:block" />
       <NavigationMenu className="hidden md:flex">
         <NavigationMenuList>
           <NavigationMenuItem>
@@ -102,8 +76,6 @@ function TheHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </Header>
+    </BaseHeader>
   );
 }
-
-export { Header, TheHeader };

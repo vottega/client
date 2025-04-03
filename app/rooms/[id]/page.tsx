@@ -1,10 +1,15 @@
+"use client";
+
+import { APIErrorResponse } from "@/app/api/types";
+import { RoomResponseDTO } from "@/app/api/types/room";
+import { ParticipantResponseDTO, RoomEventType } from "@/app/api/types/sse-server.dto";
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
+import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { Avatars } from "@/components/liveblocks/Avatars";
 import { Editor } from "@/components/liveblocks/Editor";
 import { Status } from "@/components/liveblocks/Status";
-import { BreadcrumbHeader } from "@/components/ui/BreadcrumbHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -16,17 +21,92 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Plus } from "lucide-react";
+import { useSSE } from "@/hooks/useSSE";
+import { Plus, Settings } from "lucide-react";
+import Link from "next/link";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import useSWR from "swr";
 
-export default function Rooms({ params: { pageId } }: { params: { pageId: string } }) {
-  console.log(pageId);
+export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
+  const {
+    data: sseResponse,
+    error,
+    isLoading,
+  } = useSSE<{ type: RoomEventType; data: unknown }>(
+    roomId,
+    `http://localhost:8084/sse/room/${roomId}/43ba2e8c-c67d-47e4-8a40-beead7f16507`,
+  );
+
+  const getRoom = async (url: string) => {
+    const headers = new Headers();
+    headers.set("Content-Type", "application/json");
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+    });
+
+    const data: RoomResponseDTO | APIErrorResponse = await response.json();
+
+    if (!response.ok) {
+      // TODO: 에러처리 및 에러UI
+      return null;
+    }
+
+    return data as RoomResponseDTO;
+  };
+
+  const {
+    data: room,
+    error: roomError,
+    isLoading: isRoomLoading,
+  } = useSWR(`http://localhost:8082/api/room/${roomId}`, getRoom);
+
+  useEffect(() => {
+    if (sseResponse) {
+      const { type, data } = sseResponse;
+
+      switch (type) {
+        case "ROOM_INFO": {
+        }
+        case "PARTICIPANT_INFO": {
+          const participant = data as ParticipantResponseDTO;
+          switch (participant.action) {
+            case "ENTER": {
+              toast(`${participant.name}님이 입장했어요.`, {
+                description: participant.enteredAt,
+                action: {
+                  label: "현재 인원 보기",
+                  onClick: () => console.log("hello world"),
+                },
+              });
+            }
+          }
+        }
+        case "VOTE_INFO": {
+        }
+        case "VOTE_PAPER_INFO": {
+        }
+      }
+    }
+  }, [sseResponse]);
+
   return (
     <SidebarProvider>
       <SidebarInset className="max-w-full">
         <BreadcrumbHeader
           sidebarSide="right"
-          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: "회의실 이름" }]}
-        />
+          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: room?.name }]}
+          showLogo
+        >
+          <Button variant="ghost" asChild size="icon">
+            <Link href={`/rooms/${roomId}/settings`}>
+              <Settings />
+              <span className="sr-only">설정</span>
+            </Link>
+          </Button>
+        </BreadcrumbHeader>
 
         {/* contents */}
         <Main>

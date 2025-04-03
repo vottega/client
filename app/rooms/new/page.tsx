@@ -1,7 +1,8 @@
 "use client";
 
-import { APIErrorResponse } from "@/app/api/types";
-import { CreateRoomRequest, CreateRoomResponse } from "@/app/api/types/room";
+import { APIError, APIErrorResponse } from "@/app/api/types";
+import { CreateRoomRequest, RoomResponseDTO } from "@/app/api/types/room";
+import { ParticipantInfoDTO } from "@/app/api/types/room-service.dto";
 import { RoleList } from "@/app/rooms/RoleList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,13 +16,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { TheHeader } from "@/components/ui/header";
+import TheHeader from "@/components/TheHeader";
 import { Input } from "@/components/ui/input";
 import { Roles, ROLES } from "@/constants/role";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 
@@ -45,7 +47,7 @@ export default function Page() {
   });
   const [roles, setRoles] = useState<Roles>(ROLES);
 
-  const createRoom = async (url: string, { arg }: { arg: CreateRoomRequest }) => {
+  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequest }) => {
     const headers = new Headers();
     headers.set("Content-Type", "application/json");
 
@@ -55,37 +57,84 @@ export default function Page() {
       headers,
     });
 
-    const data: CreateRoomResponse | APIErrorResponse = await response.json();
+    const data: RoomResponseDTO | APIErrorResponse = await response.json();
 
     if (!response.ok) {
       // TODO: 에러처리 및 에러UI
-      return null;
+      throw new Error();
     }
 
-    return data as CreateRoomResponse;
+    return data as RoomResponseDTO;
+  };
+
+  const registerMeFetcher = async (url: string) => {
+    const headers = new Headers();
+    headers.set("Content-Type", "application/json");
+
+    const me: ParticipantInfoDTO = {
+      name: "류기현",
+      phoneNumber: "01011551144",
+      position: "연 대 컴 과",
+      role: "의장",
+    };
+
+    const response = await fetch(url, {
+      method: "PUT",
+      body: JSON.stringify([me]),
+      headers,
+    });
+
+    const data: RoomResponseDTO | APIErrorResponse = await response.json();
+
+    if (!response.ok) {
+      throw new APIError(JSON.stringify(response.body), response.status);
+    }
+
+    return data as RoomResponseDTO;
   };
 
   // TODO: 에러/로딩 처리, 미들웨어 작성
-  const { trigger, data, error } = useSWRMutation<
-    CreateRoomResponse | null,
-    any,
-    string,
-    CreateRoomRequest,
-    CreateRoomResponse
-  >("http://localhost:8082/api/room", createRoom);
+  const {
+    trigger: createRoom,
+    data: roomData,
+    error,
+  } = useSWRMutation<RoomResponseDTO, APIError, string, CreateRoomRequest, RoomResponseDTO>(
+    "http://localhost:8082/api/room",
+    createRoomFetcher,
+  );
+
+  const { error: registerError, data: registerData } = useSWR<
+    RoomResponseDTO,
+    APIError,
+    () => string | null
+  >(
+    () => (roomData?.id ? `http://localhost:8082/api/room/${roomData.id}/participants` : null),
+    registerMeFetcher,
+  );
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const newData: typeof data = { ...data, participantRoleList: [...roles.values()] };
     const createRoomRequestBody = { ...newData, ownerId: 1 };
-    trigger(createRoomRequestBody);
+    createRoom(createRoomRequestBody);
   }
 
   useEffect(() => {
-    if (data) {
-      console.log(data);
-      router.push(`/rooms/${data.id}`);
+    if (error) {
+      // TODO: Error UI
+      return;
     }
-  }, [data, router]);
+  }, [error]);
+
+  useEffect(() => {
+    if (registerError) {
+      // TODO: Error UI
+      return;
+    }
+
+    if (registerData && roomData) {
+      router.push(`/rooms/${roomData.id}`);
+    }
+  }, [registerError, router, registerData, roomData]);
 
   return (
     <>
