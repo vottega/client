@@ -1,8 +1,9 @@
-import { RoomStatus } from "@/app/api/types/room-service.dto";
+import { RoomStatus } from "@/lib/api/types/room-service.dto";
 import {
   VotePaperType,
   VoteResponseDTO as VoteResponseDTOFromVote,
-} from "@/app/api/types/vote-service.dto";
+} from "@/lib/api/types/vote-service.dto";
+import { UUID } from "crypto";
 
 export interface FractionVO {
   numerator: number;
@@ -10,8 +11,7 @@ export interface FractionVO {
 }
 
 export interface ParticipantResponseDTO {
-  /** UUID */
-  id: string;
+  id: UUID;
   name: string | null;
   roomId: number;
   position: string | null;
@@ -52,8 +52,7 @@ export interface VotePaperDTO {
   votePaperId: number;
   voteId: number;
   roomId: number;
-  /** UUID */
-  userId: string;
+  userId: UUID;
   userName: string;
   votePaperType: VotePaperType;
   createdAt: string;

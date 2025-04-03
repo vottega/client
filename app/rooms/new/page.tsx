@@ -1,8 +1,11 @@
 "use client";
 
-import { APIError, APIErrorResponse } from "@/app/api/types";
-import { CreateRoomRequest, RoomResponseDTO } from "@/app/api/types/room";
-import { ParticipantInfoDTO } from "@/app/api/types/room-service.dto";
+import { APIError, APIErrorResponse } from "@/lib/api/types/error";
+import {
+  CreateRoomRequestDTO,
+  RoomResponseDTO,
+  ParticipantInfoDTO,
+} from "@/lib/api/types/room-service.dto";
 import { RoleList } from "@/app/rooms/RoleList";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +50,7 @@ export default function Page() {
   });
   const [roles, setRoles] = useState<Roles>(ROLES);
 
-  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequest }) => {
+  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequestDTO }) => {
     const headers = new Headers();
     headers.set("Content-Type", "application/json");
 
@@ -98,8 +101,8 @@ export default function Page() {
     trigger: createRoom,
     data: roomData,
     error,
-  } = useSWRMutation<RoomResponseDTO, APIError, string, CreateRoomRequest, RoomResponseDTO>(
-    "http://localhost:8082/api/room",
+  } = useSWRMutation<RoomResponseDTO, APIError, string, CreateRoomRequestDTO, RoomResponseDTO>(
+    "http://localhost:8080/api/room",
     createRoomFetcher,
   );
 
@@ -108,7 +111,7 @@ export default function Page() {
     APIError,
     () => string | null
   >(
-    () => (roomData?.id ? `http://localhost:8082/api/room/${roomData.id}/participants` : null),
+    () => (roomData?.id ? `http://localhost:8080/api/room/${roomData.id}/participants` : null),
     registerMeFetcher,
   );
 

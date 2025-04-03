@@ -58,8 +58,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Vote, VoteSchema } from "@/constants/vote";
 import { useRoomContext } from "@/hooks/useRoomContext";
+import { VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
@@ -76,42 +76,29 @@ const sidebarRightData = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [votes, setVotes] = useState<Vote[]>([
+  const [votes, setVotes] = useState<VoteResponseDTO[]>([
     {
       agendaName: "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
-      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
-      requiredAttendance: 0,
-      proceduralQuorum: "24",
-      votingQuorum: "12",
-      startTime: "2025-01-24T14:00:00",
-      startNow: false,
-      secretBallot: true,
-      isFinished: false,
-    },
-    {
-      agendaName:
-        "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
-      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
-      requiredAttendance: 0,
-      proceduralQuorum: "12",
-      votingQuorum: "12",
-      startTime: "2025-01-24T14:00:00",
-      startNow: false,
-      secretBallot: false,
-      isFinished: false,
-    },
-    {
-      agendaName: "중앙운영위원회 대응 논의의 안",
-      voteContent: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
-      requiredAttendance: 0,
-      proceduralQuorum: "12",
-      votingQuorum: "12",
-      startTime: "2025-01-24T14:00:00",
-      startNow: false,
-      secretBallot: false,
-      isFinished: true,
+      voteName: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
+      minParticipantNumber: 0,
+      minParticipantRate: { denominator: 4, numerator: 1 },
+      passRate: { denominator: 2, numerator: 1 },
+      reservedStartTime: "2025-01-24T14:00:00",
+      isSecret: true,
+      abstainNum: 0,
+      createdAt: "",
+      finishedAt: "",
+      id: 3,
+      lastUpdatedAt: "",
+      noNum: 5,
+      result: "PASSED",
+      roomId: 26,
+      startedAt: "",
+      status: "ENDED",
+      yesNum: 10,
     },
   ]);
+
   const skeletonFill = useMemo(() => Math.max(5 - votes.length, 0), [votes]);
 
   return (
@@ -160,7 +147,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               <span className="text-overflow">{vote.agendaName}</span>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>{vote.startTime.slice(0, 10)}</p>
+                              <p>{vote.reservedStartTime.slice(0, 10)}</p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -168,9 +155,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       <TableCell className="text-right pl-0 pr-2">
                         <Badge
                           className="text-xs whitespace-nowrap"
-                          variant={vote.isFinished ? "default" : "outline"}
+                          variant={vote.status === "ENDED" ? "default" : "outline"}
                         >
-                          {vote.isFinished ? "완료" : "대기"}
+                          {vote.status === "ENDED" ? "완료" : "대기"}
                         </Badge>
                       </TableCell>
                     </TableRow>
@@ -179,12 +166,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <DialogHeader className="flex-row items-center gap-2">
                       <DialogTitle>투표 정보</DialogTitle>
                       <DialogDescription>
-                        {vote.isFinished
+                        {vote.status === "ENDED"
                           ? "완료된 투표 정보와 결과를 조회할 수 있어요"
                           : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
                       </DialogDescription>
                     </DialogHeader>
-                    {vote.isFinished ? (
+                    {vote.status === "ENDED" ? (
                       <Tabs defaultValue="info">
                         <TabsList className="w-full grid grid-cols-2 mb-4">
                           <TabsTrigger value="info">투표 정보</TabsTrigger>
@@ -361,23 +348,23 @@ function NavUser({
   );
 }
 
-export function VoteInfo({ vote }: { vote: Vote }) {
+export function VoteInfo({ vote }: { vote: VoteResponseDTO }) {
   return <VoteForm existingVote={vote} />;
 }
 
-export function VoteForm({ existingVote }: { existingVote?: Vote }) {
+export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
   const form = useForm<z.infer<typeof VoteSchema>>({
     resolver: zodResolver(VoteSchema),
     defaultValues: {
       agendaName: "",
-      voteContent: "",
-      requiredAttendance: 0,
+      voteName: "",
+      minParticipantNumber: 0,
       // TODO: input otp > custom fraction input으로 전환
-      proceduralQuorum: "11",
-      votingQuorum: "12",
-      startTime: getKoreanTimeWithZeroSecond(),
+      minParticipantRate: { denominator: 1, numerator: 1 },
+      passRate: { denominator: 2, numerator: 1 },
+      reservedStartTime: getKoreanTimeWithZeroSecond(),
       startNow: true,
-      secretBallot: false,
+      isSecret: false,
       ...existingVote,
     },
   });
@@ -394,10 +381,10 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
 
   function onSubmit(data: z.infer<typeof VoteSchema>) {
     if (data.startNow) {
-      data.startTime = getKoreanTimeWithZeroSecond();
+      data.reservedStartTime = getKoreanTimeWithZeroSecond();
     }
-    data.proceduralQuorum = ratioToQuorum(data.proceduralQuorum).toString();
-    data.votingQuorum = ratioToQuorum(data.votingQuorum).toString();
+    data.minParticipantRate = ratioToQuorum(data.minParticipantRate).toString();
+    data.passRate = ratioToQuorum(data.passRate).toString();
   }
 
   const { participants } = useRoomContext();
@@ -419,7 +406,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                 <Textarea
                   {...field}
                   placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안"
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                 />
               </FormControl>
             </FormItem>
@@ -428,7 +415,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         />
         <FormField
           control={form.control}
-          name="voteContent"
+          name="voteName"
           render={({ field }) => (
             <FormItem>
               <FormLabel>표결 내용</FormLabel>
@@ -436,7 +423,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                 <Textarea
                   {...field}
                   placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                 />
               </FormControl>
             </FormItem>
@@ -444,7 +431,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         />
         <FormField
           control={form.control}
-          name="requiredAttendance"
+          name="minParticipantNumber"
           render={({ field }) => (
             <FormItem className="flex justify-between items-center space-y-0">
               <div className="flex flex-col">
@@ -457,7 +444,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   type="number"
                   className="w-[102px]"
                   onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                 />
               </FormControl>
             </FormItem>
@@ -465,7 +452,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         />
         <FormField
           control={form.control}
-          name="proceduralQuorum"
+          name="minParticipantRate"
           render={({ field }) => (
             <FormItem className="flex justify-between items-center space-y-0">
               <div className="flex flex-col gap-2">
@@ -482,7 +469,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   maxLength={2}
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                   pattern={quorumRatioPattern}
                 >
                   <InputOTPGroup>
@@ -499,7 +486,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         />
         <FormField
           control={form.control}
-          name="votingQuorum"
+          name="passRate"
           render={({ field }) => (
             <FormItem className="flex justify-between items-center space-y-0">
               <div className="flex flex-col gap-2">
@@ -516,7 +503,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   maxLength={2}
                   value={field.value}
                   onChange={(value) => field.onChange(value)}
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                   pattern={quorumRatioPattern}
                 >
                   <InputOTPGroup>
@@ -534,7 +521,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         <div className="flex justify-between items-center">
           <FormField
             control={form.control}
-            name="startTime"
+            name="reservedStartTime"
             render={({ field }) => (
               <FormItem className="flex justify-between items-center space-y-0">
                 <FormLabel className="mr-4">시작 시간</FormLabel>
@@ -546,7 +533,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                     onChange={(e) => {
                       field.onChange(e.target.value + ":00");
                     }}
-                    disabled={existingVote?.isFinished || form.watch("startNow")}
+                    disabled={existingVote?.status === "ENDED" || form.watch("startNow")}
                     min={field.value}
                   />
                 </FormControl>
@@ -554,7 +541,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
               </FormItem>
             )}
           />
-          {!existingVote?.isFinished && (
+          {!(existingVote?.status === "ENDED") && (
             <FormField
               control={form.control}
               name="startNow"
@@ -567,7 +554,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                       checked={field.value}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          form.setValue("startTime", getKoreanTimeWithZeroSecond());
+                          form.setValue("reservedStartTime", getKoreanTimeWithZeroSecond());
                         }
                         field.onChange(checked);
                       }}
@@ -581,7 +568,7 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
         </div>
         <FormField
           control={form.control}
-          name="secretBallot"
+          name="isSecret"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="mr-1">무기명</FormLabel>
@@ -590,14 +577,14 @@ export function VoteForm({ existingVote }: { existingVote?: Vote }) {
                   className="align-text-bottom"
                   checked={field.value}
                   onCheckedChange={(checked) => field.onChange(checked)}
-                  disabled={existingVote?.isFinished}
+                  disabled={existingVote?.status === "ENDED"}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {!existingVote?.isFinished && (
+        {!(existingVote?.status === "ENDED") && (
           <DialogFooter>
             <Button type="submit">{existingVote ? "수정하기" : "생성하기"}</Button>
           </DialogFooter>
