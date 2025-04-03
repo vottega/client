@@ -27,8 +27,13 @@ const pastelColors = [
   "bg-indigo-50", // 은은한 인디고
 ];
 
-export const RoleList = () => {
-  const [roles, setRoles] = useState<Roles>(ROLES);
+export const RoleList = ({
+  roles,
+  setRoles,
+}: {
+  roles: Roles;
+  setRoles: Dispatch<SetStateAction<Roles>>;
+}) => {
   return (
     <div className="flex flex-col gap-2">
       {[...roles.keys()].map((role, idx) => (
@@ -146,7 +151,7 @@ export const AddRoleBadge = forwardRef<
         setRoles((prev) => {
           const nextRoles = new Map(prev);
           if (nextRoles.has(newRole)) return nextRoles;
-          nextRoles.set(newRole, { value: newRole, canVote: true });
+          nextRoles.set(newRole, { role: newRole, canVote: true });
           return nextRoles;
         });
         setNewRole("");
