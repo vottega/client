@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Endpoints } from "@/lib/api/endpoints";
@@ -35,8 +36,7 @@ export const RoomList = () => {
   } satisfies Record<RoomStatus, string>;
 
   if (rooms === undefined) {
-    // TODO: loading UI
-    return <>loading...</>;
+    return <Loader message="회의실 정보 로딩중" />;
   }
 
   if (rooms.length === 0) {
