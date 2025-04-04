@@ -24,3 +24,36 @@ export const getKoreanTimeWithZeroSecond = () => {
     new Date(new Date().getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 16) + zeroSecond
   );
 };
+
+export function parseLocalDateTime(localDateTime: string): Date {
+  const date = new Date(localDateTime);
+  if (isNaN(date.getTime())) {
+    throw new Error("유효하지 않은 LocalDateTime 문자열입니다.");
+  }
+  return date;
+}
+
+export function formatDate(localDateTime: string, locale: string = "ko-KR"): string {
+  const date = parseLocalDateTime(localDateTime);
+  return date.toLocaleDateString(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+export function formatTime(localDateTime: string, locale: string = "ko-KR"): string {
+  const date = parseLocalDateTime(localDateTime);
+  return date.toLocaleTimeString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
+
+export function formatDateTime(localDateTime: string, locale: string = "ko-KR"): string {
+  const datePart = formatDate(localDateTime, locale);
+  const timePart = formatTime(localDateTime, locale);
+  return `${datePart} ${timePart}`;
+}
