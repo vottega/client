@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Roles, ROLES } from "@/constants/role";
+import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
 import {
   CreateRoomRequestDTO,
@@ -75,7 +76,7 @@ export default function Page() {
     data: roomData,
     error,
   } = useSWRMutation<RoomResponseDTO, Error, string, CreateRoomRequestDTO, RoomResponseDTO>(
-    "http://localhost:8080/api/room",
+    Endpoints.room.create().toFullPath(),
     createRoomFetcher,
   );
 
@@ -84,7 +85,7 @@ export default function Page() {
     Error,
     () => string | null
   >(
-    () => (roomData?.id ? `http://localhost:8080/api/room/${roomData.id}/participants` : null),
+    () => (roomData?.id ? Endpoints.participant.add(roomData.id).toFullPath() : null),
     registerMeFetcher,
   );
 

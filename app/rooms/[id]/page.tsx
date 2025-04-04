@@ -19,6 +19,7 @@ import {
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useSSE } from "@/hooks/useSSE";
+import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
 import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
 import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
@@ -35,7 +36,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     isLoading,
   } = useSSE<{ type: RoomEventType; data: unknown }>(
     roomId,
-    `http://localhost:8084/sse/room/${roomId}/43ba2e8c-c67d-47e4-8a40-beead7f16507`,
+    Endpoints.sse.connect(roomId, "43ba2e8c-c67d-47e4-8a40-beead7f16507").toFullPath(),
   );
 
   const getRoom = (url: string) =>
@@ -47,7 +48,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     data: room,
     error: roomError,
     isLoading: isRoomLoading,
-  } = useSWR(`http://localhost:8080/api/room/${roomId}`, getRoom);
+  } = useSWR(Endpoints.room.get(roomId).toFullPath(), getRoom);
 
   useEffect(() => {
     if (sseResponse) {
