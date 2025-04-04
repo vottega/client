@@ -86,13 +86,13 @@ export const RoomList = () => {
                     {room.ownerId} 님의 회의실
                     <span className="mx-2">·</span>
                     참가자 {room.participants.length}명
-                    <span className="mx-2 hidden md:inline">·</span>
-                    <br className="md:hidden" />
+                    <span className="mx-2 hidden lg:inline">·</span>
+                    <br className="lg:hidden" />
                     {formatDateTime(room.createdAt).slice(0, -3)}
                   </CardDescription>
                   <div className="text-sm flex gap-1 items-center">
                     <span className={`flex h-2 w-2 rounded-full ${badgeColor[room.status]}`} />
-                    <span className="hidden lg:inline">{roomStatusMessage[room.status]}</span>
+                    <span className="sm:hidden md:inline">{roomStatusMessage[room.status]}</span>
                   </div>
                 </div>
               </CardHeader>
