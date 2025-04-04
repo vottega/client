@@ -54,4 +54,11 @@ export interface UpdateRoomRequestDTO {
   status: RoomStatus | null;
 }
 
-export type RoomStatus = "NOT_STARTED" | "PROGRESS" | "FINISHED" | "STOPPED";
+export const ROOM_STATUS = {
+  NOT_STARTED: "NOT_STARTED",
+  PROGRESS: "PROGRESS",
+  FINISHED: "FINISHED",
+  STOPPED: "STOPPED",
+} as const;
+
+export type RoomStatus = (typeof ROOM_STATUS)[keyof typeof ROOM_STATUS];
