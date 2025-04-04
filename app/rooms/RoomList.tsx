@@ -69,6 +69,8 @@ export const RoomList = () => {
           </TabsTrigger>
         ))}
       </TabsList>
+
+      {/* TODO: 페이지네이션 추가 */}
       <TabsContent value="All">
         <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
           {rooms.map((room) => (
