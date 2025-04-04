@@ -48,7 +48,7 @@ export const RoomList = () => {
   };
 
   return (
-    <ul className="w-full grid grid-cols-2 p-4 gap-2">
+    <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
       {rooms.map((room) => (
         <Card
           key={`${room.id}`}
@@ -61,7 +61,8 @@ export const RoomList = () => {
               <CardDescription>
                 {room.ownerId} 님의 회의실
                 <span className="mx-2">·</span>
-                참가자 {room.participants.length}명<span className="mx-2">·</span>
+                참가자 {room.participants.length}명<span className="mx-2 hidden md:inline">·</span>
+                <br className="md:hidden" />
                 {formatDateTime(room.createdAt).slice(0, -3)}
               </CardDescription>
               <div className="text-sm flex gap-1 items-center">
