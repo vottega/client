@@ -27,6 +27,13 @@ export const RoomList = () => {
     STOPPED: "bg-amber-500",
   } satisfies Record<RoomStatus, string>;
 
+  const roomStatusMessage = {
+    NOT_STARTED: "대기",
+    FINISHED: "종료",
+    PROGRESS: "진행 중",
+    STOPPED: "중지",
+  } satisfies Record<RoomStatus, string>;
+
   if (rooms === undefined) {
     // TODO: loading UI
     return <>loading...</>;
@@ -57,9 +64,10 @@ export const RoomList = () => {
                 참가자 {room.participants.length}명<span className="mx-2">·</span>
                 {formatDateTime(room.createdAt).slice(0, -3)}
               </CardDescription>
-              <span
-                className={`flex h-2 w-2 translate-y-1 rounded-full ${badgeColor[room.status]}`}
-              />
+              <div className="text-sm flex gap-1 items-center">
+                <span className={`flex h-2 w-2 rounded-full ${badgeColor[room.status]}`} />
+                <span className="hidden lg:inline">{roomStatusMessage[room.status]}</span>
+              </div>
             </div>
           </CardHeader>
         </Card>
