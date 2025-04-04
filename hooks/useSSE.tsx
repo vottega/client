@@ -1,10 +1,11 @@
 import useSWR from "swr";
-import { useEffect } from "react";
-import { subscribeToSSE } from "@/lib/sse";
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { useCallback, useEffect } from "react";
+import { subscribeToSSE } from "@/lib/api/sse";
+import { customFetch } from "@/lib/api/fetcher";
 
 export const useSSE = <T extends unknown>(key: string, sseUrl: string) => {
+  const fetcher = useCallback((url: string) => customFetch<T>(url), []);
+
   const { data, mutate, error, isLoading } = useSWR<T>(key, fetcher);
 
   useEffect(() => {

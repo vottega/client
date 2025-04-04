@@ -1,8 +1,5 @@
 "use client";
 
-import { APIErrorResponse } from "@/lib/api/types/error";
-import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
-import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
@@ -22,6 +19,10 @@ import {
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useSSE } from "@/hooks/useSSE";
+import { Endpoints } from "@/lib/api/endpoints";
+import { customFetch } from "@/lib/api/fetcher";
+import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
+import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
@@ -35,33 +36,19 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     isLoading,
   } = useSSE<{ type: RoomEventType; data: unknown }>(
     roomId,
-    `http://localhost:8084/sse/room/${roomId}/43ba2e8c-c67d-47e4-8a40-beead7f16507`,
+    Endpoints.sse.connect(roomId, "43ba2e8c-c67d-47e4-8a40-beead7f16507").toFullPath(),
   );
 
-  const getRoom = async (url: string) => {
-    const headers = new Headers();
-    headers.set("Content-Type", "application/json");
-
-    const response = await fetch(url, {
+  const getRoom = (url: string) =>
+    customFetch<RoomResponseDTO>(url, {
       method: "GET",
-      headers,
     });
-
-    const data: RoomResponseDTO | APIErrorResponse = await response.json();
-
-    if (!response.ok) {
-      // TODO: 에러처리 및 에러UI
-      return null;
-    }
-
-    return data as RoomResponseDTO;
-  };
 
   const {
     data: room,
     error: roomError,
     isLoading: isRoomLoading,
-  } = useSWR(`http://localhost:8080/api/room/${roomId}`, getRoom);
+  } = useSWR(Endpoints.room.get(roomId).toFullPath(), getRoom);
 
   useEffect(() => {
     if (sseResponse) {
