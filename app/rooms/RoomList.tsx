@@ -5,9 +5,10 @@ import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { badgeColor, roomStatusMessage } from "@/constants/room";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
-import { ROOM_STATUS, RoomResponseDTO, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { ROOM_STATUS, RoomResponseDTO } from "@/lib/api/types/room-service.dto";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,20 +24,6 @@ export const RoomList = () => {
     Endpoints.room.listByUser(1).toFullPath(),
     getRoom,
   );
-
-  const badgeColor = {
-    NOT_STARTED: "bg-sky-500",
-    FINISHED: "bg-neutral-500",
-    PROGRESS: "bg-green-500",
-    STOPPED: "bg-amber-500",
-  } satisfies Record<RoomStatus, string>;
-
-  const roomStatusMessage = {
-    NOT_STARTED: "대기",
-    FINISHED: "종료",
-    PROGRESS: "진행 중",
-    STOPPED: "중지",
-  } satisfies Record<RoomStatus, string>;
 
   const handleClickRoom = (roomId: number) => () => {
     router.push(`/rooms/${roomId}`);
