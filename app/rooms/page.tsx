@@ -11,7 +11,7 @@ export default function Rooms() {
           <h2 className="text-lg font-semibold md:text-2xl">회의실</h2>
         </div>
         <div
-          className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm"
+          className="flex flex-col flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm overflow-hidden"
           x-chunk="dashboard-02-chunk-1"
         >
           <RoomList />

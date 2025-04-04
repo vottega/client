@@ -1,14 +1,17 @@
 "use client";
 
+import { EmptyState } from "@/components/EmptyState";
 import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
-import { RoomResponseDTO, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { ROOM_STATUS, RoomResponseDTO, RoomStatus } from "@/lib/api/types/room-service.dto";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import useSWR from "swr";
 
 export const RoomList = () => {
@@ -35,6 +38,19 @@ export const RoomList = () => {
     STOPPED: "중지",
   } satisfies Record<RoomStatus, string>;
 
+  const handleClickRoom = (roomId: number) => () => {
+    router.push(`/rooms/${roomId}`);
+  };
+
+  const tabItems = useMemo(
+    () =>
+      [ROOM_STATUS.PROGRESS, ROOM_STATUS.NOT_STARTED, ROOM_STATUS.FINISHED].map((tab) => ({
+        tab,
+        tabRooms: rooms?.filter(({ status }) => status === tab) ?? [],
+      })),
+    [rooms],
+  );
+
   if (rooms === undefined) {
     return <Loader message="회의실 정보 로딩중" />;
   }
@@ -43,37 +59,81 @@ export const RoomList = () => {
     return <EmptyRoomList />;
   }
 
-  const handleClickRoom = (roomId: number) => () => {
-    router.push(`/rooms/${roomId}`);
-  };
-
   return (
-    <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
-      {rooms.map((room) => (
-        <Card
-          key={`${room.id}`}
-          className="cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
-          onClick={handleClickRoom(room.id)}
-        >
-          <CardHeader>
-            <CardTitle>{room.name}</CardTitle>
-            <div className="flex justify-between">
-              <CardDescription>
-                {room.ownerId} 님의 회의실
-                <span className="mx-2">·</span>
-                참가자 {room.participants.length}명<span className="mx-2 hidden md:inline">·</span>
-                <br className="md:hidden" />
-                {formatDateTime(room.createdAt).slice(0, -3)}
-              </CardDescription>
-              <div className="text-sm flex gap-1 items-center">
-                <span className={`flex h-2 w-2 rounded-full ${badgeColor[room.status]}`} />
-                <span className="hidden lg:inline">{roomStatusMessage[room.status]}</span>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+    <Tabs defaultValue="All" className="w-full flex-1 flex flex-col">
+      <TabsList className="w-full grid grid-cols-4 mb-4 rounded-none">
+        <TabsTrigger value="All">전체보기 {`(${rooms.length})`}</TabsTrigger>
+        {tabItems.map(({ tab, tabRooms }, idx) => (
+          <TabsTrigger key={`tab-${idx}`} value={tab}>
+            {roomStatusMessage[tab]} {`(${tabRooms.length})`}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      <TabsContent value="All">
+        <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
+          {rooms.map((room) => (
+            <Card
+              key={`${room.id}`}
+              className="cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+              onClick={handleClickRoom(room.id)}
+            >
+              <CardHeader>
+                <CardTitle>{room.name}</CardTitle>
+                <div className="flex justify-between">
+                  <CardDescription>
+                    {room.ownerId} 님의 회의실
+                    <span className="mx-2">·</span>
+                    참가자 {room.participants.length}명
+                    <span className="mx-2 hidden md:inline">·</span>
+                    <br className="md:hidden" />
+                    {formatDateTime(room.createdAt).slice(0, -3)}
+                  </CardDescription>
+                  <div className="text-sm flex gap-1 items-center">
+                    <span className={`flex h-2 w-2 rounded-full ${badgeColor[room.status]}`} />
+                    <span className="hidden lg:inline">{roomStatusMessage[room.status]}</span>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          ))}
+        </ul>
+      </TabsContent>
+      {tabItems.map(({ tab, tabRooms }, idx) => (
+        <TabsContent key={`tab-${idx}`} value={tab}>
+          {tabRooms.length === 0 ? (
+            <EmptyState />
+          ) : (
+            <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
+              {tabRooms.map((room) => (
+                <Card
+                  key={`${room.id}`}
+                  className="cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
+                  onClick={handleClickRoom(room.id)}
+                >
+                  <CardHeader>
+                    <CardTitle>{room.name}</CardTitle>
+                    <div className="flex justify-between">
+                      <CardDescription>
+                        {room.ownerId} 님의 회의실
+                        <span className="mx-2">·</span>
+                        참가자 {room.participants.length}명
+                        <span className="mx-2 hidden md:inline">·</span>
+                        <br className="md:hidden" />
+                        {formatDateTime(room.createdAt).slice(0, -3)}
+                      </CardDescription>
+                      <div className="text-sm flex gap-1 items-center">
+                        <span className={`flex h-2 w-2 rounded-full ${badgeColor[room.status]}`} />
+                        <span className="hidden lg:inline">{roomStatusMessage[room.status]}</span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
       ))}
-    </ul>
+    </Tabs>
   );
 };
 
