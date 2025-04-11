@@ -34,7 +34,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import {
   Sidebar,
   SidebarContent,
@@ -58,8 +57,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useRoomContext } from "@/hooks/useRoomContext";
-import { VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
+import { FractionVO, VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
@@ -359,7 +357,6 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
       agendaName: "",
       voteName: "",
       minParticipantNumber: 0,
-      // TODO: input otp > custom fraction input으로 전환
       minParticipantRate: { denominator: 1, numerator: 1 },
       passRate: { denominator: 2, numerator: 1 },
       reservedStartTime: getKoreanTimeWithZeroSecond(),
@@ -369,29 +366,18 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
     },
   });
 
-  const ratioToQuorum = useCallback((ratio: string) => {
-    const [numerator, denominator] = ratio.split("").map((str) => parseInt(str));
-
-    if (numerator > denominator) {
-      return partcipantCount;
-    }
-
-    return Math.ceil(partcipantCount * (numerator / denominator));
+  const ratioToQuorum = useCallback((ratio: FractionVO) => {
+    const { numerator, denominator } = ratio;
+    return Math.min(partcipantCount, Math.ceil(partcipantCount * (numerator / denominator)));
   }, []);
 
   function onSubmit(data: z.infer<typeof VoteSchema>) {
     if (data.startNow) {
       data.reservedStartTime = getKoreanTimeWithZeroSecond();
     }
-    data.minParticipantRate = ratioToQuorum(data.minParticipantRate).toString();
-    data.passRate = ratioToQuorum(data.passRate).toString();
   }
 
-  const { participants } = useRoomContext();
-
   const partcipantCount = 20;
-
-  const quorumRatioPattern = "^[1-9]+$";
 
   return (
     <Form {...form}>
@@ -413,6 +399,7 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
           )}
           rules={{ required: true }}
         />
+
         <FormField
           control={form.control}
           name="voteName"
@@ -429,6 +416,7 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="minParticipantNumber"
@@ -445,79 +433,135 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
                   className="w-[102px]"
                   onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   disabled={existingVote?.status === "ENDED"}
+                  value={field.value ?? 0}
                 />
               </FormControl>
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="minParticipantRate"
-          render={({ field }) => (
-            <FormItem className="flex justify-between items-center space-y-0">
-              <div className="flex flex-col gap-2">
+          render={() => (
+            <FormItem className="flex items-center justify-between gap-0">
+              <div className="flex flex-col">
                 <FormLabel>의사정족수</FormLabel>
+
                 <FormDescription>
                   <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    {ratioToQuorum(field.value)}명
+                    {ratioToQuorum(form.watch("minParticipantRate"))}명
                   </span>{" "}
                   이상 출석해야 회의를 진행할 수 있음
                 </FormDescription>
               </div>
-              <FormControl>
-                <InputOTP
-                  maxLength={2}
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  disabled={existingVote?.status === "ENDED"}
-                  pattern={quorumRatioPattern}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                  </InputOTPGroup>
-                  <span>/</span>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={1} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </FormControl>
+
+              <div className="flex items-center gap-2 mt-2">
+                <FormField
+                  control={form.control}
+                  name="minParticipantRate.numerator"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          disabled={existingVote?.status === "ENDED"}
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value));
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <span className="text-muted-foreground">/</span>
+                <FormField
+                  control={form.control}
+                  name="minParticipantRate.denominator"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          disabled={existingVote?.status === "ENDED"}
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value));
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="passRate"
-          render={({ field }) => (
-            <FormItem className="flex justify-between items-center space-y-0">
-              <div className="flex flex-col gap-2">
+          render={() => (
+            <FormItem className="flex items-center justify-between gap-0">
+              <div className="flex flex-col">
                 <FormLabel>의결정족수</FormLabel>
+
                 <FormDescription>
                   <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    {ratioToQuorum(field.value)}명
+                    {ratioToQuorum(form.watch("passRate"))}명
                   </span>{" "}
                   이상 찬성해야 안건을 가결할 수 있음
                 </FormDescription>
               </div>
-              <FormControl>
-                <InputOTP
-                  maxLength={2}
-                  value={field.value}
-                  onChange={(value) => field.onChange(value)}
-                  disabled={existingVote?.status === "ENDED"}
-                  pattern={quorumRatioPattern}
-                >
-                  <InputOTPGroup>
-                    <InputOTPSlot index={0} />
-                  </InputOTPGroup>
-                  <span>/</span>
-                  <InputOTPGroup>
-                    <InputOTPSlot index={1} />
-                  </InputOTPGroup>
-                </InputOTP>
-              </FormControl>
+
+              <div className="flex items-center gap-2 mt-2">
+                <FormField
+                  control={form.control}
+                  name="passRate.numerator"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          disabled={existingVote?.status === "ENDED"}
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value));
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <span className="text-muted-foreground">/</span>
+                <FormField
+                  control={form.control}
+                  name="passRate.denominator"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          disabled={existingVote?.status === "ENDED"}
+                          onChange={(e) => {
+                            field.onChange(parseInt(e.target.value));
+                          }}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </FormItem>
           )}
         />
+
         <div className="flex justify-between items-center">
           <FormField
             control={form.control}
@@ -534,7 +578,8 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
                       field.onChange(e.target.value + ":00");
                     }}
                     disabled={existingVote?.status === "ENDED" || form.watch("startNow")}
-                    min={field.value}
+                    min={field.value ?? undefined}
+                    value={field.value ?? undefined}
                   />
                 </FormControl>
                 <FormMessage />
@@ -566,6 +611,7 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
             />
           )}
         </div>
+
         <FormField
           control={form.control}
           name="isSecret"
@@ -575,7 +621,7 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
               <FormControl>
                 <Checkbox
                   className="align-text-bottom"
-                  checked={field.value}
+                  checked={field.value ?? undefined}
                   onCheckedChange={(checked) => field.onChange(checked)}
                   disabled={existingVote?.status === "ENDED"}
                 />
@@ -584,6 +630,7 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
             </FormItem>
           )}
         />
+
         {!(existingVote?.status === "ENDED") && (
           <DialogFooter>
             <Button type="submit">{existingVote ? "수정하기" : "생성하기"}</Button>
