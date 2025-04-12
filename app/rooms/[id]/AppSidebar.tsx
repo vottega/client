@@ -57,12 +57,23 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { FractionVO, VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
+import { useVoteDialog } from "@/hooks/useDialog.vote";
+import { Endpoints } from "@/lib/api/endpoints";
+import { customFetch } from "@/lib/api/fetcher";
+import {
+  FractionVO,
+  VoteResponseDTO,
+  VoteSchema,
+  type VoteDetailResponseDTO,
+  type VoteRequestDTO,
+} from "@/lib/api/types/vote-service.dto";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
+import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 
 const sidebarRightData = {
@@ -73,31 +84,23 @@ const sidebarRightData = {
   },
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [votes, setVotes] = useState<VoteResponseDTO[]>([
-    {
-      agendaName: "개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안",
-      voteName: "아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다.",
-      minParticipantNumber: 0,
-      minParticipantRate: { denominator: 4, numerator: 1 },
-      passRate: { denominator: 2, numerator: 1 },
-      reservedStartTime: "2025-01-24T14:00:00",
-      isSecret: true,
-      abstainNum: 0,
-      createdAt: "",
-      finishedAt: "",
-      id: 3,
-      lastUpdatedAt: "",
-      noNum: 5,
-      result: "PASSED",
-      roomId: 26,
-      startedAt: "",
-      status: "ENDED",
-      yesNum: 10,
-    },
-  ]);
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  roomId: string;
+}
 
-  const skeletonFill = useMemo(() => Math.max(5 - votes.length, 0), [votes]);
+export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
+  const getVoteList = useCallback((url: string) => customFetch<VoteResponseDTO[]>(url), []);
+
+  const {
+    data: voteList = [],
+    mutate: refreshVoteList,
+    error,
+    isLoading,
+  } = useSWR(Endpoints.vote.getInfo(roomId).toFullPath(), getVoteList);
+
+  const skeletonFill = useMemo(() => Math.max(5 - voteList.length, 0), [voteList]);
+
+  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
 
   return (
     <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
@@ -111,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <CardTitle className="text-xl">안건 및 투표</CardTitle>
               <CardDescription>최근 진행한 투표예요.</CardDescription>
             </div>
-            <Dialog>
+            <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" className="ml-auto gap-1">
                   투표 생성
@@ -122,7 +125,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <DialogHeader>
                   <DialogTitle>투표 생성하기</DialogTitle>
                 </DialogHeader>
-                <VoteForm />
+                <VoteForm roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
               </DialogContent>
             </Dialog>
           </CardHeader>
@@ -134,7 +137,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {votes.map((vote, idx) => (
+              {voteList.map((vote, idx) => (
                 <Dialog key={idx}>
                   <DialogTrigger asChild>
                     <TableRow key={idx} className="h-0 cursor-pointer">
@@ -176,7 +179,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           <TabsTrigger value="result">투표 결과</TabsTrigger>
                         </TabsList>
                         <TabsContent value="info">
-                          <VoteInfo vote={vote} />
+                          <VoteInfo
+                            existingVote={vote}
+                            roomId={roomId}
+                            onFail={onFail}
+                            onSuccess={onSuccess}
+                          />
                         </TabsContent>
                         <TabsContent value="result">
                           {/* TODO: 투표 결과 */}
@@ -184,13 +192,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         </TabsContent>
                       </Tabs>
                     ) : (
-                      <VoteInfo vote={vote} />
+                      <VoteInfo
+                        existingVote={vote}
+                        roomId={roomId}
+                        onFail={onFail}
+                        onSuccess={onSuccess}
+                      />
                     )}
                   </DialogContent>
                 </Dialog>
               ))}
               {[...Array(skeletonFill)].map((_, idx) => (
-                <TableRow key={votes.length + idx + 1} className="relative h-[73px] z-0">
+                <TableRow key={voteList.length + idx + 1} className="relative h-[73px] z-0">
                   <TableCell>
                     <Skeleton className="h-[40px] w-full" />
                   </TableCell>
@@ -346,11 +359,28 @@ function NavUser({
   );
 }
 
-export function VoteInfo({ vote }: { vote: VoteResponseDTO }) {
-  return <VoteForm existingVote={vote} />;
+export function VoteInfo({
+  roomId,
+  existingVote,
+  onFail,
+  onSuccess,
+}: React.ComponentProps<typeof VoteForm>) {
+  return (
+    <VoteForm existingVote={existingVote} roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
+  );
 }
 
-export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
+export function VoteForm({
+  roomId,
+  existingVote,
+  onSuccess,
+  onFail,
+}: {
+  roomId: string;
+  existingVote?: VoteResponseDTO;
+  onSuccess: () => void;
+  onFail: () => void;
+}) {
   const form = useForm<z.infer<typeof VoteSchema>>({
     resolver: zodResolver(VoteSchema),
     defaultValues: {
@@ -366,6 +396,15 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
     },
   });
 
+  const createVoteFetcher = (url: string, { arg }: { arg: VoteRequestDTO }) =>
+    customFetch<VoteDetailResponseDTO>(url, { method: "POST", body: JSON.stringify(arg) });
+
+  const {
+    data,
+    error,
+    trigger: createVote,
+  } = useSWRMutation(Endpoints.vote.create(roomId).toFullPath(), createVoteFetcher);
+
   const ratioToQuorum = useCallback((ratio: FractionVO) => {
     const { numerator, denominator } = ratio;
     return Math.min(partcipantCount, Math.ceil(partcipantCount * (numerator / denominator)));
@@ -375,9 +414,25 @@ export function VoteForm({ existingVote }: { existingVote?: VoteResponseDTO }) {
     if (data.startNow) {
       data.reservedStartTime = getKoreanTimeWithZeroSecond();
     }
+
+    const { startNow, ...reqBody } = data;
+
+    createVote(reqBody);
   }
 
   const partcipantCount = 20;
+
+  useEffect(() => {
+    if (error) {
+      onFail();
+    }
+  }, [error, onFail]);
+
+  useEffect(() => {
+    if (data) {
+      onSuccess();
+    }
+  }, [data, onSuccess]);
 
   return (
     <Form {...form}>

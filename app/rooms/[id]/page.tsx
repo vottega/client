@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useSSE } from "@/hooks/useSSE";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
@@ -25,7 +26,7 @@ import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
 import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
@@ -39,16 +40,21 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     Endpoints.sse.connect(roomId, "43ba2e8c-c67d-47e4-8a40-beead7f16507").toFullPath(),
   );
 
-  const getRoom = (url: string) =>
-    customFetch<RoomResponseDTO>(url, {
-      method: "GET",
-    });
+  const getRoom = useCallback(
+    (url: string) =>
+      customFetch<RoomResponseDTO>(url, {
+        method: "GET",
+      }),
+    [],
+  );
 
   const {
     data: room,
     error: roomError,
     isLoading: isRoomLoading,
   } = useSWR(Endpoints.room.get(roomId).toFullPath(), getRoom);
+
+  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
 
   useEffect(() => {
     if (sseResponse) {
@@ -110,7 +116,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
             <Card className="flex-grow">
               <CardHeader className="flex-row items-center space-y-0">
                 <CardTitle>투표 정보</CardTitle>
-                <Dialog>
+                <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" className="ml-auto gap-1">
                       투표 생성
@@ -121,19 +127,19 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
                     <DialogHeader>
                       <DialogTitle>투표 생성하기</DialogTitle>
                     </DialogHeader>
-                    <VoteForm />
+                    <VoteForm roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
                   </DialogContent>
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <VoteList />
+                <VoteList roomId={roomId} />
               </CardContent>
             </Card>
           </div>
         </Main>
       </SidebarInset>
 
-      <AppSidebar side="right" />
+      <AppSidebar side="right" roomId={roomId} />
     </SidebarProvider>
   );
 }

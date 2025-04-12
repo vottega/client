@@ -13,10 +13,18 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { VoteResponse, VoteResult, VoteStatus } from "@/constants/vote";
+import { useVoteDialog } from "@/hooks/useDialog.vote";
+import { Endpoints } from "@/lib/api/endpoints";
+import { customFetch } from "@/lib/api/fetcher";
+import type { VoteResponseDTO, VoteResult, VoteStatus } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
-import { HTMLAttributes, useMemo, useState } from "react";
+import { HTMLAttributes, useCallback, useMemo } from "react";
+import useSWR from "swr";
+
+interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
+  roomId: string;
+}
 
 export const VoteResultBadge = ({
   voteResult,
@@ -58,10 +66,11 @@ export const VoteResultBadge = ({
   );
 };
 
-const VoteCard = ({ vote }: { vote: VoteResponse }) => {
+const VoteCard = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
   const { agendaName, finishedAt, result, status } = vote;
+  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Card className="flex p-4 gap-4 justify-between cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground">
           <CardHeader className="p-0">
@@ -89,7 +98,7 @@ const VoteCard = ({ vote }: { vote: VoteResponse }) => {
               <TabsTrigger value="result">투표 결과</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
-              <VoteInfo vote={vote} />
+              <VoteInfo existingVote={vote} onFail={onFail} onSuccess={onSuccess} roomId={roomId} />
             </TabsContent>
             <TabsContent value="result">
               {/* TODO: 투표 결과 */}
@@ -97,7 +106,7 @@ const VoteCard = ({ vote }: { vote: VoteResponse }) => {
             </TabsContent>
           </Tabs>
         ) : (
-          <VoteInfo vote={vote} />
+          <VoteInfo existingVote={vote} onFail={onFail} onSuccess={onSuccess} roomId={roomId} />
         )}
       </DialogContent>
     </Dialog>
@@ -113,165 +122,17 @@ const VoteCardFallback = ({ children }: HTMLAttributes<HTMLDivElement>) => {
   );
 };
 
-export const VoteList = ({ className }: HTMLAttributes<HTMLDivElement>) => {
-  const sample: VoteResponse[] = [
-    {
-      id: 0,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안건이에요안건이에요안건이에요안건이에요안건이에요",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "STARTED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-    {
-      id: 1,
-      roomId: 0,
-      agendaName: "안건이에요안건이에요안",
-      voteName:
-        "투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요투표명이에요",
-      status: "CREATED",
-      passRate: { denominator: 3, numerator: 1 },
-      minParticipantNumber: 5,
-      minParticipantRate: { denominator: 3, numerator: 1 },
-      reservedStartTime: "hello world",
-      isSecret: true,
-      yesNum: 5,
-      noNum: 5,
-      /** 기권 */
-      abstainNum: 5,
-      createdAt: "2011-10-05T14:48:00.000Z",
-      result: "NOT_DECIDED",
-      startedAt: "2011-10-05T14:48:00.000Z",
-      finishedAt: "2011-10-05T14:48:00.000Z",
-      lastUpdatedAt: "2011-10-05T14:48:00.000Z",
-    },
-  ];
+export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
+  const getVoteList = useCallback((url: string) => customFetch<VoteResponseDTO[]>(url), []);
 
-  const [voteList, setVoteList] = useState<VoteResponse[]>(sample);
+  const {
+    data: voteList = [],
+    mutate: refreshVoteList,
+    error,
+    isLoading,
+  } = useSWR(Endpoints.vote.getInfo(roomId).toFullPath(), getVoteList);
+
+  // const [voteList, setVoteList] = useState<VoteResponseDTO[]>(sample);
   const upcomingVoteList = useMemo(
     () => voteList.filter((vote) => vote.status === "CREATED"),
     [voteList],
@@ -286,7 +147,7 @@ export const VoteList = ({ className }: HTMLAttributes<HTMLDivElement>) => {
   );
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn("space-y-4", className)} {...props}>
       <Card className="bg-muted border-transparent">
         <CardHeader>
           <CardDescription>
@@ -297,7 +158,7 @@ export const VoteList = ({ className }: HTMLAttributes<HTMLDivElement>) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} />)
+            startedVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} roomId={roomId} />)
           )}
         </CardContent>
       </Card>
@@ -313,7 +174,7 @@ export const VoteList = ({ className }: HTMLAttributes<HTMLDivElement>) => {
             {upcomingVoteList.length === 0 ? (
               <VoteCardFallback>예정된 투표가 없어요.</VoteCardFallback>
             ) : (
-              upcomingVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} />)
+              upcomingVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} roomId={roomId} />)
             )}
           </CardContent>
         </Card>
@@ -328,7 +189,7 @@ export const VoteList = ({ className }: HTMLAttributes<HTMLDivElement>) => {
             {endedVoteList.length === 0 ? (
               <VoteCardFallback>종료된 투표가 없어요.</VoteCardFallback>
             ) : (
-              endedVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} />)
+              endedVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} roomId={roomId} />)
             )}
           </CardContent>
         </Card>
