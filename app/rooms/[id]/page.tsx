@@ -1,6 +1,7 @@
 "use client";
 
 import { AppSidebar, VoteForm } from "@/app/rooms/[id]/AppSidebar";
+import { OnlineOffline } from "@/app/rooms/[id]/OnlineOffline";
 import { Room } from "@/app/rooms/[id]/Room";
 import { VoteList } from "@/app/rooms/[id]/VoteList";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
@@ -18,31 +19,44 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useSSE } from "@/hooks/useSSE";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
-import { RoomResponseDTO } from "@/lib/api/types/room-service.dto";
-import { ParticipantResponseDTO, RoomEventType } from "@/lib/api/types/sse-server.dto";
+import { RoomResponseDTO, type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
+import {
+  RoomEventType,
+  type ParticipantResponseDTO as SSEParticipantResponseDTO,
+} from "@/lib/api/types/sse-server.dto";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 
+export type SSEResponse = { type: RoomEventType; data: unknown };
+
 export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
+  const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
+  const participantsRef = useRef<ParticipantResponseDTO[]>([]);
+  const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
+
+  const getRoom = useCallback(
+    (url: string) =>
+      customFetch<RoomResponseDTO>(url, {
+        method: "GET",
+      }),
+    [],
+  );
+
   const {
     data: sseResponse,
     error,
     isLoading,
-  } = useSSE<{ type: RoomEventType; data: unknown }>(
+  } = useSSE<SSEResponse>(
     roomId,
-    Endpoints.sse.connect(roomId, "43ba2e8c-c67d-47e4-8a40-beead7f16507").toFullPath(),
+    Endpoints.sse.connect(roomId, "f5f8b219-c8fa-46cf-b92a-05dc29169156").toFullPath(),
   );
-
-  const getRoom = (url: string) =>
-    customFetch<RoomResponseDTO>(url, {
-      method: "GET",
-    });
 
   const {
     data: room,
@@ -50,34 +64,65 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     isLoading: isRoomLoading,
   } = useSWR(Endpoints.room.get(roomId).toFullPath(), getRoom);
 
-  useEffect(() => {
-    if (sseResponse) {
-      const { type, data } = sseResponse;
+  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
 
-      switch (type) {
-        case "ROOM_INFO": {
-        }
-        case "PARTICIPANT_INFO": {
-          const participant = data as ParticipantResponseDTO;
-          switch (participant.action) {
-            case "ENTER": {
-              toast(`${participant.name}님이 입장했어요.`, {
-                description: participant.enteredAt,
-                action: {
-                  label: "현재 인원 보기",
-                  onClick: () => console.log("hello world"),
-                },
-              });
+  const handleSseResponse = useCallback(({ type, data }: SSEResponse) => {
+    switch (type) {
+      case "ROOM_INFO": {
+      }
+      case "PARTICIPANT_INFO": {
+        const participant = data as SSEParticipantResponseDTO;
+        switch (participant.action) {
+          case "ENTER": {
+            const index = participantsRef.current.findIndex((p) => p.id === participant.id);
+
+            if (index === -1) {
+              console.debug("참여자 정보가 없어요.");
+              setSseResponseQueue((prev) => [...prev, { type, data }]);
+              return;
             }
+
+            setParticipants((prev) => {
+              const newParticipants = [...prev];
+              newParticipants[index].isEntered = true;
+              return newParticipants;
+            });
+
+            toast(`${participantsRef.current[index].name}님이 입장했어요.`, {
+              description: participant.enteredAt,
+              action: {
+                label: "현재 인원 보기",
+                onClick: () => console.log("hello world"),
+              },
+            });
           }
         }
-        case "VOTE_INFO": {
-        }
-        case "VOTE_PAPER_INFO": {
-        }
+      }
+      case "VOTE_INFO": {
+      }
+      case "VOTE_PAPER_INFO": {
       }
     }
-  }, [sseResponse]);
+  }, []);
+
+  useEffect(() => {
+    if (room) {
+      setParticipants(room.participants);
+      participantsRef.current = room.participants;
+    }
+  }, [room]);
+
+  useEffect(() => {
+    if (!sseResponse) return;
+    handleSseResponse(sseResponse);
+  }, [sseResponse, setParticipants, handleSseResponse]);
+
+  useEffect(() => {
+    if (sseResponseQueue.length === 0) return;
+    const [head, ...rest] = sseResponseQueue;
+    setSseResponseQueue(rest);
+    handleSseResponse(head);
+  }, [sseResponseQueue, handleSseResponse]);
 
   return (
     <SidebarProvider>
@@ -110,7 +155,7 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
             <Card className="flex-grow">
               <CardHeader className="flex-row items-center space-y-0">
                 <CardTitle>투표 정보</CardTitle>
-                <Dialog>
+                <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button size="sm" className="ml-auto gap-1">
                       투표 생성
@@ -121,19 +166,27 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
                     <DialogHeader>
                       <DialogTitle>투표 생성하기</DialogTitle>
                     </DialogHeader>
-                    <VoteForm />
+                    <VoteForm roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
                   </DialogContent>
                 </Dialog>
               </CardHeader>
               <CardContent>
-                <VoteList />
+                <VoteList roomId={roomId} />
+              </CardContent>
+            </Card>
+            <Card className="flex-grow">
+              <CardHeader className="flex-row items-center space-y-0">
+                <CardTitle>참여중인 인원</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <OnlineOffline participants={participants} />
               </CardContent>
             </Card>
           </div>
         </Main>
       </SidebarInset>
 
-      <AppSidebar side="right" />
+      <AppSidebar side="right" roomId={roomId} />
     </SidebarProvider>
   );
 }
