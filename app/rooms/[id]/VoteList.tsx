@@ -163,7 +163,7 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid lg:grid-cols-2 gap-4">
         <Card className="bg-muted border-transparent">
           <CardHeader>
             <CardDescription>
