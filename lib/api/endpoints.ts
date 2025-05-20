@@ -90,6 +90,26 @@ export const Endpoints = {
     connect: (roomId: number | string, userId: UUID) =>
       new Endpoint(`/sse/room/${roomId}/${userId}`, baseUrlMap.sse),
   },
+
+  user: {
+    /** `POST` */
+    create: () => new Endpoint("/api/user", baseUrlMap.user),
+
+    /** `POST` */
+    checkUserId: () => new Endpoint("/api/user/check/userId", baseUrlMap.user),
+
+    /** `POST` */
+    checkEmail: () => new Endpoint("/api/user/check/email", baseUrlMap.user),
+
+    /** `POST` */
+    validateCode: () => new Endpoint("/api/user/validate", baseUrlMap.user),
+
+    /** `POST` */
+    sendEmail: () => new Endpoint("/api/user/send", baseUrlMap.user),
+
+    /** `POST` */
+    login: () => new Endpoint("/api/user/login", baseUrlMap.user),
+  },
 } as const;
 
 const baseUrlMap = {
@@ -97,4 +117,5 @@ const baseUrlMap = {
   participant: process.env.NEXT_PUBLIC_ROOM_SERVER_HOST ?? "",
   vote: process.env.NEXT_PUBLIC_VOTE_SERVER_HOST ?? "",
   sse: process.env.NEXT_PUBLIC_SSE_SERVER_HOST ?? "",
+  user: process.env.NEXT_PUBLIC_USER_SERVER_HOST ?? "",
 } satisfies Record<keyof typeof Endpoints, string>;
