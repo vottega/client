@@ -86,9 +86,16 @@ export const Endpoints = {
   },
 
   sse: {
-    /** `GET` */
-    connect: (roomId: number | string, userId: UUID) =>
-      new Endpoint(`/sse/room/${roomId}/${userId}`, baseUrlMap.sse),
+    /** `GET` - For room owner connection */
+    connect: (roomId: number | string) => new Endpoint(`/api/sse/room/${roomId}`, baseUrlMap.sse),
+
+    /** `GET` - For participant connection */
+    connectParticipant: (roomId: number | string, participantId: UUID) =>
+      new Endpoint(`/api/sse/room?roomId=${roomId}&participantId=${participantId}`, baseUrlMap.sse),
+
+    /** `GET` - For local development participant connection */
+    connectLocal: (roomId: number | string, participantId: UUID) =>
+      new Endpoint(`/api/sse/room/${roomId}/${participantId}`, baseUrlMap.sse),
   },
 
   user: {
