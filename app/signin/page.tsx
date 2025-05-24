@@ -42,7 +42,7 @@ export default function Signin() {
     trigger: signin,
     data,
     error,
-  } = useSWRMutation(Endpoints.user.login().toFullPath(), signinFetcher);
+  } = useSWRMutation(Endpoints.auth.authenticateUser().toFullPath(), signinFetcher);
 
   const onSubmit = (values: SigninFormData) => {
     signin(values);

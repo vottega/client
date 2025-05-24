@@ -117,6 +117,17 @@ export const Endpoints = {
     /** `POST` */
     login: () => new Endpoint("/api/user/login", baseUrlMap.user),
   },
+
+  auth: {
+    /** `POST` */
+    verify: () => new Endpoint("/api/auth/verify", baseUrlMap.auth),
+
+    /** `POST` */
+    authenticateParticipant: () => new Endpoint("/api/auth/participant", baseUrlMap.auth),
+
+    /** `POST` */
+    authenticateUser: () => new Endpoint("/api/auth/user", baseUrlMap.auth),
+  },
 } as const;
 
 const baseUrlMap = {
@@ -125,4 +136,5 @@ const baseUrlMap = {
   vote: process.env.NEXT_PUBLIC_VOTE_SERVER_HOST ?? "",
   sse: process.env.NEXT_PUBLIC_SSE_SERVER_HOST ?? "",
   user: process.env.NEXT_PUBLIC_USER_SERVER_HOST ?? "",
+  auth: process.env.NEXT_PUBLIC_AUTH_SERVER_HOST ?? "",
 } satisfies Record<keyof typeof Endpoints, string>;
