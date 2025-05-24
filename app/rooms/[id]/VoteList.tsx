@@ -159,7 +159,7 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) => <VotePaper key={vote.id} />)
+            startedVoteList.map((vote) => <VotePaper key={vote.id} vote={vote} />)
           )}
         </CardContent>
       </Card>

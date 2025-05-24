@@ -12,18 +12,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
+import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 
-// 🎟️ 트렌디한 예시 투표 데이터
-const vote = {
-  agendaName: "조직 개편안 승인",
-  voteName: "2025년 상반기 조직 개편안",
-  isSecret: true,
-  reservedStartTime: "2025-05-24T09:23:22.086Z",
-  passRate: { numerator: 2, denominator: 3 },
-  minParticipantRate: { numerator: 1, denominator: 2 },
-};
-
-export function VotePaper() {
+export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
   const [selectedOption, setSelectedOption] = useState<string>("");
   const formattedDate = format(new Date(vote.reservedStartTime), "yyyy.MM.dd HH:mm", {
     locale: ko,
