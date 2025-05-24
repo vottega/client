@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { useSSE } from "@/hooks/useSSE";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
 import { RoomResponseDTO, type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
@@ -30,13 +30,15 @@ import {
 } from "@/lib/api/types/sse-server.dto";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { useSSE } from "@/hooks/useSSE";
 
 export type SSEResponse = { type: RoomEventType; data: unknown };
 
 export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
+  const auth = useAuth();
   const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
   const participantsRef = useRef<ParticipantResponseDTO[]>([]);
   const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
@@ -49,14 +51,37 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     [],
   );
 
+  // SSE 연결 정보 준비
+  const sseConnectionInfo = useMemo(() => {
+    if (!auth.role) return null;
+    return auth.role === "PARTICIPANT" && auth.participantId
+      ? {
+          role: "PARTICIPANT" as const,
+          participantId: auth.participantId,
+          roomId: Number(roomId),
+        }
+      : auth.role === "USER" && auth.userId
+        ? {
+            role: "USER" as const,
+            userId: auth.userId,
+            roomId: Number(roomId),
+          }
+        : null;
+  }, [auth.role, auth.participantId, auth.userId, roomId]);
+
+  // SSE URL 준비
+  const sseUrl = useMemo(() => {
+    if (!sseConnectionInfo) return null;
+    return sseConnectionInfo.role === "PARTICIPANT"
+      ? Endpoints.sse.connectLocal(roomId, sseConnectionInfo.participantId).toFullPath()
+      : Endpoints.sse.connect(roomId).toFullPath();
+  }, [sseConnectionInfo, roomId]);
+
   const {
     data: sseResponse,
     error,
     isLoading,
-  } = useSSE<SSEResponse>(
-    roomId,
-    Endpoints.sse.connect(roomId, "f5f8b219-c8fa-46cf-b92a-05dc29169156").toFullPath(),
-  );
+  } = useSSE<SSEResponse>(roomId, sseUrl, sseConnectionInfo);
 
   const {
     data: room,
