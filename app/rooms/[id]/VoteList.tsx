@@ -1,6 +1,7 @@
 "use client";
 
 import { VoteInfo } from "@/app/rooms/[id]/AppSidebar";
+import { VoteLiveBoardDialogExample } from "@/app/rooms/[id]/VoteLiveBoard";
 import { VotePaper } from "@/app/rooms/[id]/VotePaper";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -159,7 +160,12 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) => <VotePaper key={vote.id} vote={vote} />)
+            startedVoteList.map((vote) => (
+              <div key={vote.id}>
+                <VotePaper vote={vote} />
+                <VoteLiveBoardDialogExample />
+              </div>
+            ))
           )}
         </CardContent>
       </Card>
