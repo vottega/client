@@ -2,7 +2,7 @@
 
 import { Role } from "@/lib/api/types/auth-service.dto";
 import { UUID } from "crypto";
-import { createContext, useContext, ReactNode, useState } from "react";
+import { createContext, useContext, ReactNode, useState, useCallback } from "react";
 
 interface AuthState {
   role?: Role;
@@ -34,9 +34,9 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>({});
 
-  const setAuth = (newState: AuthState) => {
+  const setAuth = useCallback((newState: AuthState) => {
     setAuthState(newState);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider

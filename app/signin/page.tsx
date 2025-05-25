@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { customFetch } from "@/lib/api/fetcher";
 import { Endpoints } from "@/lib/api/endpoints";
+import type { AuthResponseDTO } from "@/lib/api/types/auth-service.dto";
+import { useAuth } from "@/lib/auth/AuthContext";
+import { useRouter } from "next/navigation";
 
 interface SigninFormData {
   userId: string;
@@ -18,6 +21,8 @@ interface SigninFormData {
 }
 
 export default function Signin() {
+  const { setAuth } = useAuth();
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -31,7 +36,7 @@ export default function Signin() {
 
   const signinFetcher = useCallback(
     async (url: string, { arg }: { arg: SigninFormData }) =>
-      customFetch<void>(url, {
+      customFetch<AuthResponseDTO>(url, {
         method: "POST",
         body: JSON.stringify(arg),
       }),
@@ -40,8 +45,8 @@ export default function Signin() {
 
   const {
     trigger: signin,
-    data,
-    error,
+    data: signinData,
+    error: signinError,
   } = useSWRMutation(Endpoints.auth.authenticateUser().toFullPath(), signinFetcher);
 
   const onSubmit = (values: SigninFormData) => {
@@ -49,16 +54,21 @@ export default function Signin() {
   };
 
   useEffect(() => {
-    if (data) {
-      console.log(data);
+    if (signinData) {
+      localStorage.setItem("token", signinData.token);
+      setAuth({
+        role: "USER",
+        userId: 1,
+      });
+      router.push("/");
     }
-  }, [data]);
+  }, [signinData, setAuth, router]);
 
   useEffect(() => {
-    if (error) {
-      console.log(error);
+    if (signinError) {
+      console.log(signinError);
     }
-  }, [error]);
+  }, [signinError]);
 
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">

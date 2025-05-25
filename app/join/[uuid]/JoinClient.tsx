@@ -26,7 +26,6 @@ export function JoinClient({ initialData, error, participantId }: JoinClientProp
       // Store token in localStorage
       localStorage.setItem("token", initialData.token);
 
-      console.log(participantId);
       // Set auth context
       setAuth({
         role: "PARTICIPANT",

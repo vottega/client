@@ -24,9 +24,11 @@ import { Endpoints } from "@/lib/api/endpoints";
 import type {
   EmailCheckResponse,
   UserCreateRequest,
-  UserIdCheckRequest,
   UserIdCheckResponse,
 } from "@/lib/api/types/user-service.dto";
+import { useToast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { useRouter } from "next/navigation";
 
 const signupSchema = z.object({
   name: z.string().min(1, "이름을 입력해주세요."),
@@ -39,6 +41,8 @@ const signupSchema = z.object({
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export function SignupForm() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [emailSent, setEmailSent] = useState(false);
   const [userIdCheckResult, setUserIdCheckResult] = useState<"idle" | "valid" | "duplicated">(
     "idle",
@@ -66,10 +70,11 @@ export function SignupForm() {
     [],
   );
 
-  const { trigger: sendEmail } = useSWRMutation(
-    Endpoints.user.sendEmail().toFullPath(),
-    sendEmailFetcher,
-  );
+  const {
+    trigger: sendEmail,
+    data: sendEmailData,
+    error: sendEmailError,
+  } = useSWRMutation(Endpoints.user.sendEmail().toFullPath(), sendEmailFetcher);
 
   const registerFetcher = useCallback(
     async (url: string, { arg }: { arg: SignupFormValues }) =>
@@ -139,12 +144,6 @@ export function SignupForm() {
     register(values);
   };
 
-  useEffect(() => {
-    if (registerData) {
-      console.log("회원가입 성공:", registerData);
-    }
-  }, [registerData]);
-
   const handleClickCheckEmail = async () => {
     const email = form.getValues("email");
     const emailAuthCode = form.getValues("emailAuthCode");
@@ -196,6 +195,30 @@ export function SignupForm() {
     sendEmail({ email });
     setEmailSent(true);
   };
+
+  useEffect(() => {
+    if (registerData !== undefined) {
+      toast({
+        title: "회원가입 완료",
+        description: "로그인 페이지로 이동해 로그인해주세요.",
+        action: (
+          <ToastAction altText="로그인하기" onClick={() => router.push("/signin")}>
+            로그인하기
+          </ToastAction>
+        ),
+      });
+    }
+  }, [registerData, router, toast]);
+
+  useEffect(() => {
+    if (sendEmailError) {
+      toast({
+        title: "이메일 전송 실패",
+        description: "이메일 전송에 실패했습니다. 다시 시도해주세요.",
+        variant: "destructive",
+      });
+    }
+  }, [sendEmailError, toast]);
 
   return (
     <Card className="max-w-md mx-auto mt-10 shadow-xl">
