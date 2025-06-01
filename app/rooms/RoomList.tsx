@@ -17,7 +17,7 @@ import useSWR from "swr";
 
 export const RoomList = () => {
   const router = useRouter();
-  const { userId } = useAuth();
+  const { id } = useAuth();
 
   const getRoom = (url: string) => customFetch(url);
 
@@ -25,10 +25,7 @@ export const RoomList = () => {
     data: rooms,
     isLoading,
     error,
-  } = useSWR<RoomResponseDTO[]>(
-    userId ? Endpoints.room.listByUser(userId).toFullPath() : null,
-    getRoom,
-  );
+  } = useSWR<RoomResponseDTO[]>(id ? Endpoints.room.listByUser(id).toFullPath() : null, getRoom);
 
   const badgeColor = {
     NOT_STARTED: "bg-sky-500",
@@ -57,7 +54,7 @@ export const RoomList = () => {
     [rooms],
   );
 
-  if (isLoading) {
+  if (rooms === undefined || isLoading) {
     return <Loader message="회의실 정보 로딩중" />;
   }
 

@@ -1,55 +1,36 @@
+import useSWR from "swr";
+import { useCallback, useEffect } from "react";
 import { subscribeToSSE } from "@/lib/api/sse";
-import { SSEConnectionInfo } from "@/lib/api/types/sse-server.dto";
-import { useEffect, useState } from "react";
+import { customFetch } from "@/lib/api/fetcher";
 
-export function useSSE<T>(
-  key: string,
-  url: string | null,
-  connectionInfo: SSEConnectionInfo | null,
-) {
-  console.log("useSSE: url", url);
-  console.log("useSSE: connectionInfo", connectionInfo);
-  const [data, setData] = useState<T | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+export const useSSE = <T extends unknown>(key: string, sseUrl: string, token: string) => {
+  const fetcher = useCallback((url: string) => customFetch<T>(url), []);
+
+  console.log("sseUrl", sseUrl);
+
+  const { data, mutate, error, isLoading } = useSWR<T>(sseUrl, fetcher);
 
   useEffect(() => {
-    // URL이나 연결 정보가 없으면 연결하지 않음
-    if (!url || !connectionInfo) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    // 역할에 따른 헤더 설정
-    const headers: Record<string, string> = {
-      "X-Client-Role": connectionInfo.role,
-    };
-
-    if (connectionInfo.role === "PARTICIPANT") {
-      headers["X-Participant-Id"] = connectionInfo.participantId;
-      headers["X-Room-Id"] = connectionInfo.roomId.toString();
-    } else {
-      headers["X-User-Id"] = connectionInfo.userId.toString();
-    }
-
-    console.log("headers", headers);
+    if (!sseUrl) return;
 
     const unsubscribe = subscribeToSSE(
-      url,
-      (parsedData) => {
-        setData(parsedData as T);
-        setIsLoading(false);
+      sseUrl,
+      (incomingData) => {
+        // mutate로 SWR 캐시 업데이트
+        mutate((prev) => {
+          if (!prev) return incomingData;
+          // 병합 방식은 데이터 구조에 따라 커스터마이징
+          return {
+            ...prev,
+            ...incomingData,
+          };
+        }, false); // false = revalidation 없이 캐시만 수정
       },
-      {
-        headers,
-      },
+      token,
     );
 
-    return () => {
-      unsubscribe();
-    };
-  }, [key, url, connectionInfo]);
+    return unsubscribe;
+  }, [sseUrl, mutate]);
 
   return { data, error, isLoading };
-}
+};

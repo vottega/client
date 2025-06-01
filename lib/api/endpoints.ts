@@ -90,8 +90,7 @@ export const Endpoints = {
     connect: (roomId: number | string) => new Endpoint(`/api/sse/room/${roomId}`, baseUrlMap.sse),
 
     /** `GET` - For participant connection */
-    connectParticipant: (roomId: number | string, participantId: UUID) =>
-      new Endpoint(`/api/sse/room?roomId=${roomId}&participantId=${participantId}`, baseUrlMap.sse),
+    connectParticipant: () => new Endpoint(`/api/sse/room`, baseUrlMap.sse),
 
     /** `GET` - For local development participant connection */
     connectLocal: (roomId: number | string, participantId: UUID) =>

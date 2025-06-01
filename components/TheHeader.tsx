@@ -26,7 +26,8 @@ import Link from "next/link";
 export default function TheHeader() {
   const { userId, role } = useAuth();
   const token = getToken();
-  const isLoggedIn = token !== null && userId !== undefined && role !== "USER";
+  const isLoggedIn = token != null && userId != undefined && role === "USER";
+  console.log(token, userId, role, isLoggedIn);
 
   return (
     <BaseHeader className="z-40">

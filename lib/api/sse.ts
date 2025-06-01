@@ -1,22 +1,10 @@
-interface SSEOptions extends EventSourceInit {
-  headers?: Record<string, string>;
-}
+import { EventSourcePolyfill } from "event-source-polyfill";
 
-export const subscribeToSSE = (
-  url: string,
-  onMessage: (data: any) => void,
-  options?: SSEOptions,
-) => {
-  // URL에 헤더 정보를 쿼리 파라미터로 추가
-  const urlWithHeaders = new URL(url);
-  if (options?.headers) {
-    Object.entries(options.headers).forEach(([key, value]) => {
-      urlWithHeaders.searchParams.append(key, value);
-    });
-  }
-
-  const { headers, ...eventSourceOptions } = options || {};
-  const eventSource = new EventSource(urlWithHeaders.toString(), eventSourceOptions);
+export const subscribeToSSE = (url: string, onMessage: (data: any) => void, token: string) => {
+  const eventSource = new EventSourcePolyfill("/sse", {
+    headers: { Authorization: `Bearer ${token}` },
+    heartbeatTimeout: 45000,
+  });
 
   eventSource.onmessage = (event) => {
     try {

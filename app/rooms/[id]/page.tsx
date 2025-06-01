@@ -34,11 +34,13 @@ import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
 import { useSSE } from "@/hooks/useSSE";
+import { getToken } from "@/lib/auth";
 
 export type SSEResponse = { type: RoomEventType; data: unknown };
 
 export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
-  const auth = useAuth();
+  const { role } = useAuth();
+  const token = useMemo(() => getToken(), []);
   const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
   const participantsRef = useRef<ParticipantResponseDTO[]>([]);
   const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
@@ -51,37 +53,13 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     [],
   );
 
-  // SSE 연결 정보 준비
-  const sseConnectionInfo = useMemo(() => {
-    if (!auth.role) return null;
-    return auth.role === "PARTICIPANT" && auth.participantId
-      ? {
-          role: "PARTICIPANT" as const,
-          participantId: auth.participantId,
-          roomId: Number(roomId),
-        }
-      : auth.role === "USER" && auth.userId
-        ? {
-            role: "USER" as const,
-            userId: auth.userId,
-            roomId: Number(roomId),
-          }
-        : null;
-  }, [auth.role, auth.participantId, auth.userId, roomId]);
-
-  // SSE URL 준비
   const sseUrl = useMemo(() => {
-    if (!sseConnectionInfo) return null;
-    return sseConnectionInfo.role === "PARTICIPANT"
-      ? Endpoints.sse.connectLocal(roomId, sseConnectionInfo.participantId).toFullPath()
-      : Endpoints.sse.connect(roomId).toFullPath();
-  }, [sseConnectionInfo, roomId]);
+    return role === "USER"
+      ? Endpoints.sse.connect(roomId).toFullPath()
+      : Endpoints.sse.connectParticipant().toFullPath();
+  }, [role, roomId]);
 
-  const {
-    data: sseResponse,
-    error,
-    isLoading,
-  } = useSSE<SSEResponse>(roomId, sseUrl, sseConnectionInfo);
+  const { data: sseResponse, error, isLoading } = useSSE<SSEResponse>(roomId, sseUrl, token ?? "");
 
   const {
     data: room,

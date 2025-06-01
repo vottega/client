@@ -39,5 +39,6 @@ export interface VerifyResponseDTO {
   role: Role;
   participantId: UUID | null;
   roomId: number | null;
-  userId: number | null;
+  id: number | null;
+  userId: string | null;
 }

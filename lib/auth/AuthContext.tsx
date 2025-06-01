@@ -1,19 +1,38 @@
 "use client";
 
-import { Role } from "@/lib/api/types/auth-service.dto";
+import { Endpoints } from "@/lib/api/endpoints";
+import { customFetch } from "@/lib/api/fetcher";
+import {
+  Role,
+  type VerifyRequestDTO,
+  type VerifyResponseDTO,
+} from "@/lib/api/types/auth-service.dto";
+import { getToken } from "@/lib/auth";
 import { UUID } from "crypto";
-import { createContext, useContext, ReactNode, useState, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  memo,
+} from "react";
+import useSWR from "swr";
 
 interface AuthState {
   role?: Role;
-  userId?: number;
-  participantId?: UUID;
+  id?: number | null;
+  userId?: string | null;
+  participantId?: UUID | null;
 }
 
 interface AuthContextValue {
   role?: Role;
-  userId?: number;
-  participantId?: UUID;
+  id?: number | null;
+  userId?: string | null;
+  participantId?: UUID | null;
   setAuth: (state: AuthState) => void;
 }
 
@@ -31,8 +50,37 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider({ children }: AuthProviderProps) {
+export const AuthProvider = memo(function AuthProvider({ children }: AuthProviderProps) {
+  console.log("AuthProvider");
+  const token = useMemo(() => getToken(), []);
+
+  const verifyTokenFetcher = useCallback(
+    async (url: string) =>
+      customFetch<VerifyResponseDTO>(url, {
+        method: "POST",
+        body: JSON.stringify({ token }),
+      }),
+    [token],
+  );
+
+  const {
+    data: verifyData,
+    isLoading,
+    error,
+  } = useSWR(token ? Endpoints.auth.verify().toFullPath() : null, verifyTokenFetcher);
+
   const [authState, setAuthState] = useState<AuthState>({});
+
+  useEffect(() => {
+    if (verifyData) {
+      setAuthState({
+        role: verifyData.role,
+        userId: verifyData.userId,
+        participantId: verifyData.participantId,
+        id: verifyData.id,
+      });
+    }
+  }, [verifyData]);
 
   const setAuth = useCallback((newState: AuthState) => {
     setAuthState(newState);
@@ -48,4 +96,4 @@ export function AuthProvider({ children }: AuthProviderProps) {
       {children}
     </AuthContext.Provider>
   );
-}
+});
