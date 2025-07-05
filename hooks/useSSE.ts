@@ -3,15 +3,17 @@ import { useCallback, useEffect } from "react";
 import { subscribeToSSE } from "@/lib/api/sse";
 import { customFetch } from "@/lib/api/fetcher";
 
-export const useSSE = <T extends unknown>(key: string, sseUrl: string, token: string) => {
+export const useSSE = <T extends unknown>(
+  key: string,
+  sseUrl: string | null,
+  token: string | null,
+) => {
   const fetcher = useCallback((url: string) => customFetch<T>(url), []);
-
-  console.log("sseUrl", sseUrl);
 
   const { data, mutate, error, isLoading } = useSWR<T>(sseUrl, fetcher);
 
   useEffect(() => {
-    if (!sseUrl) return;
+    if (!sseUrl || !token) return;
 
     const unsubscribe = subscribeToSSE(
       sseUrl,
@@ -30,7 +32,7 @@ export const useSSE = <T extends unknown>(key: string, sseUrl: string, token: st
     );
 
     return unsubscribe;
-  }, [sseUrl, mutate]);
+  }, [sseUrl, mutate, token]);
 
   return { data, error, isLoading };
 };

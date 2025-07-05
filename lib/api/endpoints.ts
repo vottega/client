@@ -72,8 +72,7 @@ export const Endpoints = {
     getDetail: (voteId: number | string) => new Endpoint(`/api/vote/${voteId}/detail`),
 
     /** `POST` */
-    updateStatus: (voteId: number | string, status: VoteStatus) =>
-      new Endpoint(`/api/vote/${voteId}/${status}`),
+    updateStatus: (voteId: number | string) => new Endpoint(`/api/vote/${voteId}/status`),
 
     /** `PUT` */
     submit: (voteId: number | string) => new Endpoint(`/api/vote/${voteId}`),

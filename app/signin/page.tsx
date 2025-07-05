@@ -27,6 +27,7 @@ export default function Signin() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    getValues,
   } = useForm<SigninFormData>({
     defaultValues: {
       userId: "",
@@ -58,11 +59,12 @@ export default function Signin() {
       localStorage.setItem("token", signinData.token);
       setAuth({
         role: "USER",
-        userId: 1,
+        userId: getValues("userId"),
+        id: 1,
       });
       router.push("/");
     }
-  }, [signinData, setAuth, router]);
+  }, [signinData, setAuth, router, getValues]);
 
   useEffect(() => {
     if (signinError) {

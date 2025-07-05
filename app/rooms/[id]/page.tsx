@@ -40,7 +40,7 @@ export type SSEResponse = { type: RoomEventType; data: unknown };
 
 export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
   const { role } = useAuth();
-  const token = useMemo(() => getToken(), []);
+  const token = getToken();
   const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
   const participantsRef = useRef<ParticipantResponseDTO[]>([]);
   const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
@@ -54,12 +54,13 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
   );
 
   const sseUrl = useMemo(() => {
+    if (role == null) return null;
     return role === "USER"
       ? Endpoints.sse.connect(roomId).toFullPath()
       : Endpoints.sse.connectParticipant().toFullPath();
   }, [role, roomId]);
 
-  const { data: sseResponse, error, isLoading } = useSSE<SSEResponse>(roomId, sseUrl, token ?? "");
+  const { data: sseResponse, error, isLoading } = useSSE<SSEResponse>(roomId, sseUrl, token);
 
   const {
     data: room,

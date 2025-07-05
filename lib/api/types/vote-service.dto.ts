@@ -37,6 +37,10 @@ export const VoteSchema = z.object({
 
 export interface VoteRequestDTO extends Omit<z.infer<typeof VoteSchema>, "startNow"> {}
 
+export interface VoteStatusRequestDTO {
+  status: VoteStatus;
+}
+
 export interface VoteResponseDTO {
   id: number;
   roomId: number;

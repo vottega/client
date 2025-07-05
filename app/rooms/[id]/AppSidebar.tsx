@@ -66,6 +66,7 @@ import {
   VoteSchema,
   type VoteDetailResponseDTO,
   type VoteRequestDTO,
+  type VoteStatusRequestDTO,
 } from "@/lib/api/types/vote-service.dto";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -399,11 +400,31 @@ export function VoteForm({
   const createVoteFetcher = (url: string, { arg }: { arg: VoteRequestDTO }) =>
     customFetch<VoteDetailResponseDTO>(url, { method: "POST", body: JSON.stringify(arg) });
 
+  const updateVoteStatusFetcher = (url: string, { arg }: { arg: VoteStatusRequestDTO }) =>
+    customFetch<VoteDetailResponseDTO>(url, { method: "POST", body: JSON.stringify(arg) });
+
   const {
     data,
     error,
     trigger: createVote,
   } = useSWRMutation(Endpoints.vote.create(roomId).toFullPath(), createVoteFetcher);
+
+  const shouldUpdateVoteStatus = useMemo(() => {
+    console.log(data, form.getValues("startNow"));
+    if (data != null && form.getValues("startNow")) {
+      return true;
+    }
+    return false;
+  }, [data, form]);
+
+  const {
+    data: voteStatus,
+    error: voteStatusError,
+    trigger: updateVoteStatus,
+  } = useSWRMutation(
+    shouldUpdateVoteStatus && data ? Endpoints.vote.updateStatus(data.id).toFullPath() : null,
+    updateVoteStatusFetcher,
+  );
 
   const ratioToQuorum = useCallback((ratio: FractionVO) => {
     const { numerator, denominator } = ratio;
@@ -411,12 +432,7 @@ export function VoteForm({
   }, []);
 
   function onSubmit(data: z.infer<typeof VoteSchema>) {
-    if (data.startNow) {
-      data.reservedStartTime = getKoreanTimeWithZeroSecond();
-    }
-
     const { startNow, ...reqBody } = data;
-
     createVote(reqBody);
   }
 
@@ -430,9 +446,19 @@ export function VoteForm({
 
   useEffect(() => {
     if (data) {
+      if (form.getValues("startNow")) {
+        updateVoteStatus({ status: "STARTED" });
+      } else {
+        onSuccess();
+      }
+    }
+  }, [data, form, onSuccess, updateVoteStatus]);
+
+  useEffect(() => {
+    if (voteStatus) {
       onSuccess();
     }
-  }, [data, onSuccess]);
+  }, [voteStatus, onSuccess]);
 
   return (
     <Form {...form}>

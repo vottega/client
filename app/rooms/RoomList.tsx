@@ -25,7 +25,7 @@ export const RoomList = () => {
     data: rooms,
     isLoading,
     error,
-  } = useSWR<RoomResponseDTO[]>(id ? Endpoints.room.listByUser(id).toFullPath() : null, getRoom);
+  } = useSWR<RoomResponseDTO[]>(id ? Endpoints.room.listByUser().toFullPath() : null, getRoom);
 
   const badgeColor = {
     NOT_STARTED: "bg-sky-500",
