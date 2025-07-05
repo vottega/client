@@ -4,6 +4,7 @@ import {
   VoteResponseDTO as VoteResponseDTOFromVote,
 } from "@/lib/api/types/vote-service.dto";
 import { UUID } from "crypto";
+import { Role } from "./auth-service.dto";
 
 export interface FractionVO {
   numerator: number;
@@ -64,3 +65,37 @@ export interface VoteResponseDTO extends VoteResponseDTOFromVote {
 }
 
 export type VoteAction = "EDIT" | "STATUS_CHANGE" | "RESET";
+
+interface BaseSSEConnectionInfo {
+  role: Role;
+  roomId: number;
+}
+
+interface ParticipantSSEConnectionInfo extends BaseSSEConnectionInfo {
+  role: "PARTICIPANT";
+  participantId: UUID;
+}
+
+interface UserSSEConnectionInfo extends BaseSSEConnectionInfo {
+  role: "USER";
+  userId: number;
+}
+
+export type SSEConnectionInfo = ParticipantSSEConnectionInfo | UserSSEConnectionInfo;
+
+interface BaseSSEHeaders {
+  "X-Client-Role": Role;
+  "X-Room-Id": string;
+}
+
+interface ParticipantSSEHeaders extends BaseSSEHeaders {
+  "X-Client-Role": "PARTICIPANT";
+  "X-Participant-Id": string;
+}
+
+interface UserSSEHeaders extends BaseSSEHeaders {
+  "X-Client-Role": "USER";
+  "X-User-Id": string;
+}
+
+export type SSEHeaders = ParticipantSSEHeaders | UserSSEHeaders;

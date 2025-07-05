@@ -1,9 +1,10 @@
-export const subscribeToSSE = (
-  url: string,
-  onMessage: (data: any) => void,
-  options?: EventSourceInit,
-) => {
-  const eventSource = new EventSource(url, options);
+import { EventSourcePolyfill } from "event-source-polyfill";
+
+export const subscribeToSSE = (url: string, onMessage: (data: any) => void, token: string) => {
+  const eventSource = new EventSourcePolyfill(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    heartbeatTimeout: 45000,
+  });
 
   eventSource.onmessage = (event) => {
     try {

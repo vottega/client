@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { useSSE } from "@/hooks/useSSE";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
 import { RoomResponseDTO, type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
@@ -30,13 +30,17 @@ import {
 } from "@/lib/api/types/sse-server.dto";
 import { Plus, Settings } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
 import useSWR from "swr";
+import { useSSE } from "@/hooks/useSSE";
+import { getToken } from "@/lib/auth";
 
 export type SSEResponse = { type: RoomEventType; data: unknown };
 
 export default function Rooms({ params: { id: roomId } }: { params: { id: string } }) {
+  const { role } = useAuth();
+  const token = getToken();
   const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
   const participantsRef = useRef<ParticipantResponseDTO[]>([]);
   const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
@@ -49,14 +53,14 @@ export default function Rooms({ params: { id: roomId } }: { params: { id: string
     [],
   );
 
-  const {
-    data: sseResponse,
-    error,
-    isLoading,
-  } = useSSE<SSEResponse>(
-    roomId,
-    Endpoints.sse.connect(roomId, "f5f8b219-c8fa-46cf-b92a-05dc29169156").toFullPath(),
-  );
+  const sseUrl = useMemo(() => {
+    if (role == null) return null;
+    return role === "USER"
+      ? Endpoints.sse.connect(roomId).toFullPath()
+      : Endpoints.sse.connectParticipant().toFullPath();
+  }, [role, roomId]);
+
+  const { data: sseResponse, error, isLoading } = useSSE<SSEResponse>(roomId, sseUrl, token);
 
   const {
     data: room,

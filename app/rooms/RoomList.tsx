@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Endpoints } from "@/lib/api/endpoints";
 import { customFetch } from "@/lib/api/fetcher";
 import { ROOM_STATUS, RoomResponseDTO, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { useAuth } from "@/lib/auth/AuthContext";
 import { formatDateTime } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,13 +17,15 @@ import useSWR from "swr";
 
 export const RoomList = () => {
   const router = useRouter();
+  const { id } = useAuth();
 
   const getRoom = (url: string) => customFetch(url);
 
-  const { data: rooms } = useSWR<RoomResponseDTO[]>(
-    Endpoints.room.listByUser(1).toFullPath(),
-    getRoom,
-  );
+  const {
+    data: rooms,
+    isLoading,
+    error,
+  } = useSWR<RoomResponseDTO[]>(id ? Endpoints.room.listByUser().toFullPath() : null, getRoom);
 
   const badgeColor = {
     NOT_STARTED: "bg-sky-500",
@@ -51,11 +54,11 @@ export const RoomList = () => {
     [rooms],
   );
 
-  if (rooms === undefined) {
+  if (rooms === undefined || isLoading) {
     return <Loader message="회의실 정보 로딩중" />;
   }
 
-  if (rooms.length === 0) {
+  if (rooms && rooms.length === 0) {
     return <EmptyRoomList />;
   }
 
