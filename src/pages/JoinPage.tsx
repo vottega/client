@@ -1,57 +1,28 @@
 import { JoinClient } from "@/components/JoinClient";
-import { Endpoints } from "@/lib/api/endpoints";
-import { ParticipantAuthResponseDTO } from "@/lib/api/types/auth-service.dto";
+import { useAuthenticateParticipant } from "@/lib/api/queries/auth";
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-
-async function authenticate(uuid: string): Promise<ParticipantAuthResponseDTO> {
-  const response = await fetch(Endpoints.auth.authenticateParticipant().toFullPath(), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ participantId: uuid }),
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error("Authentication failed");
-  }
-
-  return response.json();
-}
+import { useEffect } from "react";
 
 export default function JoinPage() {
   const { uuid } = useParams<{ uuid: string }>();
-  const [authData, setAuthData] = useState<ParticipantAuthResponseDTO | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAuthenticate = async () => {
-    if (!uuid) {
-      setError(new Error("유효하지 않은 링크입니다"));
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setError(null);
-      setIsLoading(true);
-      const data = await authenticate(uuid);
-      setAuthData(data);
-    } catch (e) {
-      setError(e as Error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const {
+    mutate: authenticate,
+    data: authData,
+    error,
+    isPending: isLoading,
+  } = useAuthenticateParticipant();
 
   useEffect(() => {
-    handleAuthenticate();
-  }, [uuid]);
+    if (uuid) {
+      authenticate({ participantId: uuid });
+    }
+  }, [uuid, authenticate]);
 
   const handleRetry = () => {
-    handleAuthenticate();
+    if (uuid) {
+      authenticate({ participantId: uuid });
+    }
   };
 
   if (isLoading) {
@@ -67,8 +38,8 @@ export default function JoinPage() {
 
   return (
     <JoinClient
-      initialData={authData}
-      error={error}
+      initialData={authData || null}
+      error={error || null}
       participantId={uuid || ""}
       onRetry={handleRetry}
     />

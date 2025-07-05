@@ -14,13 +14,11 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
+import { useVoteInfo } from "@/lib/api/queries/vote";
 import type { VoteResponseDTO, VoteResult, VoteStatus } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
-import { HTMLAttributes, useCallback, useMemo } from "react";
-import useSWR from "swr";
+import { HTMLAttributes, useMemo } from "react";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
@@ -123,14 +121,7 @@ const VoteCardFallback = ({ children }: HTMLAttributes<HTMLDivElement>) => {
 };
 
 export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
-  const getVoteList = useCallback((url: string) => customFetch<VoteResponseDTO[]>(url), []);
-
-  const {
-    data: voteList = [],
-    mutate: _refreshVoteList,
-    error: _error,
-    isLoading: _isLoading,
-  } = useSWR(Endpoints.vote.getInfo(roomId).toFullPath(), getVoteList);
+  const { data: voteList = [], error: _error, isLoading: _isLoading } = useVoteInfo(roomId);
 
   // const [voteList, setVoteList] = useState<VoteResponseDTO[]>(sample);
   const upcomingVoteList = useMemo(

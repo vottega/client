@@ -13,12 +13,12 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      port: 3000,
       proxy: {
         "/api": {
           target: env.VITE_SERVER_HOST || "http://localhost:9000",
           changeOrigin: true,
-          secure: false,
+          secure: false, // 개발 환경에서는 HTTP 허용
+          followRedirects: true,
         },
       },
     },

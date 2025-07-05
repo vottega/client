@@ -15,18 +15,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Roles, ROLES } from "@/constants/role";
 import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import {
-  CreateRoomRequestDTO,
-  ParticipantInfoDTO,
-  RoomResponseDTO,
-} from "@/lib/api/types/room-service.dto";
+import { apiClient } from "@/lib/api/client";
+import { ParticipantInfoDTO, RoomResponseDTO } from "@/lib/api/types/room-service.dto";
+import { useCreateRoom } from "@/lib/api/queries/room";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
+import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
 
 export default function NewRoomPage() {
@@ -56,42 +52,33 @@ export default function NewRoomPage() {
     role: "의장",
   };
 
-  const createRoomFetcher = async (url: string, { arg }: { arg: CreateRoomRequestDTO }) =>
-    customFetch<RoomResponseDTO>(url, {
-      method: "POST",
-      body: JSON.stringify(arg),
-    });
+  const registerMeApi = async (roomId: number): Promise<RoomResponseDTO> => {
+    const response = await apiClient.put(Endpoints.participant.add(roomId).path, [me]);
+    return response.data;
+  };
 
-  const registerMeFetcher = async (url: string) =>
-    customFetch<RoomResponseDTO>(url, {
-      method: "PUT",
-      body: JSON.stringify([me]),
-    });
+  const { mutate: createRoom, data: roomData, error, isPending: isCreating } = useCreateRoom();
 
-  // TODO: 에러/로딩 처리, 미들웨어 작성
   const {
-    trigger: createRoom,
-    data: roomData,
-    error,
-  } = useSWRMutation<RoomResponseDTO, Error, string, CreateRoomRequestDTO, RoomResponseDTO>(
-    Endpoints.room.create().toFullPath(),
-    createRoomFetcher,
-  );
-
-  const { error: registerError, data: registerData } = useSWR<
-    RoomResponseDTO,
-    Error,
-    () => string | null
-  >(
-    () => (roomData?.id ? Endpoints.participant.add(roomData.id).toFullPath() : null),
-    registerMeFetcher,
-  );
+    mutate: registerMe,
+    error: registerError,
+    data: registerData,
+    isPending: isRegistering,
+  } = useMutation({
+    mutationFn: registerMeApi,
+  });
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const newData: typeof data = { ...data, participantRoleList: [...roles.values()] };
     const createRoomRequestBody = { ...newData, ownerId: 1 };
     createRoom(createRoomRequestBody);
   }
+
+  useEffect(() => {
+    if (roomData && !registerData && !registerError) {
+      registerMe(roomData.id);
+    }
+  }, [roomData, registerData, registerError, registerMe]);
 
   useEffect(() => {
     if (error) {
@@ -160,7 +147,13 @@ export default function NewRoomPage() {
                 )}
               />
               <DialogFooter>
-                <Button type="submit">회의실 만들기</Button>
+                <Button type="submit" disabled={isCreating || isRegistering}>
+                  {isCreating
+                    ? "회의실 생성 중..."
+                    : isRegistering
+                      ? "등록 중..."
+                      : "회의실 만들기"}
+                </Button>
               </DialogFooter>
             </form>
           </Form>

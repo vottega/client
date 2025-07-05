@@ -15,9 +15,8 @@ import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import { RoomResponseDTO, type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
+import { useRoom } from "@/lib/api/queries/room";
+import { type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
 import {
   RoomEventType,
   type ParticipantResponseDTO as SSEParticipantResponseDTO,
@@ -26,9 +25,9 @@ import { Plus, Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import { useSSE } from "@/hooks/useSSE";
 import { getToken } from "@/lib/auth";
+import { Endpoints } from "@/lib/api/endpoints";
 
 export type SSEResponse = { type: RoomEventType; data: unknown };
 
@@ -39,14 +38,6 @@ export default function RoomDetailPage() {
   const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
   const participantsRef = useRef<ParticipantResponseDTO[]>([]);
   const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
-
-  const getRoom = useCallback(
-    (url: string) =>
-      customFetch<RoomResponseDTO>(url, {
-        method: "GET",
-      }),
-    [],
-  );
 
   const sseUrl = useMemo(() => {
     if (role == null || !roomId) return null;
@@ -61,11 +52,7 @@ export default function RoomDetailPage() {
     isLoading: _isLoading,
   } = useSSE<SSEResponse>(roomId || "", sseUrl, token);
 
-  const {
-    data: room,
-    error: _roomError,
-    isLoading: _isRoomLoading,
-  } = useSWR(roomId ? Endpoints.room.get(roomId).toFullPath() : null, getRoom);
+  const { data: room, error: _roomError, isLoading: _isRoomLoading } = useRoom(roomId);
 
   const { onFail, onSuccess, open, setOpen } = useVoteDialog();
 

@@ -1,22 +1,14 @@
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import {
-  Role,
-  // type VerifyRequestDTO,
-  type VerifyResponseDTO,
-} from "@/lib/api/types/auth-service.dto";
-import { getToken } from "@/lib/auth";
+import { Role } from "@/lib/api/types/auth-service.dto";
+import { useVerifyToken } from "@/lib/api/queries/auth";
 import {
   createContext,
   useContext,
   ReactNode,
   useState,
   useCallback,
-  useMemo,
   useEffect,
   memo,
 } from "react";
-import useSWR from "swr";
 
 type UUID = string;
 
@@ -51,22 +43,8 @@ interface AuthProviderProps {
 
 export const AuthProvider = memo(function AuthProvider({ children }: AuthProviderProps) {
   console.log("AuthProvider");
-  const token = useMemo(() => getToken(), []);
 
-  const verifyTokenFetcher = useCallback(
-    async (url: string) =>
-      customFetch<VerifyResponseDTO>(url, {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      }),
-    [token],
-  );
-
-  const {
-    data: verifyData,
-    isLoading: _isLoading,
-    error: _error,
-  } = useSWR(token ? Endpoints.auth.verify().toFullPath() : null, verifyTokenFetcher);
+  const { data: verifyData, isLoading: _isLoading, error: _error } = useVerifyToken();
 
   const [authState, setAuthState] = useState<AuthState>({});
 

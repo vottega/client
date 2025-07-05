@@ -1,8 +1,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useCallback, useEffect, useState } from "react";
-import useSWRMutation from "swr/mutation";
+import { useEffect, useState } from "react";
 
 import {
   Form,
@@ -17,13 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { customFetch } from "@/lib/api/fetcher";
-import { Endpoints } from "@/lib/api/endpoints";
-import type {
-  EmailCheckResponse,
-  UserCreateRequest,
-  UserIdCheckResponse,
-} from "@/lib/api/types/user-service.dto";
+import {
+  useCreateUser,
+  useCheckUserId,
+  useCheckEmail,
+  useSendEmail,
+  useValidateCode,
+} from "@/lib/api/queries/user";
+
 import { useToast } from "@/components/ui/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { useNavigate } from "react-router-dom";
@@ -59,76 +59,11 @@ export function SignupForm() {
     },
   });
 
-  const sendEmailFetcher = useCallback(
-    async (url: string, { arg }: { arg: { email: string } }) =>
-      customFetch<void>(url, {
-        method: "POST",
-        body: JSON.stringify(arg),
-      }),
-    [],
-  );
-
-  const {
-    trigger: sendEmail,
-    data: _sendEmailData,
-    error: sendEmailError,
-  } = useSWRMutation(Endpoints.user.sendEmail().toFullPath(), sendEmailFetcher);
-
-  const registerFetcher = useCallback(
-    async (url: string, { arg }: { arg: SignupFormValues }) =>
-      customFetch<UserCreateRequest>(url, {
-        method: "POST",
-        body: JSON.stringify(arg),
-      }),
-    [],
-  );
-
-  const { trigger: register, data: registerData } = useSWRMutation(
-    Endpoints.user.create().toFullPath(),
-    registerFetcher,
-  );
-
-  const checkUserIdFetcher = useCallback(
-    async (url: string, { arg }: { arg: { userId: string } }) =>
-      customFetch<UserIdCheckResponse>(url, {
-        method: "POST",
-        body: JSON.stringify(arg),
-      }),
-    [],
-  );
-
-  const { trigger: checkUserId } = useSWRMutation(
-    Endpoints.user.checkUserId().toFullPath(),
-    checkUserIdFetcher,
-  );
-
-  const checkEmailFetcher = useCallback(
-    async (url: string, { arg }: { arg: { email: string } }) =>
-      customFetch<EmailCheckResponse>(url, {
-        method: "POST",
-        body: JSON.stringify(arg),
-      }),
-    [],
-  );
-
-  const { trigger: checkEmail } = useSWRMutation(
-    Endpoints.user.checkEmail().toFullPath(),
-    checkEmailFetcher,
-  );
-
-  const verifyEmailCodeFetcher = useCallback(
-    async (url: string, { arg }: { arg: { email: string; emailAuthCode: string } }) =>
-      customFetch<void>(url, {
-        method: "POST",
-        body: JSON.stringify(arg),
-      }),
-    [],
-  );
-
-  const { trigger: verifyEmailCode } = useSWRMutation(
-    Endpoints.user.validateCode().toFullPath(),
-    verifyEmailCodeFetcher,
-  );
+  const { mutate: sendEmail, data: _sendEmailData, error: sendEmailError } = useSendEmail();
+  const { mutate: register, data: registerData } = useCreateUser();
+  const { mutateAsync: checkUserId } = useCheckUserId();
+  const { mutateAsync: checkEmail } = useCheckEmail();
+  const { mutateAsync: verifyEmailCode } = useValidateCode();
 
   const onSubmit = (values: SignupFormValues) => {
     if (userIdCheckResult !== "valid") {
@@ -164,8 +99,8 @@ export function SignupForm() {
       return;
     }
     try {
-      const { isDuplicate } = await checkUserId({ userId: value });
-      setUserIdCheckResult(isDuplicate ? "duplicated" : "valid");
+      const result = await checkUserId({ userId: value });
+      setUserIdCheckResult(result.available ? "valid" : "duplicated");
     } catch {
       setUserIdCheckResult("duplicated");
     }
@@ -179,8 +114,8 @@ export function SignupForm() {
     }
 
     try {
-      const { isDuplicate } = await checkEmail({ email });
-      if (isDuplicate) {
+      const result = await checkEmail({ email });
+      if (!result.available) {
         setEmailCheckResult("duplicated");
         return;
       }

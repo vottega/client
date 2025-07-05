@@ -56,23 +56,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import {
-  FractionVO,
-  VoteResponseDTO,
-  VoteSchema,
-  type VoteDetailResponseDTO,
-  type VoteRequestDTO,
-  type VoteStatusRequestDTO,
-} from "@/lib/api/types/vote-service.dto";
+import { useVoteInfo, useCreateVote, useUpdateVoteStatus } from "@/lib/api/queries/vote";
+import { FractionVO, VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
 import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useCallback, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
 import { z } from "zod";
 
 const sidebarRightData = {
@@ -88,14 +78,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
-  const getVoteList = useCallback((url: string) => customFetch<VoteResponseDTO[]>(url), []);
-
-  const {
-    data: voteList = [],
-    mutate: _refreshVoteList,
-    error: _error,
-    isLoading: _isLoading,
-  } = useSWR(Endpoints.vote.getInfo(roomId).toFullPath(), getVoteList);
+  const { data: voteList = [], error: _error, isLoading: _isLoading } = useVoteInfo(roomId);
 
   const skeletonFill = useMemo(() => Math.max(5 - voteList.length, 0), [voteList]);
 
@@ -395,34 +378,13 @@ export function VoteForm({
     },
   });
 
-  const createVoteFetcher = (url: string, { arg }: { arg: VoteRequestDTO }) =>
-    customFetch<VoteDetailResponseDTO>(url, { method: "POST", body: JSON.stringify(arg) });
-
-  const updateVoteStatusFetcher = (url: string, { arg }: { arg: VoteStatusRequestDTO }) =>
-    customFetch<VoteDetailResponseDTO>(url, { method: "POST", body: JSON.stringify(arg) });
+  const { mutate: createVote, data, error } = useCreateVote(roomId);
 
   const {
-    data,
-    error,
-    trigger: createVote,
-  } = useSWRMutation(Endpoints.vote.create(roomId).toFullPath(), createVoteFetcher);
-
-  const shouldUpdateVoteStatus = useMemo(() => {
-    console.log(data, form.getValues("startNow"));
-    if (data != null && form.getValues("startNow")) {
-      return true;
-    }
-    return false;
-  }, [data, form]);
-
-  const {
+    mutate: updateVoteStatus,
     data: voteStatus,
     error: _voteStatusError,
-    trigger: updateVoteStatus,
-  } = useSWRMutation(
-    shouldUpdateVoteStatus && data ? Endpoints.vote.updateStatus(data.id).toFullPath() : null,
-    updateVoteStatusFetcher,
-  );
+  } = useUpdateVoteStatus();
 
   const ratioToQuorum = useCallback((ratio: FractionVO) => {
     const { numerator, denominator } = ratio;
@@ -445,7 +407,7 @@ export function VoteForm({
   useEffect(() => {
     if (data) {
       if (form.getValues("startNow")) {
-        updateVoteStatus({ status: "STARTED" });
+        updateVoteStatus({ voteId: data.id, data: { status: "STARTED" } });
       } else {
         onSuccess();
       }

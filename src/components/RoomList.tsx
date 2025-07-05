@@ -3,26 +3,16 @@ import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import { ROOM_STATUS, RoomResponseDTO, RoomStatus } from "@/lib/api/types/room-service.dto";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { ROOM_STATUS, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { useRooms } from "@/lib/api/queries/room";
 import { formatDateTime } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
-import useSWR from "swr";
 
 export const RoomList = () => {
   const navigate = useNavigate();
-  const { id } = useAuth();
 
-  const getRoom = (url: string) => customFetch(url);
-
-  const {
-    data: rooms,
-    isLoading,
-    error: _error,
-  } = useSWR<RoomResponseDTO[]>(id ? Endpoints.room.listByUser().toFullPath() : null, getRoom);
+  const { data: rooms, isLoading, error: _error } = useRooms();
 
   const badgeColor = {
     NOT_STARTED: "bg-sky-500",

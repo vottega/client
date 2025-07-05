@@ -17,18 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Endpoints } from "@/lib/api/endpoints";
-import { customFetch } from "@/lib/api/fetcher";
-import type {
-  VotePaperRequestDTO,
-  VotePaperType,
-  VoteResponseDTO,
-} from "@/lib/api/types/vote-service.dto";
+import { useSubmitVote } from "@/lib/api/queries/vote";
+import type { VotePaperType, VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { useHttpErrorHandler } from "@/lib/hooks/useHttpErrorHandler";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useEffect, useState } from "react";
-import useSWRMutation from "swr/mutation";
 
 export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
   const handleError = useHttpErrorHandler();
@@ -43,14 +37,7 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     { value: "ABSTAIN", label: "기권" },
   ];
 
-  const submitVoteFetcher = (url: string, { arg }: { arg: VotePaperRequestDTO }) =>
-    customFetch(url, { method: "PUT", body: JSON.stringify(arg) });
-
-  const {
-    trigger: submitVote,
-    data,
-    error,
-  } = useSWRMutation(Endpoints.vote.submit(vote.id).toFullPath(), submitVoteFetcher);
+  const { mutate: submitVote, data, error } = useSubmitVote(vote.id);
 
   const getVoteLabel = (type: VotePaperType) => {
     return voteOptions.find((opt) => opt.value === type)?.label || "";
