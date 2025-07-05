@@ -1,30 +1,12 @@
-import { Role } from "@/lib/api/types/auth-service.dto";
+import { queryKeys } from "@/lib/api/queries";
 import { useVerifyToken } from "@/lib/api/queries/auth";
-import {
-  createContext,
-  useContext,
-  ReactNode,
-  useState,
-  useCallback,
-  useEffect,
-  memo,
-} from "react";
+import { type VerifyResponseDTO } from "@/lib/api/types/auth-service.dto";
+import { getToken } from "@/lib/auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { createContext, memo, ReactNode, useCallback, useContext } from "react";
 
-type UUID = string;
-
-interface AuthState {
-  role?: Role;
-  id?: number | null;
-  userId?: string | null;
-  participantId?: UUID | null;
-}
-
-interface AuthContextValue {
-  role?: Role;
-  id?: number | null;
-  userId?: string | null;
-  participantId?: UUID | null;
-  setAuth: (state: AuthState) => void;
+interface AuthContextValue extends VerifyResponseDTO {
+  setAuth: (state: VerifyResponseDTO) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -42,35 +24,24 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = memo(function AuthProvider({ children }: AuthProviderProps) {
-  console.log("AuthProvider");
+  const token = getToken();
 
-  const { data: verifyData, isLoading: _isLoading, error: _error } = useVerifyToken();
+  if (token === null) {
+    return <></>;
+  }
 
-  const [authState, setAuthState] = useState<AuthState>({});
-
-  useEffect(() => {
-    if (verifyData) {
-      setAuthState({
-        role: verifyData.role,
-        userId: verifyData.userId,
-        participantId: verifyData.participantId,
-        id: verifyData.id,
-      });
-    }
-  }, [verifyData]);
-
-  const setAuth = useCallback((newState: AuthState) => {
-    setAuthState(newState);
-  }, []);
-
-  return (
-    <AuthContext.Provider
-      value={{
-        ...authState,
-        setAuth,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const queryClient = useQueryClient();
+  const { data: verifyData, isLoading: _isLoading, error: _error } = useVerifyToken(token);
+  const setAuth = useCallback(
+    (newState: VerifyResponseDTO) => {
+      queryClient.setQueryData(queryKeys.auth.verify(), newState);
+    },
+    [queryClient],
   );
+
+  if (verifyData === undefined) {
+    return <></>;
+  }
+
+  return <AuthContext.Provider value={{ ...verifyData, setAuth }}>{children}</AuthContext.Provider>;
 });

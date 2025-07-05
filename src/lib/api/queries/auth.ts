@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../client";
 import { Endpoints } from "../endpoints";
-import { queryKeys } from "./index";
 import {
-  ParticipantAuthResponseDTO,
   AuthResponseDTO,
+  ParticipantAuthResponseDTO,
   VerifyResponseDTO,
 } from "../types/auth-service.dto";
+import { queryKeys } from "./index";
 
 // 인증 관련 API 함수들
 export const authApi = {
-  verifyToken: async (): Promise<VerifyResponseDTO> => {
-    const response = await apiClient.post(Endpoints.auth.verify().path);
+  verifyToken: async (token: string): Promise<VerifyResponseDTO> => {
+    const response = await apiClient.post(Endpoints.auth.verify().path, { token });
     return response.data;
   },
 
@@ -32,12 +32,10 @@ export const authApi = {
 };
 
 // 커스텀 훅들
-export const useVerifyToken = () => {
-  const token = localStorage.getItem("token");
-
+export const useVerifyToken = (token: string) => {
   return useQuery({
     queryKey: queryKeys.auth.verify(),
-    queryFn: authApi.verifyToken,
+    queryFn: () => authApi.verifyToken(token),
     enabled: !!token,
     staleTime: 10 * 60 * 1000, // 10분
   });
