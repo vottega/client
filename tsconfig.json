@@ -20,6 +20,9 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
+    /* Types */
+    "types": ["vite/client"],
+
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
@@ -30,6 +33,5 @@
     "esModuleInterop": true,
     "downlevelIteration": true
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"]
 }
