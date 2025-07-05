@@ -16,12 +16,12 @@ export const userApi = {
     await apiClient.post(Endpoints.user.create().path, data);
   },
 
-  checkUserId: async (data: UserIdCheckRequest): Promise<{ available: boolean }> => {
+  checkUserId: async (data: UserIdCheckRequest): Promise<{ isDuplicate: boolean }> => {
     const response = await apiClient.post(Endpoints.user.checkUserId().path, data);
     return response.data;
   },
 
-  checkEmail: async (data: EmailCheckRequest): Promise<{ available: boolean }> => {
+  checkEmail: async (data: EmailCheckRequest): Promise<{ isDuplicate: boolean }> => {
     const response = await apiClient.post(Endpoints.user.checkEmail().path, data);
     return response.data;
   },
