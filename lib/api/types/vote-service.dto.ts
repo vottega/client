@@ -97,6 +97,12 @@ export interface VotePaperDTO {
   votedAt: string | null;
 }
 
+export interface VotePaperRequestDTO {
+  voteId: number;
+  userId: UUID;
+  voteResultType: VotePaperType;
+}
+
 export type VoteStatus = "CREATED" | "STARTED" | "ENDED";
 
 export type VoteResult = "PASSED" | "REJECTED" | "NOT_DECIDED";

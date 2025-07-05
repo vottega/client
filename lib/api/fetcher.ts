@@ -1,4 +1,5 @@
 import { getToken } from "@/lib/auth";
+import { HttpError } from "./errors";
 
 export async function customFetch<T = any>(input: RequestInfo, options?: RequestInit): Promise<T> {
   const token = getToken();
@@ -22,7 +23,7 @@ export async function customFetch<T = any>(input: RequestInfo, options?: Request
 
     if (!res.ok) {
       const errorBody = await res.text();
-      throw new Error(`Fetch error: ${res.status} ${res.statusText} - ${errorBody}`);
+      throw new HttpError(res.status, res.statusText, errorBody);
     }
 
     const contentType = res.headers.get("Content-Type");
@@ -32,7 +33,11 @@ export async function customFetch<T = any>(input: RequestInfo, options?: Request
 
     return res.text() as unknown as T; // 텍스트 등 다른 형식 응답
   } catch (err) {
-    console.error("[fetch error]", err);
+    if (err instanceof HttpError) {
+      console.error(`[HTTP Error ${err.statusCode}]`, err.message);
+    } else {
+      console.error("[fetch error]", err);
+    }
     throw err;
   }
 }
