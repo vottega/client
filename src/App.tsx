@@ -15,7 +15,6 @@ import RoomSettingsRolesPage from "./pages/RoomSettingsRolesPage";
 import RoomSettingsVotesPage from "./pages/RoomSettingsVotesPage";
 import NewRoomPage from "./pages/NewRoomPage";
 import JoinPage from "./pages/JoinPage";
-import VotePage from "./pages/VotePage";
 
 function App() {
   return (
@@ -32,7 +31,6 @@ function App() {
         <Route path="/rooms/:id/settings/roles" element={<RoomSettingsRolesPage />} />
         <Route path="/rooms/:id/settings/votes" element={<RoomSettingsVotesPage />} />
         <Route path="/join/:uuid" element={<JoinPage />} />
-        <Route path="/vote/:id" element={<VotePage />} />
       </Routes>
       <Toaster />
       <Sonner />
