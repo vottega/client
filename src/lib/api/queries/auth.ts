@@ -42,25 +42,19 @@ export const useVerifyToken = (token: string) => {
 };
 
 export const useAuthenticateUser = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: authApi.authenticateUser,
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
-      queryClient.setQueryData(queryKeys.auth.verify(), data);
     },
   });
 };
 
 export const useAuthenticateParticipant = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: authApi.authenticateParticipant,
     onSuccess: (data) => {
       localStorage.setItem("token", data.token);
-      queryClient.setQueryData(queryKeys.auth.verify(), data);
     },
   });
 };
@@ -73,6 +67,7 @@ export const useLogout = () => {
       localStorage.removeItem("token");
     },
     onSuccess: () => {
+      queryClient.setQueryData(queryKeys.auth.verify(), null);
       queryClient.clear();
     },
   });

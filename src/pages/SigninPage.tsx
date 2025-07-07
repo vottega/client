@@ -1,12 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuthenticateUser } from "@/lib/api/queries/auth";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { isHttpError } from "@/lib/api/errors";
+import { useAuthenticateUser, useVerifyToken } from "@/lib/api/queries/auth";
+import { getToken } from "@/lib/auth";
 
 interface SigninFormData {
   userId: string;
@@ -14,13 +16,14 @@ interface SigninFormData {
 }
 
 export default function SigninPage() {
-  const { setAuth } = useAuth();
   const navigate = useNavigate();
+  const token = getToken();
+  const { toast } = useToast();
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-    getValues,
   } = useForm<SigninFormData>({
     defaultValues: {
       userId: "",
@@ -30,32 +33,99 @@ export default function SigninPage() {
 
   const {
     mutate: signin,
-    data: signinData,
     error: signinError,
     isPending: isSigninPending,
+    isSuccess: isSigninSuccess,
   } = useAuthenticateUser();
 
-  const onSubmit = (values: SigninFormData) => {
-    signin(values);
-  };
+  const {
+    error: verifyError,
+    isSuccess: isVerifySuccess,
+    refetch: verifyToken,
+  } = useVerifyToken(token ?? "");
+
+  const onSubmit = useCallback(
+    (values: SigninFormData) => {
+      signin(values);
+    },
+    [signin],
+  );
 
   useEffect(() => {
-    if (signinData) {
-      localStorage.setItem("token", signinData.token);
-      setAuth({
-        role: "USER",
-        userId: getValues("userId"),
-        id: 1,
-      });
-      navigate("/");
+    if (isSigninSuccess) {
+      verifyToken();
     }
-  }, [signinData, setAuth, navigate, getValues]);
+  }, [isSigninSuccess, verifyToken]);
 
+  // 로그인 에러 처리
   useEffect(() => {
     if (signinError) {
-      console.log(signinError);
+      let errorMessage = "로그인에 실패했습니다. 다시 시도해주세요.";
+
+      if (isHttpError(signinError)) {
+        switch (signinError.statusCode) {
+          case 400:
+            errorMessage = "아이디 또는 비밀번호가 잘못되었습니다.";
+            break;
+          case 401:
+            errorMessage = "인증에 실패했습니다. 아이디와 비밀번호를 확인해주세요.";
+            break;
+          case 403:
+            errorMessage = "접근이 거부되었습니다. 관리자에게 문의하세요.";
+            break;
+          case 404:
+            errorMessage = "존재하지 않는 사용자입니다.";
+            break;
+          case 429:
+            errorMessage = "너무 많은 로그인 시도가 있었습니다. 잠시 후 다시 시도해주세요.";
+            break;
+          case 500:
+          default:
+            errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+            break;
+        }
+      }
+
+      toast({
+        variant: "destructive",
+        title: "로그인 실패",
+        description: errorMessage,
+      });
     }
-  }, [signinError]);
+  }, [signinError, toast]);
+
+  // 토큰 검증 에러 처리
+  useEffect(() => {
+    if (verifyError) {
+      let errorMessage = "인증 확인에 실패했습니다.";
+
+      if (isHttpError(verifyError)) {
+        switch (verifyError.statusCode) {
+          case 401:
+            errorMessage = "토큰이 유효하지 않습니다. 다시 로그인해주세요.";
+            break;
+          case 403:
+            errorMessage = "접근 권한이 없습니다.";
+            break;
+          default:
+            errorMessage = "인증 확인 중 오류가 발생했습니다.";
+            break;
+        }
+      }
+
+      toast({
+        variant: "destructive",
+        title: "인증 실패",
+        description: errorMessage,
+      });
+    }
+  }, [verifyError, toast]);
+
+  useEffect(() => {
+    if (isVerifySuccess) {
+      navigate("/");
+    }
+  }, [isVerifySuccess, navigate, toast]);
 
   return (
     <div className="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">

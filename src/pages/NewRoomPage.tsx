@@ -1,5 +1,4 @@
 import { RoleList } from "@/components/RoleList";
-import TheHeader from "@/components/TheHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DialogFooter } from "@/components/ui/dialog";
@@ -99,66 +98,55 @@ export default function NewRoomPage() {
   }, [registerError, navigate, registerData, roomData]);
 
   return (
-    <>
-      <TheHeader />
-      <div className="w-full max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle>회의실 만들기</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="roomName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-right">회의실 이름</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="회의실 이름을 입력해주세요." autoFocus />
-                    </FormControl>
-                    <FormMessage />
-                    <FormDescription className="sr-only">
-                      회의실 이름을 입력해주세요.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="participantRoleList"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="text-right">참여자 역할</FormLabel>
-                    <FormDescription>
-                      스위치 버튼으로 참여자 역할의 투표권 여부를 조정할 수 있어요.
-                    </FormDescription>
-                    <FormControl>
-                      <Card>
-                        <CardContent className="p-4">
-                          <RoleList roles={roles} setRoles={setRoles} />
-                        </CardContent>
-                      </Card>
-                    </FormControl>
-                    <FormDescription className="sr-only">
-                      회의실 이름을 입력해주세요.
-                    </FormDescription>
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button type="submit" disabled={isCreating || isRegistering}>
-                  {isCreating
-                    ? "회의실 생성 중..."
-                    : isRegistering
-                      ? "등록 중..."
-                      : "회의실 만들기"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </CardContent>
-      </div>
-    </>
+    <div className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>회의실 만들기</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="roomName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-right">회의실 이름</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="회의실 이름을 입력해주세요." autoFocus />
+                  </FormControl>
+                  <FormMessage />
+                  <FormDescription className="sr-only">회의실 이름을 입력해주세요.</FormDescription>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="participantRoleList"
+              render={() => (
+                <FormItem>
+                  <FormLabel className="text-right">참여자 역할</FormLabel>
+                  <FormDescription>
+                    스위치 버튼으로 참여자 역할의 투표권 여부를 조정할 수 있어요.
+                  </FormDescription>
+                  <FormControl>
+                    <Card>
+                      <CardContent className="p-4">
+                        <RoleList roles={roles} setRoles={setRoles} />
+                      </CardContent>
+                    </Card>
+                  </FormControl>
+                  <FormDescription className="sr-only">회의실 이름을 입력해주세요.</FormDescription>
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" disabled={isCreating || isRegistering}>
+                {isCreating ? "회의실 생성 중..." : isRegistering ? "등록 중..." : "회의실 만들기"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </CardContent>
+    </div>
   );
 }

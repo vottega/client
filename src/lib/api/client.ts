@@ -1,4 +1,5 @@
 import axios from "axios";
+import { HttpError } from "./errors";
 
 // axios 인스턴스 생성
 export const apiClient = axios.create({
@@ -28,12 +29,25 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // 토큰 만료 시 로그아웃 처리
-      localStorage.removeItem("token");
-      window.location.href = "/signin";
+    // axios 에러를 HttpError로 변환
+    if (error.response) {
+      // 서버에서 응답은 왔지만 2xx 범위가 아닌 경우
+      const httpError = new HttpError(
+        error.response.status,
+        error.response.statusText,
+        error.response.data ? JSON.stringify(error.response.data) : error.message,
+      );
+
+      return Promise.reject(httpError);
+    } else if (error.request) {
+      // 요청은 보냈지만 응답이 없는 경우 (네트워크 오류)
+      const networkError = new HttpError(0, "Network Error", error.message);
+      return Promise.reject(networkError);
+    } else {
+      // 요청을 설정하는 중에 오류가 발생한 경우
+      const configError = new HttpError(0, "Request Configuration Error", error.message);
+      return Promise.reject(configError);
     }
-    return Promise.reject(error);
   },
 );
 

@@ -1,19 +1,23 @@
-import { queryKeys } from "@/lib/api/queries";
-import { useVerifyToken } from "@/lib/api/queries/auth";
-import { type VerifyResponseDTO } from "@/lib/api/types/auth-service.dto";
+import { isHttpError } from "@/lib/api/errors";
+import { useLogout, useVerifyToken } from "@/lib/api/queries/auth";
+import { type AuthResponseDTO, type VerifyResponseDTO } from "@/lib/api/types/auth-service.dto";
 import { getToken } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
-import { createContext, memo, ReactNode, useCallback, useContext } from "react";
+import { createContext, memo, ReactNode, useContext, useEffect } from "react";
 
-interface AuthContextValue extends VerifyResponseDTO {
-  setAuth: (state: VerifyResponseDTO) => void;
-}
+interface AuthContextValue extends VerifyResponseDTO, AuthResponseDTO {}
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const NOT_MOUNTED = Symbol("AuthProvider not mounted");
 
-export function useAuth() {
+export const NOT_AUTHENTICATED = Symbol("User not authenticated");
+
+const AuthContext = createContext<AuthContextValue | typeof NOT_MOUNTED | typeof NOT_AUTHENTICATED>(
+  NOT_MOUNTED,
+);
+
+export function useAuth(): AuthContextValue | typeof NOT_AUTHENTICATED {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === NOT_MOUNTED) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
@@ -25,23 +29,24 @@ interface AuthProviderProps {
 
 export const AuthProvider = memo(function AuthProvider({ children }: AuthProviderProps) {
   const token = getToken();
-
-  if (token === null) {
-    return <></>;
-  }
-
   const queryClient = useQueryClient();
-  const { data: verifyData, isLoading: _isLoading, error: _error } = useVerifyToken(token);
-  const setAuth = useCallback(
-    (newState: VerifyResponseDTO) => {
-      queryClient.setQueryData(queryKeys.auth.verify(), newState);
-    },
-    [queryClient],
-  );
+  const { data: verifyData, error: verifyError } = useVerifyToken(token ?? "");
+  const { mutate: logout } = useLogout();
 
-  if (verifyData === undefined) {
-    return <></>;
+  useEffect(() => {
+    if (verifyError && isHttpError(verifyError) && verifyError.isUnauthorized()) {
+      logout();
+      return;
+    }
+  }, [verifyError, queryClient]);
+
+  if (
+    token === null ||
+    verifyData === undefined ||
+    (verifyError && isHttpError(verifyError) && verifyError.isUnauthorized())
+  ) {
+    return <AuthContext.Provider value={NOT_AUTHENTICATED}>{children}</AuthContext.Provider>;
   }
 
-  return <AuthContext.Provider value={{ ...verifyData, setAuth }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...verifyData, token }}>{children}</AuthContext.Provider>;
 });

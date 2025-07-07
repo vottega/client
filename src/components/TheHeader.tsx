@@ -11,32 +11,43 @@ import {
 import {
   NavigationMenu,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { getToken } from "@/lib/auth";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { useLogout } from "@/lib/api/queries/auth";
+import { NOT_AUTHENTICATED, useAuth } from "@/lib/auth/AuthContext";
 import { CircleUser } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function TheHeader() {
-  const { userId, role } = useAuth();
-  const token = getToken();
-  const isLoggedIn = token != null && userId != undefined && role === "USER";
-  console.log(token, userId, role, isLoggedIn);
+  const auth = useAuth();
+  const isLoggedIn = useMemo(() => auth !== NOT_AUTHENTICATED && auth?.role === "USER", [auth]);
+  const navigate = useNavigate();
+  const { mutate: logout } = useLogout();
+
+  const handleRoomButtonClick = useCallback(() => {
+    navigate("/rooms");
+  }, [navigate]);
+
+  const handleLogout = useCallback(() => {
+    logout(undefined, {
+      onSuccess: () => {
+        navigate("/");
+      },
+    });
+  }, [logout, navigate]);
 
   return (
     <BaseHeader className="z-40">
       <BaseHeader.Logo className="hidden md:block" />
       <h1>Vottega</h1>
       {isLoggedIn && (
-        <NavigationMenu className="hidden md:flex">
+        <NavigationMenu className="flex">
           <NavigationMenuList>
             <NavigationMenuItem>
-              <NavigationMenuLink href="/rooms" className={navigationMenuTriggerStyle()}>
+              <Button variant="ghost" onClick={handleRoomButtonClick}>
                 회의실
-              </NavigationMenuLink>
+              </Button>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
@@ -56,7 +67,7 @@ export default function TheHeader() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>설정</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>로그아웃</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>로그아웃</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
