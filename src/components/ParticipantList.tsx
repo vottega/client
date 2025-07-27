@@ -27,6 +27,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDeleteParticipant, useRoom } from "@/lib/api/queries/room";
+import type { ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
 import { formatPhone } from "@/lib/utils";
 import {
   ColumnDef,
@@ -41,110 +43,110 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, Hand, MoreHorizontal } from "lucide-react";
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 export type Participant = Invitation & {
   role: string | null;
 };
 
-const data: Participant[] = [
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-  {
-    name: "류기현",
-    phoneNumber: "01012345678",
-    position: "중문 정",
-    role: "의장",
-  },
-  {
-    name: "윤민균",
-    phoneNumber: "01012345679",
-    position: "인지융 부",
-    role: "서기",
-  },
-];
+// const data: Participant[] = [
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+//   {
+//     name: "류기현",
+//     phoneNumber: "01012345678",
+//     position: "중문 정",
+//     role: "의장",
+//   },
+//   {
+//     name: "윤민균",
+//     phoneNumber: "01012345679",
+//     position: "인지융 부",
+//     role: "서기",
+//   },
+// ];
 
 const translation = {
   name: "이름",
@@ -154,14 +156,15 @@ const translation = {
 };
 
 // TODO: 추가 시 페이지네이션 유지, 스크롤 시 추가 폼 sticky, 추가 시 새롭게 추가된 요소로 scrollIntoView
-export function ParticipantList() {
+export function ParticipantList({ roomId }: { roomId: string }) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
-  const [participants, setParticipants] = useState<Participant[]>(data);
+  const { data: room } = useRoom(roomId);
+  const participants = useMemo(() => room?.participants ?? [], [room]);
 
-  const columns: ColumnDef<Participant>[] = useMemo(
+  const columns: ColumnDef<ParticipantResponseDTO>[] = useMemo(
     () => [
       {
         accessorKey: "name",
@@ -201,11 +204,11 @@ export function ParticipantList() {
         enableHiding: false,
         cell: ({ row }) => {
           const participant = row.original;
-          return <MoreButton participant={participant} setParticipants={setParticipants} />;
+          return <MoreButton participant={participant} roomId={roomId} />;
         },
       },
     ],
-    [setParticipants],
+    [roomId],
   );
 
   const table = useReactTable({
@@ -266,7 +269,7 @@ export function ParticipantList() {
               <Button>참여자 추가</Button>
             </PopoverTrigger>
             <PopoverContent className="w-[23rem]">
-              <InvitationForm participants={participants} setParticipants={setParticipants} />
+              <InvitationForm roomId={roomId} />
             </PopoverContent>
           </Popover>
         </div>
@@ -340,17 +343,18 @@ export function ParticipantList() {
 }
 
 export function MoreButton({
+  roomId,
   participant,
-  setParticipants,
 }: {
-  participant: Participant;
-  setParticipants: Dispatch<SetStateAction<Participant[]>>;
+  roomId: string;
+  participant: ParticipantResponseDTO;
 }) {
   const [dialogMenu, setDialogMenu] = useState<"none" | "kickParticipant">("none");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [alertOpen, setAlertOpen] = useState(false);
+  const { mutate: deleteParticipant } = useDeleteParticipant();
   const handleConfirmKick = () => {
-    setParticipants((prev) => prev.filter((p) => !Object.is(p, participant)));
+    deleteParticipant({ roomId, participantId: participant.id });
   };
 
   return (

@@ -25,7 +25,7 @@ export default function RoomSettingsParticipantsPage() {
           <ul>
             <li>
               <TypographyH4>참여자</TypographyH4>
-              <ParticipantList />
+              <ParticipantList roomId={roomId ?? ""} />
             </li>
           </ul>
         </Main>

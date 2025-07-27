@@ -1,4 +1,3 @@
-import { Participant } from "@/components/ParticipantList";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -9,10 +8,11 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAddParticipant, useRoom } from "@/lib/api/queries/room";
 import { cn, phoneRegex } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CircleCheck, CircleX } from "lucide-react";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -32,15 +32,10 @@ const InvitationSchema = z.object({
   position: z.string().nullable(),
 });
 
-export function InvitationForm({
-  participants,
-  setParticipants,
-  className,
-}: {
-  participants: Participant[];
-  setParticipants: Dispatch<SetStateAction<Participant[]>>;
-  className?: string;
-}) {
+export function InvitationForm({ roomId, className }: { roomId: string; className?: string }) {
+  const { mutate: addParticipant, isSuccess: isAddParticipantSuccess } = useAddParticipant();
+  const { data: room } = useRoom(roomId);
+  const participants = room?.participants ?? [];
   const form = useForm<z.infer<typeof InvitationSchema>>({
     resolver: zodResolver(InvitationSchema),
     defaultValues: {
@@ -56,24 +51,33 @@ export function InvitationForm({
   const firstInputRef = useRef<HTMLInputElement>(null);
 
   function onSubmit(data: Invitation) {
-    if (participants.find(({ phoneNumber }) => phoneNumber === data.phoneNumber)) {
+    if (participants.find(({ name }) => name === data.name)) {
       setNotification("fail");
     } else {
-      const newData: Participant = {
-        name: data.name,
-        phoneNumber: data.phoneNumber || null,
-        position: data.position || null,
-        role: "회의자",
-      };
-      setParticipants((prev: Participant[]) => [...prev, newData]);
-      setNotification("success");
-      setNewParticipantName(newData.name);
-      firstInputRef.current?.focus();
-      form.reset();
+      addParticipant({
+        roomId,
+        data: [
+          {
+            name: data.name,
+            phoneNumber: data.phoneNumber || null,
+            position: data.position || null,
+            role: "회의자",
+          },
+        ],
+      });
+      setNewParticipantName(data.name);
     }
 
     setAnimate(true);
   }
+
+  useEffect(() => {
+    if (isAddParticipantSuccess) {
+      setNotification("success");
+      firstInputRef.current?.focus();
+      form.reset();
+    }
+  }, [isAddParticipantSuccess]);
 
   return (
     <div className={cn("grid gap-4", className)}>
