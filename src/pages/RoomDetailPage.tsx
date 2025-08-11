@@ -1,7 +1,6 @@
 import { AppSidebar, VoteForm } from "@/components/AppSidebar";
-import { OnlineOffline } from "@/components/OnlineOffline";
-import { VoteList } from "@/components/VoteList";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
+import { OnlineOffline } from "@/components/OnlineOffline";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -13,114 +12,49 @@ import {
 } from "@/components/ui/dialog";
 import { Main } from "@/components/ui/main";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useAuth } from "@/lib/auth/AuthContext";
+import { VoteList } from "@/components/VoteList";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
+import { useParticipantEventHandler } from "@/hooks/useParticipantEventHandler";
+import { useRoomEventFetchSource } from "@/hooks/useRoomEventFetchSource";
+import { useRoomInfoEventHandler } from "@/hooks/useRoomInfoEventHandler";
+import { useVoteEventHandler } from "@/hooks/useVoteEventHandler";
+import { useVotePaperEventHandler } from "@/hooks/useVotePaperEventHandler";
+import { Endpoints } from "@/lib/api/endpoints";
+import { useVerifyToken } from "@/lib/api/queries/auth";
 import { useRoom } from "@/lib/api/queries/room";
-import { type ParticipantResponseDTO } from "@/lib/api/types/room-service.dto";
-import {
-  RoomEventType,
-  type ParticipantResponseDTO as SSEParticipantResponseDTO,
-} from "@/lib/api/types/sse-server.dto";
+import { getToken } from "@/lib/auth";
 import { Plus, Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
-import { toast } from "sonner";
-import { useSSE } from "@/hooks/useSSE";
-import { getToken } from "@/lib/auth";
-import { Endpoints } from "@/lib/api/endpoints";
-
-export type SSEResponse = { type: RoomEventType; data: unknown };
 
 export default function RoomDetailPage() {
-  const { id: roomId } = useParams<{ id: string }>();
-  const { role } = useAuth();
   const token = getToken();
-  const [participants, setParticipants] = useState<ParticipantResponseDTO[]>([]);
-  const participantsRef = useRef<ParticipantResponseDTO[]>([]);
-  const [sseResponseQueue, setSseResponseQueue] = useState<SSEResponse[]>([]);
+  const { id: roomId } = useParams<{ id: string }>();
+  const { data: room, isSuccess: isRoomSuccess } = useRoom(roomId);
+  const { data: verifyData } = useVerifyToken(token ?? "");
 
-  const sseUrl = useMemo(() => {
-    if (role == null || !roomId) return null;
-    return role === "USER"
-      ? Endpoints.sse.connect(roomId).toFullPath()
-      : Endpoints.sse.connectParticipant().toFullPath();
-  }, [role, roomId]);
-
-  const {
-    data: sseResponse,
-    error: _error,
-    isLoading: _isLoading,
-  } = useSSE<SSEResponse>(roomId || "", sseUrl, token);
-
-  const { data: room, error: _roomError, isLoading: _isRoomLoading } = useRoom(roomId);
+  const roomInfoEventHandler = useRoomInfoEventHandler();
+  const participantEventHandler = useParticipantEventHandler(room?.participants ?? []);
+  const voteEventHandler = useVoteEventHandler();
+  const votePaperEventHandler = useVotePaperEventHandler();
 
   const { onFail, onSuccess, open, setOpen } = useVoteDialog();
 
-  const handleSseResponse = useCallback(({ type, data }: SSEResponse) => {
-    switch (type) {
-      case "ROOM_INFO": {
-        // TODO: 방 정보 업데이트 처리
-        break;
-      }
-      case "PARTICIPANT_INFO": {
-        const participant = data as SSEParticipantResponseDTO;
-        switch (participant.action) {
-          case "ENTER": {
-            const index = participantsRef.current.findIndex((p) => p.id === participant.id);
-
-            if (index === -1) {
-              console.debug("참여자 정보가 없어요.");
-              setSseResponseQueue((prev) => [...prev, { type, data }]);
-              return;
-            }
-
-            setParticipants((prev) => {
-              const newParticipants = [...prev];
-              newParticipants[index].isEntered = true;
-              return newParticipants;
-            });
-
-            toast(`${participantsRef.current[index].name}님이 입장했어요.`, {
-              description: participant.enteredAt,
-              action: {
-                label: "현재 인원 보기",
-                onClick: () => console.log("hello world"),
-              },
-            });
-            break;
-          }
-        }
-        break;
-      }
-      case "VOTE_INFO": {
-        // TODO: 투표 정보 업데이트 처리
-        break;
-      }
-      case "VOTE_PAPER_INFO": {
-        // TODO: 투표 용지 정보 업데이트 처리
-        break;
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (room) {
-      setParticipants(room.participants);
-      participantsRef.current = room.participants;
-    }
-  }, [room]);
-
-  useEffect(() => {
-    if (!sseResponse) return;
-    handleSseResponse(sseResponse);
-  }, [sseResponse, setParticipants, handleSseResponse]);
-
-  useEffect(() => {
-    if (sseResponseQueue.length === 0) return;
-    const [head, ...rest] = sseResponseQueue;
-    setSseResponseQueue(rest);
-    handleSseResponse(head);
-  }, [sseResponseQueue, handleSseResponse]);
+  const sseUrl =
+    verifyData?.role === "USER"
+      ? Endpoints.sse.connect(roomId ?? "").path
+      : Endpoints.sse.connectParticipant().path;
+  useRoomEventFetchSource(
+    sseUrl,
+    {
+      ROOM_INFO: roomInfoEventHandler,
+      PARTICIPANT_INFO: participantEventHandler,
+      VOTE_INFO: voteEventHandler,
+      VOTE_PAPER_INFO: votePaperEventHandler,
+    },
+    {
+      enabled: isRoomSuccess,
+    },
+  );
 
   if (!roomId) {
     return <div>잘못된 접근입니다.</div>;
@@ -172,7 +106,7 @@ export default function RoomDetailPage() {
                 <CardTitle>참여중인 인원</CardTitle>
               </CardHeader>
               <CardContent>
-                <OnlineOffline participants={participants} />
+                <OnlineOffline participants={room?.participants ?? []} />
               </CardContent>
             </Card>
           </div>

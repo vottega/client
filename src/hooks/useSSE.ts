@@ -1,48 +1,70 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { Endpoints } from "@/lib/api/endpoints";
 import { subscribeToSSE } from "@/lib/api/sse";
-import { apiClient } from "@/lib/api/client";
+import { getToken } from "@/lib/auth";
+import { useVerifyToken } from "@/lib/api/queries/auth";
 
-export const useSSE = <T extends unknown>(
-  key: string,
-  sseUrl: string | null,
-  token: string | null,
-) => {
-  const queryClient = useQueryClient();
+export const useSSE = <T extends unknown>(roomId: string) => {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const { data, error, isLoading } = useQuery<T>({
-    queryKey: ["sse", key],
-    queryFn: async () => {
-      if (!sseUrl) throw new Error("SSE URL is required");
-      const response = await apiClient.get(sseUrl);
-      return response.data;
-    },
-    enabled: !!sseUrl,
-    staleTime: 0, // SSE 데이터는 항상 fresh하게 처리
-    refetchInterval: false, // SSE는 polling이 아니므로 비활성화
-  });
+  const token = getToken();
+  const { data: verifyData } = useVerifyToken(token ?? "");
+
+  const sseUrl =
+    verifyData?.role === "USER"
+      ? Endpoints.sse.connect(roomId).path
+      : Endpoints.sse.connectParticipant().path;
+
+  const handleMessage = useCallback((messageData: T) => {
+    setData(messageData);
+    setIsLoading(false);
+    setError(null);
+  }, []);
+
+  const handleOpen = useCallback(() => {
+    setIsConnected(true);
+    setIsLoading(false);
+    setError(null);
+  }, []);
+
+  const handleError = useCallback((errorData: any) => {
+    setError(errorData);
+    setIsConnected(false);
+    // 에러가 발생해도 로딩은 false로 설정 (재연결 시도 중)
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    if (!sseUrl || !token) return;
+    if (!sseUrl || !token) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     const unsubscribe = subscribeToSSE(
       sseUrl,
-      (incomingData) => {
-        // queryClient로 React Query 캐시 업데이트
-        queryClient.setQueryData<T>(["sse", key], (prev) => {
-          if (!prev) return incomingData;
-          // 병합 방식은 데이터 구조에 따라 커스터마이징
-          return {
-            ...prev,
-            ...incomingData,
-          };
-        });
-      },
+      handleMessage,
       token,
+      handleOpen,
+      handleError,
+      5000, // 5초 후 재연결 시도
     );
 
-    return unsubscribe;
-  }, [sseUrl, queryClient, key, token]);
+    return () => {
+      unsubscribe();
+      setIsConnected(false);
+    };
+  }, [sseUrl, token, handleMessage, handleOpen, handleError]);
 
-  return { data, error, isLoading };
+  return {
+    data,
+    error,
+    isLoading,
+    isConnected,
+  };
 };
