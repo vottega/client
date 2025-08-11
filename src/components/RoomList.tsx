@@ -1,18 +1,22 @@
 import { EmptyState } from "@/components/EmptyState";
+import { ErrorState } from "@/components/ErrorState";
 import { Loader } from "@/components/Loader";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ROOM_STATUS, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { useToast } from "@/components/ui/use-toast";
 import { useRooms } from "@/lib/api/queries/room";
+import { ROOM_STATUS, RoomStatus } from "@/lib/api/types/room-service.dto";
+import { useUserAuth } from "@/lib/auth/AuthGuard";
 import { formatDateTime } from "@/lib/utils";
-import { Link, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export const RoomList = () => {
   const navigate = useNavigate();
-
-  const { data: rooms, isLoading, error: _error } = useRooms();
+  const { toast } = useToast();
+  const { id } = useUserAuth();
+  const { data: rooms, isLoading, error, refetch } = useRooms(id);
 
   const badgeColor = {
     NOT_STARTED: "bg-sky-500",
@@ -32,27 +36,40 @@ export const RoomList = () => {
     navigate(`/rooms/${roomId}`);
   };
 
+  const handleRetry = () => {
+    refetch();
+    toast({
+      title: "다시 시도 중",
+      description: "회의실 목록을 다시 불러오고 있습니다.",
+    });
+  };
+
   const tabItems = useMemo(
     () =>
       [ROOM_STATUS.PROGRESS, ROOM_STATUS.NOT_STARTED, ROOM_STATUS.FINISHED].map((tab) => ({
         tab,
-        tabRooms: rooms?.filter(({ status }) => status === tab) ?? [],
+        tabRooms: rooms?.roomList.filter(({ status }) => status === tab) ?? [],
       })),
     [rooms],
   );
+
+  // 에러 처리
+  if (error) {
+    return <ErrorState error={error} onRetry={handleRetry} />;
+  }
 
   if (rooms === undefined || isLoading) {
     return <Loader message="회의실 정보 로딩중" />;
   }
 
-  if (rooms && rooms.length === 0) {
+  if (rooms && rooms.roomList.length === 0) {
     return <EmptyRoomList />;
   }
 
   return (
     <Tabs defaultValue="All" className="w-full flex-1 flex flex-col">
       <TabsList className="w-full grid grid-cols-4 mb-4 rounded-none">
-        <TabsTrigger value="All">전체보기 {`(${rooms.length})`}</TabsTrigger>
+        <TabsTrigger value="All">전체보기 {`(${rooms.roomList.length})`}</TabsTrigger>
         {tabItems.map(({ tab, tabRooms }, idx) => (
           <TabsTrigger key={`tab-${idx}`} value={tab}>
             {roomStatusMessage[tab]} {`(${tabRooms.length})`}
@@ -63,7 +80,7 @@ export const RoomList = () => {
       {/* TODO: 페이지네이션 추가 */}
       <TabsContent value="All">
         <ul className="w-full grid sm:grid-cols-2 xl:gap-6 p-4 gap-2">
-          {rooms.map((room) => (
+          {rooms.roomList.map((room) => (
             <Card
               key={`${room.id}`}
               className="cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50"
