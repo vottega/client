@@ -1,9 +1,8 @@
 import { VoteInfo } from "@/components/AppSidebar";
-import { VoteLiveBoardDialogExample } from "@/components/VoteLiveBoard";
+import { VoteCard } from "@/components/VoteCard";
 import { VotePaper } from "@/components/VotePaper";
 import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useVoteInfo } from "@/lib/api/queries/vote";
-import type { VoteResponseDTO, VoteResult, VoteStatus } from "@/lib/api/types/vote-service.dto";
+import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { HTMLAttributes, useMemo } from "react";
@@ -24,61 +23,12 @@ interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
 }
 
-export const VoteResultBadge = ({
-  voteResult,
-  voteStatus,
-}: {
-  voteResult: VoteResult;
-  voteStatus: VoteStatus;
-}) => {
-  const buttonVariant = useMemo(() => {
-    switch (voteStatus) {
-      case "CREATED":
-        return "outline";
-      case "STARTED":
-        return "default";
-      case "ENDED": {
-        if (voteResult === "PASSED") return "secondary";
-        if (voteResult === "REJECTED") return "destructive";
-      }
-    }
-  }, [voteResult, voteStatus]);
-
-  const statusMessage = useMemo(() => {
-    switch (voteStatus) {
-      case "CREATED":
-        return "예정";
-      case "STARTED":
-        return "진행";
-      case "ENDED": {
-        if (voteResult === "PASSED") return "가결";
-        if (voteResult === "REJECTED") return "부결";
-      }
-    }
-  }, [voteResult, voteStatus]);
-
-  return (
-    <Badge className="text-xs whitespace-nowrap" variant={buttonVariant}>
-      {statusMessage}
-    </Badge>
-  );
-};
-
-const VoteCard = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
-  const { agendaName, finishedAt, result, status } = vote;
+const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
   const { onFail, onSuccess, open, setOpen } = useVoteDialog();
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Card className="flex p-4 gap-4 justify-between cursor-pointer transition-colors hover:bg-accent hover:text-accent-foreground">
-          <CardHeader className="p-0">
-            <CardTitle className="text-overflow text-base">{agendaName}</CardTitle>
-            <CardDescription>{finishedAt}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <VoteResultBadge voteResult={result} voteStatus={status} />
-          </CardContent>
-        </Card>
+        <VoteCard vote={vote} />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader className="flex-row items-center gap-2">
@@ -149,12 +99,7 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) => (
-              <div key={vote.id}>
-                <VotePaper vote={vote} />
-                <VoteLiveBoardDialogExample />
-              </div>
-            ))
+            startedVoteList.map((vote) => <VotePaper vote={vote} key={vote.id} />)
           )}
         </CardContent>
       </Card>
@@ -170,7 +115,9 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
             {upcomingVoteList.length === 0 ? (
               <VoteCardFallback>예정된 투표가 없어요.</VoteCardFallback>
             ) : (
-              upcomingVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} roomId={roomId} />)
+              upcomingVoteList.map((vote) => (
+                <VoteCardDialog key={vote.id} vote={vote} roomId={roomId} />
+              ))
             )}
           </CardContent>
         </Card>
@@ -185,7 +132,9 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
             {endedVoteList.length === 0 ? (
               <VoteCardFallback>종료된 투표가 없어요.</VoteCardFallback>
             ) : (
-              endedVoteList.map((vote) => <VoteCard key={vote.id} vote={vote} roomId={roomId} />)
+              endedVoteList.map((vote) => (
+                <VoteCardDialog key={vote.id} vote={vote} roomId={roomId} />
+              ))
             )}
           </CardContent>
         </Card>

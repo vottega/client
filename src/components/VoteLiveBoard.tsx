@@ -138,9 +138,5 @@ export function VoteLiveBoardDialogExample() {
     hasVoted: i % 2 === 0,
     isOnline: i % 3 !== 0,
   }));
-  return (
-    <div className="p-4 bg-gray-100 flex justify-center">
-      <VoteLiveBoardDialog participants={sample} refreshIntervalMs={5000} />
-    </div>
-  );
+  return <VoteLiveBoardDialog participants={sample} refreshIntervalMs={5000} />;
 }

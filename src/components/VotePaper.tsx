@@ -1,12 +1,3 @@
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +8,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { VoteCard } from "@/components/VoteCard";
+import { useVerifyToken } from "@/lib/api/queries/auth";
 import { useSubmitVote } from "@/lib/api/queries/vote";
 import type { VotePaperType, VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
+import { getToken } from "@/lib/auth";
 import { useHttpErrorHandler } from "@/lib/hooks/useHttpErrorHandler";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
@@ -36,8 +39,9 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     { value: "NO", label: "반대" },
     { value: "ABSTAIN", label: "기권" },
   ];
-
+  const token = getToken();
   const { mutate: submitVote, data, error } = useSubmitVote(vote.id);
+  const { data: verifyData } = useVerifyToken(token ?? "");
 
   const getVoteLabel = (type: VotePaperType) => {
     return voteOptions.find((opt) => opt.value === type)?.label || "";
@@ -47,7 +51,7 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     setShowConfirm(false);
     submitVote({
       voteId: vote.id,
-      userId: "c5f3c755-3070-4414-a29b-91c6f6155752",
+      participant: verifyData?.participantId ?? "",
       voteResultType: selectedOption,
     });
   };
@@ -68,7 +72,9 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     <>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="default">투표하기</Button>
+          <VoteCard vote={vote}>
+            <Button variant="secondary">투표하기</Button>
+          </VoteCard>
         </DialogTrigger>
 
         <DialogContent className="sm:max-w-md p-0 overflow-hidden">
