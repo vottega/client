@@ -14,14 +14,17 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLogout } from "@/lib/api/queries/auth";
-import { NOT_AUTHENTICATED, useAuth } from "@/lib/auth/AuthContext";
+import { NOT_AUTHENTICATED, useAuth, VERIFYING } from "@/lib/auth/AuthContext";
 import { CircleUser } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 export default function TheHeader() {
   const auth = useAuth();
-  const isLoggedIn = useMemo(() => auth !== NOT_AUTHENTICATED && auth?.role === "USER", [auth]);
+  const isLoggedIn = useMemo(
+    () => auth !== NOT_AUTHENTICATED && auth !== VERIFYING && auth?.role === "USER",
+    [auth],
+  );
   const navigate = useNavigate();
   const { mutate: logout } = useLogout();
 
