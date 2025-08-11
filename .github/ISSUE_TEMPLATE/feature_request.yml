@@ -1,0 +1,37 @@
+name: "기능 제안"
+description: "새로운 기능이나 개선 사항을 제안합니다."
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: "배경/문제"
+      description: "현재 겪는 문제나 해결하고 싶은 배경을 적어주세요."
+      placeholder: "예) 방 참여자 검색이 어려움"
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: "제안하는 해결"
+      description: "간단히 무엇을 추가/변경하면 좋을지 적어주세요."
+      placeholder: "예) 참가자 목록 상단에 검색 입력 추가"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: "완료 정의 (수용 기준)"
+      description: "이 이슈가 완료되었다고 판단할 기준을 체크리스트로 적어주세요."
+      placeholder: |
+        - [ ] 검색 입력이 표시된다
+        - [ ] 이름/이메일로 필터링된다
+        - [ ] 모바일에서도 정상 동작한다
+
+  - type: textarea
+    id: refs
+    attributes:
+      label: "참고 링크/스크린샷(선택)"
+      placeholder: "디자인/유사 서비스 링크 등"
