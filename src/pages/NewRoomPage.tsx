@@ -23,9 +23,11 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
+import { useUserAuth } from "@/lib/auth/AuthGuard";
 
 export default function NewRoomPage() {
   const navigate = useNavigate();
+  const { id } = useUserAuth();
   const FormSchema = z.object({
     roomName: z.string().min(1, { message: "회의실 이름을 입력해주세요." }),
     participantRoleList: z.array(
@@ -69,7 +71,7 @@ export default function NewRoomPage() {
 
   function onSubmit(data: z.infer<typeof FormSchema>) {
     const newData: typeof data = { ...data, participantRoleList: [...roles.values()] };
-    const createRoomRequestBody = { ...newData, ownerId: 1 };
+    const createRoomRequestBody = { ...newData, ownerId: id };
     createRoom(createRoomRequestBody);
   }
 

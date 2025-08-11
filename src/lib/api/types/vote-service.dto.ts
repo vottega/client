@@ -100,7 +100,7 @@ export interface VotePaperDTO {
 
 export interface VotePaperRequestDTO {
   voteId: number;
-  userId: UUID;
+  participant: UUID;
   voteResultType: VotePaperType;
 }
 
