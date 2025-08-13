@@ -1,17 +1,21 @@
-import { useEffect, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { ko } from "date-fns/locale";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { VoteCard } from "@/components/VoteCard";
+import { useRoom } from "@/lib/api/queries/room";
+import { useVoteDetail } from "@/lib/api/queries/vote";
+import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
+import { ko } from "date-fns/locale";
 import { Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
 
 // 👥 참여자 타입 정의
 export type Participant = {
@@ -19,19 +23,35 @@ export type Participant = {
   name: string;
   hasVoted: boolean;
   isOnline: boolean;
-  votedAt?: string;
+  votedAt?: string | null;
 };
 
-export type VoteLiveBoardDialogProps = {
-  participants: Participant[];
-  refreshIntervalMs?: number;
+export type VoteLiveBoardProps = {
+  roomId: string;
+  vote: VoteResponseDTO;
 };
 
-export function VoteLiveBoardDialog({
-  participants: initialList,
-  refreshIntervalMs = 5000,
-}: VoteLiveBoardDialogProps) {
-  const [participants, _setParticipants] = useState<Participant[]>(initialList);
+export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
+  const { data: room } = useRoom(roomId);
+  const { data: voteDetail } = useVoteDetail(vote.id);
+
+  const votePaperList = useMemo(() => {
+    return new Map(voteDetail?.votePaperList.map((p) => [p.userId, p]) ?? []);
+  }, [voteDetail]);
+
+  const participants: Participant[] = useMemo(() => {
+    return (
+      room?.participants.map((p) => ({
+        id: p.id,
+        name: p.name,
+        hasVoted: votePaperList.has(p.id),
+        // TODO: 온라인 상태 확인
+        isOnline: true,
+        votedAt: votePaperList.get(p.id)?.votedAt,
+      })) ?? []
+    );
+  }, [room?.participants, votePaperList]);
+
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   // 요약 수치 계산
@@ -40,22 +60,12 @@ export function VoteLiveBoardDialog({
   const onlineCount = participants.filter((p) => p.isOnline).length;
   const percent = total ? Math.round((complete / total) * 100) : 0;
 
-  // 실시간 갱신 시각 표시
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // TODO: fetch('/api/vote/participants')...
-      // setParticipants(fetchedParticipants);
-      setLastUpdated(new Date());
-    }, refreshIntervalMs);
-    return () => clearInterval(interval);
-  }, [refreshIntervalMs]);
-
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="default" className="uppercase tracking-wider">
-          Live Vote Board
-        </Button>
+        <VoteCard vote={vote}>
+          <Button variant="secondary">투표 현황</Button>
+        </VoteCard>
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl p-0 overflow-hidden">
@@ -128,15 +138,4 @@ export function VoteLiveBoardDialog({
       </DialogContent>
     </Dialog>
   );
-}
-
-// Example usage
-export function VoteLiveBoardDialogExample() {
-  const sample: Participant[] = Array.from({ length: 15 }).map((_, i) => ({
-    id: `${i + 1}`,
-    name: `참여자 ${i + 1}`,
-    hasVoted: i % 2 === 0,
-    isOnline: i % 3 !== 0,
-  }));
-  return <VoteLiveBoardDialog participants={sample} refreshIntervalMs={5000} />;
 }
