@@ -18,18 +18,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { VoteCard } from "@/components/VoteCard";
-import { useVerifyToken } from "@/lib/api/queries/auth";
 import { useSubmitVote } from "@/lib/api/queries/vote";
 import type { VotePaperType, VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
-import { getToken } from "@/lib/auth";
 import { useHttpErrorHandler } from "@/lib/hooks/useHttpErrorHandler";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
   const handleError = useHttpErrorHandler();
   const [selectedOption, setSelectedOption] = useState<VotePaperType>("NOT_VOTED");
+  const [showVotePaper, setShowVotePaper] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const formattedDate = format(new Date(vote.reservedStartTime), "yyyy.MM.dd HH:mm", {
     locale: ko,
@@ -39,45 +38,57 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     { value: "NO", label: "반대" },
     { value: "ABSTAIN", label: "기권" },
   ];
-  const token = getToken();
-  const { mutate: submitVote, data, error } = useSubmitVote(vote.id);
-  const { data: verifyData } = useVerifyToken(token ?? "");
+  const { mutate: submitVote } = useSubmitVote(vote.id);
 
   const getVoteLabel = (type: VotePaperType) => {
     return voteOptions.find((opt) => opt.value === type)?.label || "";
   };
 
-  const handleConfirmVote = () => {
-    setShowConfirm(false);
-    submitVote({
-      voteId: vote.id,
-      participant: verifyData?.participantId ?? "",
-      voteResultType: selectedOption,
-    });
-  };
+  const handleConfirmVote = useCallback(() => {
+    submitVote(
+      {
+        voteResultType: selectedOption,
+      },
+      {
+        onSuccess: () => {
+          setShowVotePaper(false);
+          setShowConfirm(false);
+        },
+        onError: (error) => {
+          handleError(error);
+        },
+      },
+    );
+  }, [submitVote, selectedOption, handleError]);
 
-  useEffect(() => {
-    if (data) {
-      console.log(data);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    if (error) {
-      handleError(error);
-    }
-  }, [error, handleError]);
+  const handleVotePaperOpenChange = useCallback(
+    (open: boolean) => {
+      if (showConfirm && open === false) return;
+      setShowVotePaper(open);
+    },
+    [showConfirm],
+  );
 
   return (
     <>
-      <Dialog>
+      <Dialog open={showVotePaper} onOpenChange={handleVotePaperOpenChange}>
         <DialogTrigger asChild>
           <VoteCard vote={vote}>
-            <Button variant="secondary">투표하기</Button>
+            <Button variant="secondary" onClick={() => setShowVotePaper(true)}>
+              투표하기
+            </Button>
           </VoteCard>
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+        <DialogContent
+          className="sm:max-w-md p-0 overflow-hidden"
+          onInteractOutside={(e) => {
+            if (showConfirm) e.preventDefault();
+          }}
+          onEscapeKeyDown={(e) => {
+            if (showConfirm) e.preventDefault();
+          }}
+        >
           {/* ✨ 개선된 Dialog Header with Emphasized Info */}
           <DialogHeader className="p-0">
             <div className="bg-gradient-to-tr from-lime-500 via-green-500 to-emerald-500 p-8">
