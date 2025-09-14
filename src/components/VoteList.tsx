@@ -18,6 +18,7 @@ import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { HTMLAttributes, useMemo } from "react";
+import { VoteLiveBoard } from "./VoteLiveBoard";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
@@ -71,9 +72,8 @@ const VoteCardFallback = ({ children }: HTMLAttributes<HTMLDivElement>) => {
 };
 
 export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
-  const { data: voteList = [], error: _error, isLoading: _isLoading } = useVoteInfo(roomId);
+  const { data: voteList = [] } = useVoteInfo(roomId);
 
-  // const [voteList, setVoteList] = useState<VoteResponseDTO[]>(sample);
   const upcomingVoteList = useMemo(
     () => voteList.filter((vote) => vote.status === "CREATED"),
     [voteList],
@@ -99,7 +99,13 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) => <VotePaper vote={vote} key={vote.id} />)
+            startedVoteList.map((vote) =>
+              vote.isVoted ? (
+                <VoteLiveBoard roomId={roomId} vote={vote} />
+              ) : (
+                <VotePaper vote={vote} key={vote.id} />
+              ),
+            )
           )}
         </CardContent>
       </Card>

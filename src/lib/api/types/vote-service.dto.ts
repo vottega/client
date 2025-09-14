@@ -62,6 +62,7 @@ export interface VoteResponseDTO {
   startedAt: string | null;
   finishedAt: string | null;
   lastUpdatedAt: string | null;
+  isVoted: boolean;
 }
 
 export interface ParticipantIdName {
@@ -97,9 +98,7 @@ export interface VotePaperDTO {
   votedAt: string | null;
 }
 
-export interface VotePaperRequestDTO {
-  voteId: number;
-  participant: UUID;
+export interface VotePaperRequestParams {
   voteResultType: VotePaperType;
 }
 
