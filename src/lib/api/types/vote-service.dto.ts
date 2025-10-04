@@ -98,7 +98,7 @@ export interface VotePaperDTO {
   votedAt: string | null;
 }
 
-export interface VotePaperRequestParams {
+export interface VotePaperRequestDTO {
   voteResultType: VotePaperType;
 }
 
