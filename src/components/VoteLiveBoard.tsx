@@ -41,14 +41,15 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
 
   const participants: Participant[] = useMemo(() => {
     return (
-      room?.participants.map((p) => ({
-        id: p.id,
-        name: p.name,
-        hasVoted: votePaperList.has(p.id),
-        // TODO: 온라인 상태 확인
-        isOnline: true,
-        votedAt: votePaperList.get(p.id)?.votedAt,
-      })) ?? []
+      room?.participants
+        .filter((p) => votePaperList.has(p.id))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          hasVoted: votePaperList.get(p.id)?.votePaperType !== "NOT_VOTED",
+          isOnline: p.isEntered,
+          votedAt: votePaperList.get(p.id)?.votedAt,
+        })) ?? []
     );
   }, [room?.participants, votePaperList]);
 
