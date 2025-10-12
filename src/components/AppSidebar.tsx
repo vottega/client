@@ -380,11 +380,7 @@ export function VoteForm({
 
   const { mutate: createVote, data, error } = useCreateVote(roomId);
 
-  const {
-    mutate: updateVoteStatus,
-    data: voteStatus,
-    error: _voteStatusError,
-  } = useUpdateVoteStatus();
+  const { mutate: updateVoteStatus, data: voteStatus } = useUpdateVoteStatus();
 
   const ratioToQuorum = useCallback((ratio: FractionVO) => {
     const { numerator, denominator } = ratio;
@@ -407,12 +403,12 @@ export function VoteForm({
   useEffect(() => {
     if (data) {
       if (form.getValues("startNow")) {
-        updateVoteStatus({ voteId: data.id, data: { status: "STARTED" } });
+        updateVoteStatus({ voteId: data.id, data: { status: "STARTED" }, roomId });
       } else {
         onSuccess();
       }
     }
-  }, [data, form, onSuccess, updateVoteStatus]);
+  }, [data, form, onSuccess, updateVoteStatus, roomId]);
 
   useEffect(() => {
     if (voteStatus) {

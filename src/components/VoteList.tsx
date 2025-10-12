@@ -129,7 +129,7 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
               종료된 투표 <span className="text-primary ml-1">{endedVoteList.length}</span>
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex flex-col gap-2">
             {endedVoteList.length === 0 ? (
               <VoteCardFallback>종료된 투표가 없어요.</VoteCardFallback>
             ) : (
