@@ -17,7 +17,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { VoteCard } from "@/components/VoteCard";
 import { useSubmitVote } from "@/lib/api/queries/vote";
 import type { VotePaperType, VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { useHttpErrorHandler } from "@/lib/hooks/useHttpErrorHandler";
@@ -25,7 +24,7 @@ import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useCallback, useState } from "react";
 
-export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
+export function VotePaper({ vote, className }: { vote: VoteResponseDTO; className?: string }) {
   const handleError = useHttpErrorHandler();
   const [selectedOption, setSelectedOption] = useState<VotePaperType>("NOT_VOTED");
   const [showVotePaper, setShowVotePaper] = useState(false);
@@ -73,11 +72,9 @@ export function VotePaper({ vote }: { vote: VoteResponseDTO }) {
     <>
       <Dialog open={showVotePaper} onOpenChange={handleVotePaperOpenChange}>
         <DialogTrigger asChild>
-          <VoteCard vote={vote}>
-            <Button variant="secondary" onClick={() => setShowVotePaper(true)}>
-              투표하기
-            </Button>
-          </VoteCard>
+          <Button onClick={() => setShowVotePaper(true)} className={className}>
+            투표하기
+          </Button>
         </DialogTrigger>
 
         <DialogContent

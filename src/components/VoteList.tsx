@@ -1,6 +1,5 @@
 import { VoteInfo } from "@/components/AppSidebar";
 import { VoteCard } from "@/components/VoteCard";
-import { VotePaper } from "@/components/VotePaper";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import {
@@ -99,13 +98,9 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
           {startedVoteList.length === 0 ? (
             <VoteCardFallback>진행중인 투표가 없어요.</VoteCardFallback>
           ) : (
-            startedVoteList.map((vote) =>
-              vote.isVoted ? (
-                <VoteLiveBoard roomId={roomId} vote={vote} />
-              ) : (
-                <VotePaper vote={vote} key={vote.id} />
-              ),
-            )
+            startedVoteList.map((vote) => (
+              <VoteLiveBoard key={vote.id} roomId={roomId} vote={vote} />
+            ))
           )}
         </CardContent>
       </Card>

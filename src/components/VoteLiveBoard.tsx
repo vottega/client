@@ -11,11 +11,17 @@ import { VoteCard } from "@/components/VoteCard";
 import { useRoom } from "@/lib/api/queries/room";
 import { useVoteDetail } from "@/lib/api/queries/vote";
 import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
-import { cn } from "@/lib/utils";
+import { cn, formatDateTime } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Loader2, Vote } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { useVotePermission } from "../hooks/useVotePermission";
+import { useVerifyToken } from "../lib/api/queries/auth";
+import { getToken } from "../lib/auth";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Badge } from "./ui/badge";
+import { VotePaper } from "./VotePaper";
 
 // 👥 참여자 타입 정의
 export type Participant = {
@@ -33,7 +39,13 @@ export type VoteLiveBoardProps = {
 
 export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
   const { data: room } = useRoom(roomId);
-  const { data: voteDetail } = useVoteDetail(vote.id);
+  const { data: voteDetail, refetch: refetchVoteDetail } = useVoteDetail(vote.id);
+  const { data: verifyData } = useVerifyToken(getToken() ?? "");
+  const hasPermission = useVotePermission({
+    participantId: verifyData?.participantId ?? null,
+    voteId: vote.id,
+  });
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const votePaperList = useMemo(() => {
     return new Map(voteDetail?.votePaperList.map((p) => [p.userId, p]) ?? []);
@@ -53,13 +65,38 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
     );
   }, [room?.participants, votePaperList]);
 
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const participantMe = room?.participants.find((p) => p.id === verifyData?.participantId);
+  const myName = verifyData?.role === "USER" ? verifyData?.userId : participantMe?.name;
 
   // 요약 수치 계산
-  const total = participants.length;
-  const complete = participants.filter((p) => p.hasVoted).length;
-  const onlineCount = participants.filter((p) => p.isOnline).length;
+  const total = votePaperList.size;
+  const complete =
+    voteDetail?.votePaperList.filter((p) => p.votePaperType !== "NOT_VOTED").length ?? 0;
   const percent = total ? Math.round((complete / total) * 100) : 0;
+
+  const myVoteStatusMessage = hasPermission ? (
+    votePaperList.get(participantMe?.id ?? "")?.votePaperType === "NOT_VOTED" ? (
+      <div>
+        {myName} 님이 투표하기를 기다리고 있어요.
+        <VotePaper vote={vote} className="absolute right-6 top-1/2 -translate-y-1/2" />
+      </div>
+    ) : (
+      <div>
+        {myName} 님은{" "}
+        <Badge variant="secondary">
+          {formatDateTime(votePaperList.get(participantMe?.id ?? "")?.votedAt ?? "")}
+        </Badge>{" "}
+        에 투표를 완료했어요.
+      </div>
+    )
+  ) : (
+    `${myName} 님은 투표 권한이 없어요.`
+  );
+
+  const handleClickRefresh = useCallback(() => {
+    refetchVoteDetail();
+    setLastUpdated(new Date());
+  }, [refetchVoteDetail]);
 
   return (
     <Dialog>
@@ -72,6 +109,11 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
       <DialogContent className="max-w-2xl p-0 overflow-hidden">
         {/* Header: LIVE status + stats */}
         <DialogHeader className="bg-white border-b p-6">
+          <Alert className="mb-4" variant={hasPermission ? "default" : "destructive"}>
+            <Vote className="w-4 h-4" />
+            <AlertTitle>내 투표 현황</AlertTitle>
+            <AlertDescription>{myVoteStatusMessage}</AlertDescription>
+          </Alert>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-2xl font-extrabold text-gray-900 flex gap-2">
               실시간 투표 현황
@@ -84,10 +126,9 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
           <p className="mt-1 text-sm text-gray-500">
             마지막 갱신: {formatDistanceToNow(lastUpdated, { addSuffix: true, locale: ko })}
           </p>
-          <div className="mt-4 grid grid-cols-4 gap-4 text-center">
+          <div className="mt-4 grid grid-cols-3 gap-4 text-center">
             {[
               { label: "총 참여자", value: total },
-              { label: "온라인", value: onlineCount },
               { label: "투표 완료", value: complete },
               { label: "진행률", value: `${percent}%` },
             ].map((item) => (
@@ -132,7 +173,7 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
 
         {/* Footer: Refresh */}
         <DialogFooter className="p-4 bg-white flex justify-end">
-          <Button variant="outline" onClick={() => setLastUpdated(new Date())}>
+          <Button variant="outline" onClick={handleClickRefresh}>
             새로고침
           </Button>
         </DialogFooter>
