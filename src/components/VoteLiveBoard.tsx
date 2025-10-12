@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { VoteCard } from "@/components/VoteCard";
 import { useRoom } from "@/lib/api/queries/room";
-import { useUpdateVoteStatus, useVoteDetail } from "@/lib/api/queries/vote";
+import { useResetVote, useUpdateVoteStatus, useVoteDetail } from "@/lib/api/queries/vote";
 import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn, formatDateTime } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -49,7 +49,9 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [showVoteLiveBoard, setShowVoteLiveBoard] = useState(false);
   const [showEndVoteConfirm, setShowEndVoteConfirm] = useState(false);
+  const [showResetVoteConfirm, setShowResetVoteConfirm] = useState(false);
   const { mutate: updateVoteStatus } = useUpdateVoteStatus();
+  const { mutate: resetVote } = useResetVote(vote.id, roomId);
 
   const votePaperList = useMemo(() => {
     return new Map(voteDetail?.votePaperList.map((p) => [p.userId, p]) ?? []);
@@ -123,8 +125,22 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
     );
   }, [updateVoteStatus, vote.id, roomId]);
 
+  const handleClickResetVote = useCallback(() => {
+    setShowResetVoteConfirm(true);
+  }, []);
+
+  const handleClickConfirmResetVote = useCallback(() => {
+    resetVote(undefined, {
+      onSuccess: () => {
+        setShowResetVoteConfirm(false);
+        setShowVoteLiveBoard(false);
+      },
+    });
+  }, [resetVote]);
+
   return (
     <>
+      {/* 투표 현황 모달 */}
       <Dialog open={showVoteLiveBoard} onOpenChange={setShowVoteLiveBoard}>
         <DialogTrigger asChild>
           <VoteCard vote={vote}>
@@ -197,7 +213,12 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
             ))}
           </div>
 
-          <DialogFooter className="p-4 flex gap-2">
+          <DialogFooter className="p-4 flex gap-2 justify-between">
+            {verifyData?.role === "USER" && (
+              <Button onClick={handleClickResetVote} variant="destructive">
+                투표 초기화
+              </Button>
+            )}
             <Button variant="outline" onClick={handleClickRefresh}>
               새로고침
             </Button>
@@ -205,6 +226,8 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 투표 종료 확인 모달 */}
       <Dialog open={showEndVoteConfirm} onOpenChange={setShowEndVoteConfirm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -233,6 +256,24 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
               취소
             </Button>
             <Button onClick={handleClickConfirmEndVote}>투표 종료</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 투표 초기화 확인 모달 */}
+      <Dialog open={showResetVoteConfirm} onOpenChange={setShowResetVoteConfirm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>투표 초기화</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>투표를 초기화할까요?</DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowResetVoteConfirm(false)}>
+              취소
+            </Button>
+            <Button onClick={handleClickConfirmResetVote} variant="destructive">
+              투표 초기화
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

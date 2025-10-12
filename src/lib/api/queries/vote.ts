@@ -102,13 +102,14 @@ export const useUpdateVoteStatus = () => {
   });
 };
 
-export const useResetVote = (voteId: string | number) => {
+export const useResetVote = (voteId: string | number, roomId: string | number) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => voteApi.resetVote(voteId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.votes.detail(voteId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.votes.byRoom(roomId) });
     },
   });
 };
