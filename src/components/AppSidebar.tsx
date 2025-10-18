@@ -1,7 +1,6 @@
 import { ArrowUpRight, BadgeCheck, Bell, ChevronsUpDown, LogOut, Plus, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -44,11 +43,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useCreateVote, useVoteInfo } from "@/lib/api/queries/vote";
-import { getVoteStatusMessage } from "@/lib/utils";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import { useShowUserOnlyButton } from "../hooks/useShowUserOnlyButton";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
+import { VoteResultBadge } from "./VoteCard";
 import { VoteDetailDialog } from "./VoteDetailDialog";
 import { VoteForm } from "./VoteForm";
 
@@ -114,42 +113,33 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {voteList.map((vote, idx) => {
-                const statusMessage = getVoteStatusMessage(vote.status, vote.result);
-
-                return (
-                  <VoteDetailDialog
-                    key={idx}
-                    vote={vote}
-                    roomId={roomId}
-                    onSubmit={handleSubmitVote}
-                    showStartButton={showUserOnlyButton}
-                  >
-                    <TableRow className="h-0 cursor-pointer">
-                      <TableCell className="font-medium">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-overflow">{vote.agendaName}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{vote.reservedStartTime.slice(0, 10)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="text-right pl-0 pr-2">
-                        <Badge
-                          className="text-xs whitespace-nowrap"
-                          variant={vote.status === "ENDED" ? "default" : "outline"}
-                        >
-                          {statusMessage}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  </VoteDetailDialog>
-                );
-              })}
+              {voteList.map((vote, idx) => (
+                <VoteDetailDialog
+                  key={idx}
+                  vote={vote}
+                  roomId={roomId}
+                  onSubmit={handleSubmitVote}
+                  showStartButton={showUserOnlyButton}
+                >
+                  <TableRow className="h-0 cursor-pointer">
+                    <TableCell className="font-medium">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-overflow">{vote.agendaName}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{vote.reservedStartTime.slice(0, 10)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="text-right pl-0 pr-2">
+                      <VoteResultBadge voteResult={vote.result} voteStatus={vote.status} />
+                    </TableCell>
+                  </TableRow>
+                </VoteDetailDialog>
+              ))}
               {[...Array(skeletonFill)].map((_, idx) => (
                 <TableRow key={voteList.length + idx + 1} className="relative h-[73px] z-0">
                   <TableCell>
