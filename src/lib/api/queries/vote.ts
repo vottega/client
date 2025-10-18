@@ -89,7 +89,6 @@ export const useUpdateVoteStatus = () => {
     mutationFn: ({
       voteId,
       data,
-      roomId,
     }: {
       voteId: string | number;
       data: VoteStatusRequestDTO;

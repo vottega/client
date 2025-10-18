@@ -3,13 +3,18 @@ import { QueryClient, DefaultOptions } from "@tanstack/react-query";
 
 const queryConfig: DefaultOptions = {
   queries: {
-    retry: (failureCount, error: any) => {
-      // 401, 403, 404 에러는 재시도하지 않음
+    retry: (failureCount, error: unknown) => {
+      // 401, 403, 404, 409 에러는 재시도하지 않음
       if (isHttpError(error)) {
-        if (error.isUnauthorized() || error.isForbidden() || error.isNotFound()) {
+        if (
+          error.isUnauthorized() ||
+          error.isForbidden() ||
+          error.isNotFound() ||
+          error.isConflict()
+        ) {
+          console.log("재시도하지 않음", error.statusCode);
           return false;
         }
-        return false;
       }
       return failureCount < 3;
     },

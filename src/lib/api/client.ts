@@ -52,7 +52,7 @@ apiClient.interceptors.response.use(
 );
 
 // 타입 정의
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message?: string;
   success: boolean;
@@ -61,7 +61,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export default apiClient;

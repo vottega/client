@@ -17,7 +17,7 @@ export function VoteResult({
   totalNum,
   refreshIntervalMs = 5000,
 }: VoteResultProps) {
-  const [counts, _setCounts] = useState({ yes: yesNum, no: noNum, abstain: abstainNum });
+  const [counts] = useState({ yes: yesNum, no: noNum, abstain: abstainNum });
 
   // 전체 투표수 계산
   const total = totalNum ?? counts.yes + counts.no + counts.abstain;
