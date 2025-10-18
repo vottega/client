@@ -4,10 +4,10 @@ export const useVoteDialog = () => {
   const [open, setOpen] = useState(false);
   const closeDialog = useCallback(() => setOpen(false), []);
 
-  const onFail = useCallback(() => {}, []);
+  const onError = useCallback(() => {}, []);
   const onSuccess = useCallback(() => {
     closeDialog();
   }, [closeDialog]);
 
-  return { open, setOpen, onFail, onSuccess };
+  return { open, setOpen, onError, onSuccess };
 };

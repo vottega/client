@@ -1,4 +1,4 @@
-import { AppSidebar, VoteForm } from "@/components/AppSidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { BreadcrumbHeader } from "@/components/BreadcrumbHeader";
 import { OnlineOffline } from "@/components/OnlineOffline";
 import { Button } from "@/components/ui/button";
@@ -25,24 +25,34 @@ import { useRoom } from "@/lib/api/queries/room";
 import { getToken } from "@/lib/auth";
 import { Plus, Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { VoteForm } from "../components/VoteForm";
+import { useCreateVote } from "../lib/api/queries/vote";
+import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
 
 export default function RoomDetailPage() {
   const token = getToken();
   const { id: roomId } = useParams<{ id: string }>();
   const { data: room, isSuccess: isRoomSuccess } = useRoom(roomId);
   const { data: verifyData } = useVerifyToken(token ?? "");
+  const { mutate: createVote } = useCreateVote(roomId ?? "");
+  const { onError, onSuccess, open, setOpen } = useVoteDialog();
+  const handleSubmitVote = (data: VoteRequestDTO) => {
+    createVote(data, {
+      onSuccess,
+      onError,
+    });
+  };
 
   const roomInfoEventHandler = useRoomInfoEventHandler();
   const participantEventHandler = useParticipantEventHandler(room?.participants ?? []);
   const voteEventHandler = useVoteEventHandler();
   const votePaperEventHandler = useVotePaperEventHandler();
 
-  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
-
   const sseUrl =
     verifyData?.role === "USER"
       ? Endpoints.sse.connect(roomId ?? "").path
       : Endpoints.sse.connectParticipant().path;
+
   useRoomEventFetchSource(
     sseUrl,
     {
@@ -53,6 +63,7 @@ export default function RoomDetailPage() {
     },
     {
       enabled: isRoomSuccess,
+      retry: false,
     },
   );
 
@@ -93,7 +104,7 @@ export default function RoomDetailPage() {
                     <DialogHeader>
                       <DialogTitle>투표 생성하기</DialogTitle>
                     </DialogHeader>
-                    <VoteForm roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
+                    <VoteForm roomId={roomId} onSubmit={handleSubmitVote} />
                   </DialogContent>
                 </Dialog>
               </CardHeader>

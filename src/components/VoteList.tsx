@@ -1,4 +1,3 @@
-import { VoteInfo } from "@/components/AppSidebar";
 import { VoteCard } from "@/components/VoteCard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
@@ -17,14 +16,17 @@ import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { HTMLAttributes, useMemo } from "react";
+import { VoteForm } from "./VoteForm";
 import { VoteLiveBoard } from "./VoteLiveBoard";
+import { VoteStart } from "./VoteStart";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
 }
 
 const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
-  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
+  const { open, setOpen } = useVoteDialog();
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -39,22 +41,26 @@ const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: strin
               : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
           </DialogDescription>
         </DialogHeader>
-        {vote.status === "ENDED" ? (
+        {vote.status === "ENDED" && (
           <Tabs defaultValue="info">
             <TabsList className="w-full grid grid-cols-2 mb-4">
               <TabsTrigger value="info">투표 정보</TabsTrigger>
               <TabsTrigger value="result">투표 결과</TabsTrigger>
             </TabsList>
             <TabsContent value="info">
-              <VoteInfo existingVote={vote} onFail={onFail} onSuccess={onSuccess} roomId={roomId} />
+              <VoteForm existingVote={vote} roomId={roomId} disabled />
             </TabsContent>
             <TabsContent value="result">
               {/* TODO: 투표 결과 */}
               <p>투표 결과</p>
             </TabsContent>
           </Tabs>
-        ) : (
-          <VoteInfo existingVote={vote} onFail={onFail} onSuccess={onSuccess} roomId={roomId} />
+        )}
+        {vote.status === "CREATED" && (
+          <>
+            <VoteForm existingVote={vote} roomId={roomId} disabled />
+            <VoteStart voteId={vote.id} roomId={roomId} />
+          </>
         )}
       </DialogContent>
     </Dialog>
