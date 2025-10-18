@@ -36,7 +36,7 @@ export const VoteSchema = z.object({
   startNow: z.boolean().default(true),
 });
 
-export interface VoteRequestDTO extends Omit<z.infer<typeof VoteSchema>, "startNow"> {}
+export type VoteRequestDTO = Omit<z.infer<typeof VoteSchema>, "startNow">;
 
 export interface VoteStatusRequestDTO {
   status: VoteStatus;
@@ -62,6 +62,7 @@ export interface VoteResponseDTO {
   startedAt: string | null;
   finishedAt: string | null;
   lastUpdatedAt: string | null;
+  isVoted: boolean;
 }
 
 export interface ParticipantIdName {
@@ -71,6 +72,7 @@ export interface ParticipantIdName {
 
 export interface VoteDetailResponseDTO {
   id: number;
+  roomId: number;
   agendaName: string;
   voteName: string;
   status: VoteStatus;
@@ -82,9 +84,7 @@ export interface VoteDetailResponseDTO {
   minParticipantRate: FractionVO;
   isSecret: boolean;
   result: VoteResult | null;
-  yesList: ParticipantIdName[];
-  noList: ParticipantIdName[];
-  abstainList: ParticipantIdName[];
+  votePaperList: VotePaperDTO[];
 }
 
 export interface VotePaperDTO {
@@ -99,8 +99,6 @@ export interface VotePaperDTO {
 }
 
 export interface VotePaperRequestDTO {
-  voteId: number;
-  participant: UUID;
   voteResultType: VotePaperType;
 }
 

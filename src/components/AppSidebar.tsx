@@ -1,15 +1,12 @@
 import { ArrowUpRight, BadgeCheck, Bell, ChevronsUpDown, LogOut, Plus, Users } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -22,16 +19,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
   Sidebar,
   SidebarContent,
@@ -53,17 +40,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
-import { useVoteInfo, useCreateVote, useUpdateVoteStatus } from "@/lib/api/queries/vote";
-import { FractionVO, VoteResponseDTO, VoteSchema } from "@/lib/api/types/vote-service.dto";
-import { getKoreanTimeWithZeroSecond } from "@/lib/utils";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCreateVote, useVoteInfo } from "@/lib/api/queries/vote";
 import { DialogTrigger } from "@radix-ui/react-dialog";
-import { useCallback, useEffect, useMemo } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useMemo } from "react";
+import { useShowUserOnlyButton } from "../hooks/useShowUserOnlyButton";
+import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
+import { VoteResultBadge } from "./VoteCard";
+import { VoteDetailDialog } from "./VoteDetailDialog";
+import { VoteForm } from "./VoteForm";
 
 const sidebarRightData = {
   user: {
@@ -78,12 +64,18 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
-  const { data: voteList = [], error: _error, isLoading: _isLoading } = useVoteInfo(roomId);
-
+  const { data: voteList = [] } = useVoteInfo(roomId);
+  const { onError, onSuccess, open, setOpen } = useVoteDialog();
+  const { mutate: createVote } = useCreateVote(roomId);
   const skeletonFill = useMemo(() => Math.max(5 - voteList.length, 0), [voteList]);
+  const showUserOnlyButton = useShowUserOnlyButton();
 
-  const { onFail, onSuccess, open, setOpen } = useVoteDialog();
-
+  const handleSubmitVote = (data: VoteRequestDTO) => {
+    createVote(data, {
+      onSuccess,
+      onError,
+    });
+  };
   return (
     <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
       <SidebarHeader className="h-16 border-b border-sidebar-border">
@@ -96,20 +88,22 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
               <CardTitle className="text-xl">안건 및 투표</CardTitle>
               <CardDescription>최근 진행한 투표예요.</CardDescription>
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="ml-auto gap-1">
-                  투표 생성
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>투표 생성하기</DialogTitle>
-                </DialogHeader>
-                <VoteForm roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
-              </DialogContent>
-            </Dialog>
+            {showUserOnlyButton && (
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="ml-auto gap-1">
+                    투표 생성
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>투표 생성하기</DialogTitle>
+                  </DialogHeader>
+                  <VoteForm roomId={roomId} onSubmit={handleSubmitVote} />
+                </DialogContent>
+              </Dialog>
+            )}
           </CardHeader>
           <Table>
             <TableHeader className="sticky top-0 bg-sidebar z-10">
@@ -120,69 +114,31 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
             </TableHeader>
             <TableBody>
               {voteList.map((vote, idx) => (
-                <Dialog key={idx}>
-                  <DialogTrigger asChild>
-                    <TableRow key={idx} className="h-0 cursor-pointer">
-                      <TableCell className="font-medium">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-overflow">{vote.agendaName}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{vote.reservedStartTime.slice(0, 10)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="text-right pl-0 pr-2">
-                        <Badge
-                          className="text-xs whitespace-nowrap"
-                          variant={vote.status === "ENDED" ? "default" : "outline"}
-                        >
-                          {vote.status === "ENDED" ? "완료" : "대기"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                    <DialogHeader className="flex-row items-center gap-2">
-                      <DialogTitle>투표 정보</DialogTitle>
-                      <DialogDescription>
-                        {vote.status === "ENDED"
-                          ? "완료된 투표 정보와 결과를 조회할 수 있어요"
-                          : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
-                      </DialogDescription>
-                    </DialogHeader>
-                    {vote.status === "ENDED" ? (
-                      <Tabs defaultValue="info">
-                        <TabsList className="w-full grid grid-cols-2 mb-4">
-                          <TabsTrigger value="info">투표 정보</TabsTrigger>
-                          <TabsTrigger value="result">투표 결과</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="info">
-                          <VoteInfo
-                            existingVote={vote}
-                            roomId={roomId}
-                            onFail={onFail}
-                            onSuccess={onSuccess}
-                          />
-                        </TabsContent>
-                        <TabsContent value="result">
-                          {/* TODO: 투표 결과 */}
-                          <p>투표 결과</p>
-                        </TabsContent>
-                      </Tabs>
-                    ) : (
-                      <VoteInfo
-                        existingVote={vote}
-                        roomId={roomId}
-                        onFail={onFail}
-                        onSuccess={onSuccess}
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
+                <VoteDetailDialog
+                  key={idx}
+                  vote={vote}
+                  roomId={roomId}
+                  onSubmit={handleSubmitVote}
+                  showStartButton={showUserOnlyButton}
+                >
+                  <TableRow className="h-0 cursor-pointer">
+                    <TableCell className="font-medium">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-overflow">{vote.agendaName}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{vote.reservedStartTime.slice(0, 10)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="text-right pl-0 pr-2">
+                      <VoteResultBadge voteResult={vote.result} voteStatus={vote.status} />
+                    </TableCell>
+                  </TableRow>
+                </VoteDetailDialog>
               ))}
               {[...Array(skeletonFill)].map((_, idx) => (
                 <TableRow key={voteList.length + idx + 1} className="relative h-[73px] z-0">
@@ -338,346 +294,5 @@ function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
-  );
-}
-
-export function VoteInfo({
-  roomId,
-  existingVote,
-  onFail,
-  onSuccess,
-}: React.ComponentProps<typeof VoteForm>) {
-  return (
-    <VoteForm existingVote={existingVote} roomId={roomId} onFail={onFail} onSuccess={onSuccess} />
-  );
-}
-
-export function VoteForm({
-  roomId,
-  existingVote,
-  onSuccess,
-  onFail,
-}: {
-  roomId: string;
-  existingVote?: VoteResponseDTO;
-  onSuccess: () => void;
-  onFail: () => void;
-}) {
-  const form = useForm<z.infer<typeof VoteSchema>>({
-    resolver: zodResolver(VoteSchema),
-    defaultValues: {
-      agendaName: "",
-      voteName: "",
-      minParticipantNumber: 0,
-      minParticipantRate: { denominator: 1, numerator: 1 },
-      passRate: { denominator: 2, numerator: 1 },
-      reservedStartTime: getKoreanTimeWithZeroSecond(),
-      startNow: true,
-      isSecret: false,
-      ...existingVote,
-    },
-  });
-
-  const { mutate: createVote, data, error } = useCreateVote(roomId);
-
-  const {
-    mutate: updateVoteStatus,
-    data: voteStatus,
-    error: _voteStatusError,
-  } = useUpdateVoteStatus();
-
-  const ratioToQuorum = useCallback((ratio: FractionVO) => {
-    const { numerator, denominator } = ratio;
-    return Math.min(partcipantCount, Math.ceil(partcipantCount * (numerator / denominator)));
-  }, []);
-
-  function onSubmit(data: z.infer<typeof VoteSchema>) {
-    const { startNow, ...reqBody } = data;
-    createVote(reqBody);
-  }
-
-  const partcipantCount = 20;
-
-  useEffect(() => {
-    if (error) {
-      onFail();
-    }
-  }, [error, onFail]);
-
-  useEffect(() => {
-    if (data) {
-      if (form.getValues("startNow")) {
-        updateVoteStatus({ voteId: data.id, data: { status: "STARTED" } });
-      } else {
-        onSuccess();
-      }
-    }
-  }, [data, form, onSuccess, updateVoteStatus]);
-
-  useEffect(() => {
-    if (voteStatus) {
-      onSuccess();
-    }
-  }, [voteStatus, onSuccess]);
-
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="agendaName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>안건명</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="예: 개교 139주년 아카라카를 온누리에 티켓팅 관련 중앙운영위원회 대응 논의의 안"
-                  disabled={existingVote?.status === "ENDED"}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-          rules={{ required: true }}
-        />
-
-        <FormField
-          control={form.control}
-          name="voteName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>표결 내용</FormLabel>
-              <FormControl>
-                <Textarea
-                  {...field}
-                  placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
-                  disabled={existingVote?.status === "ENDED"}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="minParticipantNumber"
-          render={({ field }) => (
-            <FormItem className="flex justify-between items-center space-y-0">
-              <div className="flex flex-col">
-                <FormLabel>출석 필요 인원</FormLabel>
-                <FormMessage />
-              </div>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  className="w-[102px]"
-                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                  disabled={existingVote?.status === "ENDED"}
-                  value={field.value ?? 0}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="minParticipantRate"
-          render={() => (
-            <FormItem className="flex items-center justify-between gap-0">
-              <div className="flex flex-col">
-                <FormLabel>의사정족수</FormLabel>
-
-                <FormDescription>
-                  <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    {ratioToQuorum(form.watch("minParticipantRate"))}명
-                  </span>{" "}
-                  이상 출석해야 회의를 진행할 수 있음
-                </FormDescription>
-              </div>
-
-              <div className="flex items-center gap-2 mt-2">
-                <FormField
-                  control={form.control}
-                  name="minParticipantRate.numerator"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                          disabled={existingVote?.status === "ENDED"}
-                          onChange={(e) => {
-                            field.onChange(parseInt(e.target.value));
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <span className="text-muted-foreground">/</span>
-                <FormField
-                  control={form.control}
-                  name="minParticipantRate.denominator"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                          disabled={existingVote?.status === "ENDED"}
-                          onChange={(e) => {
-                            field.onChange(parseInt(e.target.value));
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="passRate"
-          render={() => (
-            <FormItem className="flex items-center justify-between gap-0">
-              <div className="flex flex-col">
-                <FormLabel>의결정족수</FormLabel>
-
-                <FormDescription>
-                  <span className="text-primary text-base font-semibold border-b-2 border-primary">
-                    {ratioToQuorum(form.watch("passRate"))}명
-                  </span>{" "}
-                  이상 찬성해야 안건을 가결할 수 있음
-                </FormDescription>
-              </div>
-
-              <div className="flex items-center gap-2 mt-2">
-                <FormField
-                  control={form.control}
-                  name="passRate.numerator"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                          disabled={existingVote?.status === "ENDED"}
-                          onChange={(e) => {
-                            field.onChange(parseInt(e.target.value));
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                <span className="text-muted-foreground">/</span>
-                <FormField
-                  control={form.control}
-                  name="passRate.denominator"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          className="w-10 p-1 text-center transition-all [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
-                          disabled={existingVote?.status === "ENDED"}
-                          onChange={(e) => {
-                            field.onChange(parseInt(e.target.value));
-                          }}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <div className="flex justify-between items-center">
-          <FormField
-            control={form.control}
-            name="reservedStartTime"
-            render={({ field }) => (
-              <FormItem className="flex justify-between items-center space-y-0">
-                <FormLabel className="mr-4">시작 시간</FormLabel>
-                <FormControl>
-                  <Input
-                    type="datetime-local"
-                    {...field}
-                    className="w-fit"
-                    onChange={(e) => {
-                      field.onChange(e.target.value + ":00");
-                    }}
-                    disabled={existingVote?.status === "ENDED" || form.watch("startNow")}
-                    min={field.value ?? undefined}
-                    value={field.value ?? undefined}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          {!(existingVote?.status === "ENDED") && (
-            <FormField
-              control={form.control}
-              name="startNow"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="mr-1">바로 시작</FormLabel>
-                  <FormControl>
-                    <Checkbox
-                      className="align-text-bottom"
-                      checked={field.value}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          form.setValue("reservedStartTime", getKoreanTimeWithZeroSecond());
-                        }
-                        field.onChange(checked);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
-
-        <FormField
-          control={form.control}
-          name="isSecret"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="mr-1">무기명</FormLabel>
-              <FormControl>
-                <Checkbox
-                  className="align-text-bottom"
-                  checked={field.value ?? undefined}
-                  onCheckedChange={(checked) => field.onChange(checked)}
-                  disabled={existingVote?.status === "ENDED"}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {!(existingVote?.status === "ENDED") && (
-          <DialogFooter>
-            <Button type="submit">{existingVote ? "수정하기" : "생성하기"}</Button>
-          </DialogFooter>
-        )}
-      </form>
-    </Form>
   );
 }

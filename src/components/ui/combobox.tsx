@@ -25,7 +25,7 @@ export function Combobox({
 }: {
   datas: Data[];
   defaultValue?: string;
-  onValueChange?: any;
+  onValueChange?: (value: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(defaultValue ?? "");
@@ -64,7 +64,7 @@ export function Combobox({
                   onSelect={(currentValue) => {
                     setValue(currentValue);
                     setOpen(false);
-                    onValueChange(currentValue);
+                    onValueChange?.(currentValue);
                   }}
                 >
                   <Check

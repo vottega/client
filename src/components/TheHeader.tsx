@@ -14,7 +14,7 @@ import {
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
 import { useLogout } from "@/lib/api/queries/auth";
-import { NOT_AUTHENTICATED, useAuth, VERIFYING } from "@/lib/auth/AuthContext";
+import { NOT_AUTHENTICATED, useAuth, VERIFYING } from "@/lib/auth/authUtils";
 import { CircleUser } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";

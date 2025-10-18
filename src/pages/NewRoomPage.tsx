@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { useUserAuth } from "@/lib/auth/AuthGuard";
+import { useUserAuth } from "@/lib/auth/useAuthenticatedAuth";
 
 export default function NewRoomPage() {
   const navigate = useNavigate();

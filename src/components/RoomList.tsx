@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { useRooms } from "@/lib/api/queries/room";
 import { ROOM_STATUS, RoomStatus } from "@/lib/api/types/room-service.dto";
-import { useUserAuth } from "@/lib/auth/AuthGuard";
+import { useUserAuth } from "@/lib/auth/useAuthenticatedAuth";
 import { formatDateTime } from "@/lib/utils";
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";

@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { VoteResponseDTO, VoteResult, VoteStatus } from "@/lib/api/types/vote-service.dto";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, getVoteStatusMessage } from "@/lib/utils";
 import { forwardRef, useMemo } from "react";
 
 export const VoteResultBadge = ({
@@ -24,18 +24,7 @@ export const VoteResultBadge = ({
     }
   }, [voteResult, voteStatus]);
 
-  const statusMessage = useMemo(() => {
-    switch (voteStatus) {
-      case "CREATED":
-        return "예정";
-      case "STARTED":
-        return "진행";
-      case "ENDED": {
-        if (voteResult === "PASSED") return "가결";
-        if (voteResult === "REJECTED") return "부결";
-      }
-    }
-  }, [voteResult, voteStatus]);
+  const statusMessage = getVoteStatusMessage(voteStatus, voteResult);
 
   return (
     <Badge className="text-xs whitespace-nowrap" variant={buttonVariant}>

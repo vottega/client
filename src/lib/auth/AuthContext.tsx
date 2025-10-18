@@ -1,26 +1,8 @@
 import { isHttpError } from "@/lib/api/errors";
 import { useLogout, useVerifyToken } from "@/lib/api/queries/auth";
-import { type AuthResponseDTO, type VerifyResponseDTO } from "@/lib/api/types/auth-service.dto";
 import { getToken } from "@/lib/auth";
-import { createContext, memo, ReactNode, useContext, useEffect } from "react";
-
-interface AuthContextValue extends VerifyResponseDTO, AuthResponseDTO {}
-
-const NOT_MOUNTED = Symbol("AuthProvider not mounted");
-export const NOT_AUTHENTICATED = Symbol("User not authenticated");
-export const VERIFYING = Symbol("Token verification in progress");
-
-const AuthContext = createContext<
-  AuthContextValue | typeof NOT_MOUNTED | typeof NOT_AUTHENTICATED | typeof VERIFYING
->(NOT_MOUNTED);
-
-export function useAuth(): AuthContextValue | typeof NOT_AUTHENTICATED | typeof VERIFYING {
-  const context = useContext(AuthContext);
-  if (context === NOT_MOUNTED) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
+import { memo, ReactNode, useEffect } from "react";
+import { AuthContext, NOT_AUTHENTICATED, VERIFYING } from "./authUtils";
 
 interface AuthProviderProps {
   children: ReactNode;

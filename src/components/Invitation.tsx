@@ -77,7 +77,7 @@ export function InvitationForm({ roomId, className }: { roomId: string; classNam
       firstInputRef.current?.focus();
       form.reset();
     }
-  }, [isAddParticipantSuccess]);
+  }, [form, isAddParticipantSuccess]);
 
   return (
     <div className={cn("grid gap-4", className)}>

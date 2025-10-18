@@ -56,7 +56,7 @@ export function SignupForm() {
     defaultValues: { [currentStep]: formData[currentStep] || "" },
   });
 
-  const { mutate: sendEmail, data: _sendEmailData, error: sendEmailError } = useSendEmail();
+  const { mutate: sendEmail, error: sendEmailError } = useSendEmail();
   const { mutate: register, error: registerError, isSuccess: registerSuccess } = useCreateUser();
   const { mutateAsync: checkUserId } = useCheckUserId();
   const { mutateAsync: checkEmail } = useCheckEmail();
@@ -81,7 +81,7 @@ export function SignupForm() {
   // 현재 단계 완료된 항목들
   const completedSteps = STEP_ORDER.slice(0, STEP_ORDER.indexOf(currentStep));
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: Record<string, string>) => {
     const value = values[currentStep];
 
     // 현재 단계 데이터 저장
