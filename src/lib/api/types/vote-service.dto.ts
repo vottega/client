@@ -51,7 +51,7 @@ export interface VoteResponseDTO {
   passRate: FractionVO;
   minParticipantNumber: number;
   minParticipantRate: FractionVO;
-  reservedStartTime: string;
+  reservedStartTime: string | null;
   isSecret: boolean;
   yesNum: number;
   noNum: number;

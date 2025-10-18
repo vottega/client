@@ -58,7 +58,7 @@ export interface VotePaperDTO {
   userName: string;
   votePaperType: VotePaperType;
   createdAt: string;
-  votedAt?: string;
+  votedAt: string | null;
 }
 
 export interface VoteResponseDTO extends VoteResponseDTOFromVote {

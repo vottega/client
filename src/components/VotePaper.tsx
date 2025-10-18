@@ -29,7 +29,7 @@ export function VotePaper({ vote, className }: { vote: VoteResponseDTO; classNam
   const [selectedOption, setSelectedOption] = useState<VotePaperType>("NOT_VOTED");
   const [showVotePaper, setShowVotePaper] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const formattedDate = format(new Date(vote.reservedStartTime), "yyyy.MM.dd HH:mm", {
+  const formattedDate = format(new Date(vote.reservedStartTime ?? ""), "yyyy.MM.dd HH:mm", {
     locale: ko,
   });
   const voteOptions: { value: VotePaperType; label: string }[] = [

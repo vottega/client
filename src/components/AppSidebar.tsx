@@ -129,7 +129,7 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
                             <span className="text-overflow">{vote.agendaName}</span>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>{vote.reservedStartTime.slice(0, 10)}</p>
+                            <p>{vote.reservedStartTime?.slice(0, 10) ?? ""}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
