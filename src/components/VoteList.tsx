@@ -19,6 +19,7 @@ import { HTMLAttributes, useMemo } from "react";
 import { VoteForm } from "./VoteForm";
 import { VoteLiveBoard } from "./VoteLiveBoard";
 import { VoteStart } from "./VoteStart";
+import { VoteResultDetail } from "./VoteResultDetail";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
@@ -32,7 +33,7 @@ const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: strin
       <DialogTrigger asChild>
         <VoteCard vote={vote} />
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader className="flex-row items-center gap-2">
           <DialogTitle>투표 정보</DialogTitle>
           <DialogDescription>
@@ -51,8 +52,7 @@ const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: strin
               <VoteForm existingVote={vote} roomId={roomId} disabled />
             </TabsContent>
             <TabsContent value="result">
-              {/* TODO: 투표 결과 */}
-              <p>투표 결과</p>
+              <VoteResultDetail voteId={vote.id} />
             </TabsContent>
           </Tabs>
         )}

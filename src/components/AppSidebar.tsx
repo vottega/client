@@ -48,6 +48,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
 import { VoteForm } from "./VoteForm";
+import { VoteResultDetail } from "./VoteResultDetail";
 
 const sidebarRightData = {
   user: {
@@ -133,7 +134,7 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
                       </TableCell>
                     </TableRow>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
+                  <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader className="flex-row items-center gap-2">
                       <DialogTitle>투표 정보</DialogTitle>
                       <DialogDescription>
@@ -157,8 +158,7 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
                           />
                         </TabsContent>
                         <TabsContent value="result">
-                          {/* TODO: 투표 결과 */}
-                          <p>투표 결과</p>
+                          <VoteResultDetail voteId={vote.id} />
                         </TabsContent>
                       </Tabs>
                     ) : (
