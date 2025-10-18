@@ -22,6 +22,7 @@ import { useVerifyToken } from "../lib/api/queries/auth";
 import { getToken } from "../lib/auth";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { Badge } from "./ui/badge";
+import { useToast } from "./ui/use-toast";
 import { VotePaper } from "./VotePaper";
 
 // 👥 참여자 타입 정의
@@ -39,6 +40,7 @@ export type VoteLiveBoardProps = {
 };
 
 export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
+  const { toast } = useToast();
   const { data: room } = useRoom(roomId);
   const { data: voteDetail, refetch: refetchVoteDetail } = useVoteDetail(vote.id);
   const { data: verifyData } = useVerifyToken(getToken() ?? "");
@@ -120,10 +122,21 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
         onSuccess: () => {
           setShowEndVoteConfirm(false);
           setShowVoteLiveBoard(false);
+          toast({
+            title: "투표 종료",
+            description: "투표가 종료되었습니다.",
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: "투표 종료 실패",
+            description: error.message,
+            variant: "destructive",
+          });
         },
       },
     );
-  }, [updateVoteStatus, vote.id, roomId]);
+  }, [updateVoteStatus, vote.id, roomId, toast]);
 
   const handleClickResetVote = useCallback(() => {
     setShowResetVoteConfirm(true);
@@ -134,9 +147,20 @@ export function VoteLiveBoard({ roomId, vote }: VoteLiveBoardProps) {
       onSuccess: () => {
         setShowResetVoteConfirm(false);
         setShowVoteLiveBoard(false);
+        toast({
+          title: "투표 초기화",
+          description: "투표가 초기화되었습니다.",
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: "투표 초기화 실패",
+          description: error.message,
+          variant: "destructive",
+        });
       },
     });
-  }, [resetVote]);
+  }, [resetVote, toast]);
 
   return (
     <>
