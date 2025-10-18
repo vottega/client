@@ -96,7 +96,7 @@ export function VoteForm({
                   {...field}
                   placeholder="예: 아카라카를 온누리에 관련 중앙운영위원회 입장문을 작성해 공개한다."
                   disabled={disabled}
-                  readOnly
+                  readOnly={readOnly}
                 />
               </FormControl>
             </FormItem>
