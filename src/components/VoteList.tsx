@@ -2,24 +2,16 @@ import { VoteCard } from "@/components/VoteCard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useVoteInfo } from "@/lib/api/queries/vote";
-import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { HTMLAttributes, useMemo } from "react";
-import { VoteLiveBoard } from "./VoteLiveBoard";
+import { useShowUserOnlyButton } from "../hooks/useShowUserOnlyButton";
 import { VoteDetailDialog } from "./VoteDetailDialog";
+import { VoteLiveBoard } from "./VoteLiveBoard";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
 }
-
-const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
-  return (
-    <VoteDetailDialog vote={vote} roomId={roomId} showStartButton>
-      <VoteCard vote={vote} />
-    </VoteDetailDialog>
-  );
-};
 
 const VoteCardFallback = ({ children }: HTMLAttributes<HTMLDivElement>) => {
   return (
@@ -32,6 +24,7 @@ const VoteCardFallback = ({ children }: HTMLAttributes<HTMLDivElement>) => {
 
 export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
   const { data: voteList = [] } = useVoteInfo(roomId);
+  const showStartButton = useShowUserOnlyButton();
 
   const upcomingVoteList = useMemo(
     () => voteList.filter((vote) => vote.status === "CREATED"),
@@ -77,7 +70,9 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
               <VoteCardFallback>예정된 투표가 없어요.</VoteCardFallback>
             ) : (
               upcomingVoteList.map((vote) => (
-                <VoteCardDialog key={vote.id} vote={vote} roomId={roomId} />
+                <VoteDetailDialog vote={vote} roomId={roomId} showStartButton={showStartButton}>
+                  <VoteCard vote={vote} />
+                </VoteDetailDialog>
               ))
             )}
           </CardContent>
@@ -94,7 +89,9 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
               <VoteCardFallback>종료된 투표가 없어요.</VoteCardFallback>
             ) : (
               endedVoteList.map((vote) => (
-                <VoteCardDialog key={vote.id} vote={vote} roomId={roomId} />
+                <VoteDetailDialog vote={vote} roomId={roomId} showStartButton={showStartButton}>
+                  <VoteCard vote={vote} />
+                </VoteDetailDialog>
               ))
             )}
           </CardContent>

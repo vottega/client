@@ -44,11 +44,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useCreateVote, useVoteInfo } from "@/lib/api/queries/vote";
+import { getVoteStatusMessage } from "@/lib/utils";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo } from "react";
+import { useShowUserOnlyButton } from "../hooks/useShowUserOnlyButton";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
-import { VoteForm } from "./VoteForm";
 import { VoteDetailDialog } from "./VoteDetailDialog";
+import { VoteForm } from "./VoteForm";
 
 const sidebarRightData = {
   user: {
@@ -67,6 +69,8 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
   const { onError, onSuccess, open, setOpen } = useVoteDialog();
   const { mutate: createVote } = useCreateVote(roomId);
   const skeletonFill = useMemo(() => Math.max(5 - voteList.length, 0), [voteList]);
+  const showUserOnlyButton = useShowUserOnlyButton();
+
   const handleSubmitVote = (data: VoteRequestDTO) => {
     createVote(data, {
       onSuccess,
@@ -85,20 +89,22 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
               <CardTitle className="text-xl">안건 및 투표</CardTitle>
               <CardDescription>최근 진행한 투표예요.</CardDescription>
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="ml-auto gap-1">
-                  투표 생성
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>투표 생성하기</DialogTitle>
-                </DialogHeader>
-                <VoteForm roomId={roomId} onSubmit={handleSubmitVote} />
-              </DialogContent>
-            </Dialog>
+            {showUserOnlyButton && (
+              <Dialog open={open} onOpenChange={setOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="ml-auto gap-1">
+                    투표 생성
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>투표 생성하기</DialogTitle>
+                  </DialogHeader>
+                  <VoteForm roomId={roomId} onSubmit={handleSubmitVote} />
+                </DialogContent>
+              </Dialog>
+            )}
           </CardHeader>
           <Table>
             <TableHeader className="sticky top-0 bg-sidebar z-10">
@@ -108,32 +114,42 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {voteList.map((vote, idx) => (
-                <VoteDetailDialog key={idx} vote={vote} roomId={roomId} onSubmit={handleSubmitVote}>
-                  <TableRow className="h-0 cursor-pointer">
-                    <TableCell className="font-medium">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="text-overflow">{vote.agendaName}</span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{vote.reservedStartTime.slice(0, 10)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
-                    <TableCell className="text-right pl-0 pr-2">
-                      <Badge
-                        className="text-xs whitespace-nowrap"
-                        variant={vote.status === "ENDED" ? "default" : "outline"}
-                      >
-                        {vote.status === "ENDED" ? "완료" : "대기"}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                </VoteDetailDialog>
-              ))}
+              {voteList.map((vote, idx) => {
+                const statusMessage = getVoteStatusMessage(vote.status, vote.result);
+
+                return (
+                  <VoteDetailDialog
+                    key={idx}
+                    vote={vote}
+                    roomId={roomId}
+                    onSubmit={handleSubmitVote}
+                    showStartButton={showUserOnlyButton}
+                  >
+                    <TableRow className="h-0 cursor-pointer">
+                      <TableCell className="font-medium">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="text-overflow">{vote.agendaName}</span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{vote.reservedStartTime.slice(0, 10)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                      <TableCell className="text-right pl-0 pr-2">
+                        <Badge
+                          className="text-xs whitespace-nowrap"
+                          variant={vote.status === "ENDED" ? "default" : "outline"}
+                        >
+                          {statusMessage}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  </VoteDetailDialog>
+                );
+              })}
               {[...Array(skeletonFill)].map((_, idx) => (
                 <TableRow key={voteList.length + idx + 1} className="relative h-[73px] z-0">
                   <TableCell>

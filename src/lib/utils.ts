@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { VoteResult, VoteStatus } from "./api/types/vote-service.dto";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -56,4 +57,20 @@ export function formatDateTime(localDateTime: string, locale: string = "ko-KR"):
   const datePart = formatDate(localDateTime, locale);
   const timePart = formatTime(localDateTime, locale);
   return `${datePart} ${timePart}`;
+}
+
+export function getVoteStatusMessage(
+  voteStatus: VoteStatus,
+  voteResult?: VoteResult,
+): string | undefined {
+  switch (voteStatus) {
+    case "CREATED":
+      return "예정";
+    case "STARTED":
+      return "진행";
+    case "ENDED": {
+      if (voteResult === "PASSED") return "가결";
+      if (voteResult === "REJECTED") return "부결";
+    }
+  }
 }
