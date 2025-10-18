@@ -1,69 +1,23 @@
 import { VoteCard } from "@/components/VoteCard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useVoteInfo } from "@/lib/api/queries/vote";
 import type { VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { cn } from "@/lib/utils";
 import { AlertCircle } from "lucide-react";
 import { HTMLAttributes, useMemo } from "react";
-import { VoteForm } from "./VoteForm";
 import { VoteLiveBoard } from "./VoteLiveBoard";
-import { VoteStart } from "./VoteStart";
-import { VoteResultDetail } from "./VoteResultDetail";
+import { VoteDetailDialog } from "./VoteDetailDialog";
 
 interface VoteListProps extends HTMLAttributes<HTMLDivElement> {
   roomId: string;
 }
 
 const VoteCardDialog = ({ vote, roomId }: { vote: VoteResponseDTO; roomId: string }) => {
-  const { open, setOpen } = useVoteDialog();
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <VoteCard vote={vote} />
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="flex-row items-center gap-2">
-          <DialogTitle>투표 정보</DialogTitle>
-          <DialogDescription>
-            {vote.status === "ENDED" || vote.status === "STARTED"
-              ? "완료된 투표 정보와 결과를 조회할 수 있어요"
-              : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
-          </DialogDescription>
-        </DialogHeader>
-        {vote.status === "ENDED" && (
-          <Tabs defaultValue="info">
-            <TabsList className="w-full grid grid-cols-2 mb-4">
-              <TabsTrigger value="info">투표 정보</TabsTrigger>
-              <TabsTrigger value="result">투표 결과</TabsTrigger>
-            </TabsList>
-            <TabsContent value="info">
-              <VoteForm existingVote={vote} roomId={roomId} disabled />
-            </TabsContent>
-            <TabsContent value="result">
-              <VoteResultDetail voteId={vote.id} />
-            </TabsContent>
-          </Tabs>
-        )}
-        {vote.status === "CREATED" && (
-          <>
-            <VoteForm existingVote={vote} roomId={roomId} disabled />
-            <VoteStart voteId={vote.id} roomId={roomId} />
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+    <VoteDetailDialog vote={vote} roomId={roomId} showStartButton>
+      <VoteCard vote={vote} />
+    </VoteDetailDialog>
   );
 };
 

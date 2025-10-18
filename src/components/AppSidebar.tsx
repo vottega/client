@@ -48,7 +48,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
 import { VoteForm } from "./VoteForm";
-import { VoteResultDetail } from "./VoteResultDetail";
+import { VoteDetailDialog } from "./VoteDetailDialog";
 
 const sidebarRightData = {
   user: {
@@ -109,68 +109,30 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
             </TableHeader>
             <TableBody>
               {voteList.map((vote, idx) => (
-                <Dialog key={idx}>
-                  <DialogTrigger asChild>
-                    <TableRow key={idx} className="h-0 cursor-pointer">
-                      <TableCell className="font-medium">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <span className="text-overflow">{vote.agendaName}</span>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{vote.reservedStartTime.slice(0, 10)}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                      <TableCell className="text-right pl-0 pr-2">
-                        <Badge
-                          className="text-xs whitespace-nowrap"
-                          variant={vote.status === "ENDED" ? "default" : "outline"}
-                        >
-                          {vote.status === "ENDED" ? "완료" : "대기"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader className="flex-row items-center gap-2">
-                      <DialogTitle>투표 정보</DialogTitle>
-                      <DialogDescription>
-                        {vote.status === "ENDED"
-                          ? "완료된 투표 정보와 결과를 조회할 수 있어요"
-                          : "대기 중인 투표 정보를 조회 및 수정할 수 있어요."}
-                      </DialogDescription>
-                    </DialogHeader>
-                    {vote.status === "ENDED" ? (
-                      <Tabs defaultValue="info">
-                        <TabsList className="w-full grid grid-cols-2 mb-4">
-                          <TabsTrigger value="info">투표 정보</TabsTrigger>
-                          <TabsTrigger value="result">투표 결과</TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="info">
-                          <VoteForm
-                            existingVote={vote}
-                            roomId={roomId}
-                            onSubmit={handleSubmitVote}
-                            disabled
-                          />
-                        </TabsContent>
-                        <TabsContent value="result">
-                          <VoteResultDetail voteId={vote.id} />
-                        </TabsContent>
-                      </Tabs>
-                    ) : (
-                      <VoteForm
-                        existingVote={vote}
-                        roomId={roomId}
-                        onSubmit={handleSubmitVote}
-                        disabled
-                      />
-                    )}
-                  </DialogContent>
-                </Dialog>
+                <VoteDetailDialog key={idx} vote={vote} roomId={roomId} onSubmit={handleSubmitVote}>
+                  <TableRow className="h-0 cursor-pointer">
+                    <TableCell className="font-medium">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-overflow">{vote.agendaName}</span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{vote.reservedStartTime.slice(0, 10)}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="text-right pl-0 pr-2">
+                      <Badge
+                        className="text-xs whitespace-nowrap"
+                        variant={vote.status === "ENDED" ? "default" : "outline"}
+                      >
+                        {vote.status === "ENDED" ? "완료" : "대기"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                </VoteDetailDialog>
               ))}
               {[...Array(skeletonFill)].map((_, idx) => (
                 <TableRow key={voteList.length + idx + 1} className="relative h-[73px] z-0">
