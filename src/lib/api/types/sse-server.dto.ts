@@ -14,7 +14,7 @@ export interface FractionVO {
 
 export interface ParticipantResponseDTO {
   id: UUID;
-  name: string | null;
+  name: string;
   roomId: number;
   position: string | null;
   participantRole: ParticipantRoleDTO | null;

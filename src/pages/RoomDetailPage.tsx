@@ -43,7 +43,7 @@ export default function RoomDetailPage() {
   const showUserOnlyButton = auth.role === "USER";
 
   const roomInfoEventHandler = useRoomInfoEventHandler();
-  const participantEventHandler = useParticipantEventHandler(room?.participants ?? []);
+  const participantEventHandler = useParticipantEventHandler(roomId ?? "");
   const voteEventHandler = useVoteEventHandler();
   const votePaperEventHandler = useVotePaperEventHandler();
 
