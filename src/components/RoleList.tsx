@@ -35,7 +35,12 @@ export const RoleList = ({
   return (
     <div className="flex flex-col gap-2">
       {[...roles.keys()].map((role, idx) => (
-        <RoleBadgeWithCanVoteSwitch key={idx} variant={idx} setRoles={setRoles}>
+        <RoleBadgeWithCanVoteSwitch
+          key={idx}
+          variant={idx}
+          defaultChecked={roles.get(role)?.canVote}
+          setRoles={setRoles}
+        >
           {role}
         </RoleBadgeWithCanVoteSwitch>
       ))}
@@ -73,10 +78,12 @@ export function RoleBadge({
 export const RoleBadgeWithCanVoteSwitch = ({
   children,
   variant,
+  defaultChecked = true,
   setRoles,
 }: HTMLAttributes<HTMLDivElement> & {
   variant: number;
   children: string;
+  defaultChecked?: boolean;
   setRoles: Dispatch<SetStateAction<Roles>>;
 }) => {
   const isDefaultRole = ROLES.has(children);
@@ -123,7 +130,7 @@ export const RoleBadgeWithCanVoteSwitch = ({
         </Label>
         <Switch
           id={`${children}-can-vote`}
-          defaultChecked={true}
+          defaultChecked={defaultChecked}
           className="data-[state=checked]:bg-zinc-700"
           onCheckedChange={handleCheckedChange}
         />

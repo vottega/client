@@ -42,7 +42,7 @@ export default function RoomDetailPage() {
   };
   const showUserOnlyButton = auth.role === "USER";
 
-  const roomInfoEventHandler = useRoomInfoEventHandler();
+  const roomInfoEventHandler = useRoomInfoEventHandler(roomId ?? "");
   const participantEventHandler = useParticipantEventHandler(roomId ?? "");
   const voteEventHandler = useVoteEventHandler();
   const votePaperEventHandler = useVotePaperEventHandler();

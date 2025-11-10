@@ -6,25 +6,7 @@ import { toast } from "sonner";
 import { queryKeys } from "../lib/api/queries";
 import { useRoom } from "../lib/api/queries/room";
 import { useAuthenticatedAuth } from "../lib/auth/useAuthenticatedAuth";
-
-/**
- * 두 타임스탬프를 비교하여 newTimestamp가 더 최신인지 확인
- * @returns true면 새 데이터가 더 최신이거나 같음 (업데이트 허용)
- */
-const isNewerOrEqual = (
-  currentTimestamp: string | null | undefined,
-  newTimestamp: string | null | undefined,
-): boolean => {
-  // 타임스탬프가 없으면 항상 업데이트 허용
-  if (!currentTimestamp || !newTimestamp) {
-    return true;
-  }
-
-  const currentTime = new Date(currentTimestamp).getTime();
-  const newTime = new Date(newTimestamp).getTime();
-
-  return newTime >= currentTime;
-};
+import { isNewerOrEqual } from "../lib/utils";
 
 /**
  * 이벤트 처리 여부를 결정 (타임스탬프 기반 데이터 정합성 검증)

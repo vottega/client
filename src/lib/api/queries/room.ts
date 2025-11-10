@@ -6,6 +6,7 @@ import {
   RoomResponseDTO,
   UpdateRoomRequestDTO,
   type ParticipantInfoDTO,
+  type ParticipantRoleDTO,
 } from "../types/room-service.dto";
 import { queryKeys } from "./index";
 
@@ -39,8 +40,14 @@ export const roomApi = {
     return response.data;
   },
 
-  addRole: async ({ roomId, role }: { roomId: string; role: string }): Promise<void> => {
-    const response = await apiClient.put(Endpoints.room.addRole(roomId).path, { role });
+  addRole: async ({
+    roomId,
+    roleInfo,
+  }: {
+    roomId: string;
+    roleInfo: ParticipantRoleDTO;
+  }): Promise<void> => {
+    const response = await apiClient.put(Endpoints.room.addRole(roomId).path, roleInfo);
     return response.data;
   },
 
