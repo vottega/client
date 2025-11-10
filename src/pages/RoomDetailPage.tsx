@@ -44,7 +44,7 @@ export default function RoomDetailPage() {
 
   const roomInfoEventHandler = useRoomInfoEventHandler(roomId ?? "");
   const participantEventHandler = useParticipantEventHandler(roomId ?? "");
-  const voteEventHandler = useVoteEventHandler();
+  const voteEventHandler = useVoteEventHandler(roomId ?? "");
   const votePaperEventHandler = useVotePaperEventHandler();
 
   const sseUrl =

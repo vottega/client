@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
 import type { VoteRequestDTO, VoteResponseDTO } from "@/lib/api/types/vote-service.dto";
 import { ReactNode } from "react";
+import { useAuthenticatedAuth } from "../lib/auth/useAuthenticatedAuth";
 import { VoteForm } from "./VoteForm";
 import { VoteResultDetail } from "./VoteResultDetail";
 import { VoteStart } from "./VoteStart";
@@ -30,6 +31,7 @@ export function VoteDetailDialog({
   children,
 }: VoteDetailDialogProps) {
   const { open, setOpen } = useVoteDialog();
+  const { role } = useAuthenticatedAuth();
 
   const getDescription = () => {
     if (vote.status === "ENDED" || vote.status === "STARTED") {
@@ -64,7 +66,13 @@ export function VoteDetailDialog({
 
         {vote.status === "CREATED" && (
           <>
-            <VoteForm existingVote={vote} roomId={roomId} onSubmit={onSubmit} disabled />
+            {/* TODO: 투표 수정 api 추가 및 반영 필요 */}
+            <VoteForm
+              existingVote={vote}
+              roomId={roomId}
+              onSubmit={onSubmit}
+              readOnly={role !== "USER"}
+            />
             {showStartButton && <VoteStart voteId={vote.id} roomId={roomId} />}
           </>
         )}
