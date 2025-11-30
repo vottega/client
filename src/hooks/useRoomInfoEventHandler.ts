@@ -56,6 +56,17 @@ export const useRoomInfoEventHandler = (roomId: string) => {
       // React Query 캐시 업데이트: 방 정보 수정
       queryClient.setQueryData<RoomCacheDTO>(queryKeys.rooms.detail(roomId), (old) => {
         if (!old) return old;
+
+        // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+        if (!isNewerOrEqual(old.lastUpdatedAt, data.lastUpdatedAt)) {
+          console.debug("ROOM_INFO 캐시 업데이트 시 오래된 데이터 무시:", {
+            current: old.lastUpdatedAt,
+            incoming: data.lastUpdatedAt,
+            roomId: data.id,
+          });
+          return old;
+        }
+
         return {
           ...old,
           name: data.name,

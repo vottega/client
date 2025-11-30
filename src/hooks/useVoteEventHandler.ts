@@ -63,6 +63,18 @@ export const useVoteEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: 투표 정보 수정
           queryClient.setQueryData<VoteListItemDTO[]>(queryKeys.votes.byRoom(roomId), (old) => {
             if (!old) return old;
+            
+            // 타임스탬프 이중 검증 (shouldProcessEvent에서 이미 체크했지만 캐시 업데이트 시점에 재확인)
+            const existingVote = old.find((v) => v.id === data.id);
+            if (existingVote && !isNewerOrEqual(existingVote.lastUpdatedAt, data.lastUpdatedAt)) {
+              console.debug("EDIT 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: existingVote.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                voteId: data.id,
+              });
+              return old;
+            }
+            
             return old.map((v) => (v.id === data.id ? data : v));
           });
 
@@ -77,9 +89,24 @@ export const useVoteEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: 투표 상태 변경
           queryClient.setQueryData<VoteListItemDTO[]>(queryKeys.votes.byRoom(roomId), (old) => {
             if (!old) return old;
-            if (old.find((v) => v.id === data.id) === undefined) {
+            
+            const existingVote = old.find((v) => v.id === data.id);
+            
+            // 새 투표인 경우 추가
+            if (!existingVote) {
               return [...old, data];
             }
+            
+            // 기존 투표는 타임스탬프 비교 후 업데이트 (이중 검증)
+            if (!isNewerOrEqual(existingVote.lastUpdatedAt, data.lastUpdatedAt)) {
+              console.debug("STATUS_CHANGE 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: existingVote.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                voteId: data.id,
+              });
+              return old;
+            }
+            
             return old.map((v) => (v.id === data.id ? data : v));
           });
 
@@ -97,6 +124,18 @@ export const useVoteEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: 투표 초기화
           queryClient.setQueryData<VoteListItemDTO[]>(queryKeys.votes.byRoom(roomId), (old) => {
             if (!old) return old;
+            
+            // 타임스탬프 이중 검증
+            const existingVote = old.find((v) => v.id === data.id);
+            if (existingVote && !isNewerOrEqual(existingVote.lastUpdatedAt, data.lastUpdatedAt)) {
+              console.debug("RESET 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: existingVote.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                voteId: data.id,
+              });
+              return old;
+            }
+            
             return old.map((v) => (v.id === data.id ? data : v));
           });
 

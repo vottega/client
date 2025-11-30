@@ -64,16 +64,26 @@ export const useVotePaperEventHandler = (roomId: string) => {
         (old) => {
           if (!old) return old;
 
-          const existingPaperIndex = old.votePaperList.findIndex(
+          const existingPaper = old.votePaperList.find(
             (vp) => vp.votePaperId === data.votePaperId,
           );
 
           let updatedPaperList: VoteDetailResponseDTO["votePaperList"];
 
-          if (existingPaperIndex === -1) {
+          if (!existingPaper) {
             // 새 투표용지 추가
             updatedPaperList = [...old.votePaperList, data];
           } else {
+            // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+            if (!isNewerOrEqual(existingPaper.votedAt, data.votedAt)) {
+              console.debug("VOTE_PAPER 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: existingPaper.votedAt,
+                incoming: data.votedAt,
+                votePaperId: data.votePaperId,
+              });
+              return old;
+            }
+            
             // 기존 투표용지 업데이트
             updatedPaperList = old.votePaperList.map((vp) =>
               vp.votePaperId === data.votePaperId ? data : vp,

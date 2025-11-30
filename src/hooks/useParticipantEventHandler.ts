@@ -67,6 +67,21 @@ export const useParticipantEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: isEntered 상태 변경
           queryClient.setQueryData<RoomResponseDTO>(queryKeys.rooms.detail(roomId), (old) => {
             if (!old) return old;
+
+            // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+            const currentParticipant = old.participants.find((p) => p.id === data.id);
+            if (
+              currentParticipant &&
+              !isNewerOrEqual(currentParticipant.lastUpdatedAt, data.lastUpdatedAt)
+            ) {
+              console.debug("ENTER 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: currentParticipant.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                participantId: data.id,
+              });
+              return old;
+            }
+
             return {
               ...old,
               participants: old.participants.map((p) =>
@@ -97,6 +112,21 @@ export const useParticipantEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: isEntered 상태 변경
           queryClient.setQueryData<RoomResponseDTO>(queryKeys.rooms.detail(roomId), (old) => {
             if (!old) return old;
+
+            // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+            const currentParticipant = old.participants.find((p) => p.id === data.id);
+            if (
+              currentParticipant &&
+              !isNewerOrEqual(currentParticipant.lastUpdatedAt, data.lastUpdatedAt)
+            ) {
+              console.debug("EXIT 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: currentParticipant.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                participantId: data.id,
+              });
+              return old;
+            }
+
             return {
               ...old,
               participants: old.participants.map((p) =>
@@ -120,6 +150,21 @@ export const useParticipantEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: 참여자 정보 수정
           queryClient.setQueryData<RoomResponseDTO>(queryKeys.rooms.detail(roomId), (old) => {
             if (!old) return old;
+
+            // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+            const currentParticipant = old.participants.find((p) => p.id === data.id);
+            if (
+              currentParticipant &&
+              !isNewerOrEqual(currentParticipant.lastUpdatedAt, data.lastUpdatedAt)
+            ) {
+              console.debug("EDIT 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: currentParticipant.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                participantId: data.id,
+              });
+              return old;
+            }
+
             return {
               ...old,
               participants: old.participants.map((p) =>
@@ -147,12 +192,35 @@ export const useParticipantEventHandler = (roomId: string) => {
             if (!old) return old;
 
             // 이미 존재하는지 확인
-            const exists = old.participants.some((p) => p.id === data.id);
-            if (exists) {
-              console.debug("이미 존재하는 참여자입니다.");
-              return old;
+            const existingParticipant = old.participants.find((p) => p.id === data.id);
+            if (existingParticipant) {
+              // 이미 존재하는 경우, 타임스탬프 검증
+              if (!isNewerOrEqual(existingParticipant.lastUpdatedAt, data.lastUpdatedAt)) {
+                console.debug("ADD 캐시 업데이트 시 오래된 데이터 무시:", {
+                  current: existingParticipant.lastUpdatedAt,
+                  incoming: data.lastUpdatedAt,
+                  participantId: data.id,
+                });
+                return old;
+              }
+              // 더 최신 데이터면 업데이트
+              return {
+                ...old,
+                participants: old.participants.map((p) =>
+                  p.id === data.id
+                    ? {
+                        ...p,
+                        name: data.name,
+                        position: data.position ?? p.position,
+                        participantRole: data.participantRole ?? p.participantRole,
+                        lastUpdatedAt: data.lastUpdatedAt ?? p.lastUpdatedAt,
+                      }
+                    : p,
+                ),
+              };
             }
 
+            // 새 참여자 추가
             return {
               ...old,
               participants: [
@@ -190,6 +258,21 @@ export const useParticipantEventHandler = (roomId: string) => {
           // React Query 캐시 업데이트: 참여자 삭제
           queryClient.setQueryData<RoomResponseDTO>(queryKeys.rooms.detail(roomId), (old) => {
             if (!old) return old;
+
+            // 타임스탬프 이중 검증 (레이스 컨디션 방지)
+            const currentParticipant = old.participants.find((p) => p.id === data.id);
+            if (
+              currentParticipant &&
+              !isNewerOrEqual(currentParticipant.lastUpdatedAt, data.lastUpdatedAt)
+            ) {
+              console.debug("DELETE 캐시 업데이트 시 오래된 데이터 무시:", {
+                current: currentParticipant.lastUpdatedAt,
+                incoming: data.lastUpdatedAt,
+                participantId: data.id,
+              });
+              return old;
+            }
+
             return {
               ...old,
               participants: old.participants.filter((p) => p.id !== data.id),
