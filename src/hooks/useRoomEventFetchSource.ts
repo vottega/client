@@ -1,6 +1,5 @@
 import type {
   ParticipantResponseDTO,
-  RoomEventType,
   RoomResponseDTO,
   VotePaperDTO,
   VoteResponseDTO,
@@ -9,10 +8,12 @@ import { getToken } from "@/lib/auth";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import { useEffect, useRef } from "react";
 
-type RoomEvent<T = unknown> = {
-  type: RoomEventType;
-  data: T;
-};
+// Discriminated Union 패턴으로 타입 안전성 확보
+type RoomEvent =
+  | { type: "ROOM_INFO"; data: RoomResponseDTO }
+  | { type: "PARTICIPANT_INFO"; data: ParticipantResponseDTO }
+  | { type: "VOTE_INFO"; data: VoteResponseDTO }
+  | { type: "VOTE_PAPER_INFO"; data: VotePaperDTO };
 
 type RoomEventHandlers = {
   ROOM_INFO?: (data: RoomResponseDTO) => void;
@@ -60,11 +61,26 @@ export function useRoomEventFetchSource(
         try {
           const parsed = JSON.parse(ev.data) as RoomEvent;
           console.log("[SSE] Received:", parsed);
-          const handler = handlersRef.current[parsed.type];
-          if (handler) {
-            handler(parsed.data);
-          } else {
-            console.warn(`[SSE] No handler for type: ${parsed.type}`);
+
+          // TypeScript의 타입 좁히기를 활용한 타입 안전한 분기 처리
+          switch (parsed.type) {
+            case "ROOM_INFO":
+              handlersRef.current.ROOM_INFO?.(parsed.data);
+              break;
+            case "PARTICIPANT_INFO":
+              handlersRef.current.PARTICIPANT_INFO?.(parsed.data);
+              break;
+            case "VOTE_INFO":
+              handlersRef.current.VOTE_INFO?.(parsed.data);
+              break;
+            case "VOTE_PAPER_INFO":
+              handlersRef.current.VOTE_PAPER_INFO?.(parsed.data);
+              break;
+            default: {
+              // exhaustive check: 모든 케이스를 처리했는지 컴파일 타임에 검증
+              const _exhaustiveCheck: never = parsed;
+              console.warn(`[SSE] No handler for type:`, _exhaustiveCheck);
+            }
           }
         } catch (err) {
           console.error("[SSE] Invalid message format", err);
