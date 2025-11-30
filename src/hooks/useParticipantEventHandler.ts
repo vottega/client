@@ -27,20 +27,7 @@ const shouldProcessEvent = (
     return false;
   }
 
-  // ENTER: enteredAt 기준으로 비교
-  if (action === "ENTER") {
-    const isNewer = isNewerOrEqual(participant.enteredAt, incomingData.enteredAt);
-    if (!isNewer) {
-      console.debug("오래된 ENTER 이벤트 무시:", {
-        current: participant.enteredAt,
-        incoming: incomingData.enteredAt,
-        participantId: incomingData.id,
-      });
-    }
-    return isNewer;
-  }
-
-  // EXIT, EDIT, DELETE: lastUpdatedAt 기준으로 비교
+  // ENTER, EXIT, EDIT, DELETE: lastUpdatedAt 기준으로 비교
   const isNewer = isNewerOrEqual(participant.lastUpdatedAt, incomingData.lastUpdatedAt);
   if (!isNewer) {
     console.debug(`오래된 ${action} 이벤트 무시:`, {
