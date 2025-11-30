@@ -7,23 +7,44 @@ import { queryKeys } from "../lib/api/queries";
 import { useRoom } from "../lib/api/queries/room";
 import { isNewerOrEqual } from "../lib/utils";
 
+/**
+ * 이벤트 처리 여부를 결정 (타임스탬프 기반 데이터 정합성 검증)
+ * @returns true면 이벤트 처리 진행, false면 오래된 이벤트로 판단하여 무시
+ */
+const shouldProcessEvent = (
+  room: RoomCacheDTO | undefined,
+  incomingData: RoomResponseDTO,
+): boolean => {
+  // 방 정보가 없으면 처리하지 않음
+  if (!room) {
+    return false;
+  }
+
+  // lastUpdatedAt 기준으로 비교
+  const isNewer = isNewerOrEqual(room.lastUpdatedAt, incomingData.lastUpdatedAt);
+  if (!isNewer) {
+    console.debug("오래된 ROOM_INFO 이벤트 무시:", {
+      current: room.lastUpdatedAt,
+      incoming: incomingData.lastUpdatedAt,
+      roomId: incomingData.id,
+    });
+  }
+  return isNewer;
+};
+
 export const useRoomInfoEventHandler = (roomId: string) => {
   const queryClient = useQueryClient();
   const { data: room } = useRoom(roomId);
 
   return useCallback(
     (data: RoomResponseDTO) => {
-      if (!room) {
+      // 타임스탬프 기반 데이터 정합성 검증
+      if (!shouldProcessEvent(room, data)) {
         return;
       }
 
-      // 타임스탬프 기반 데이터 정합성 검증
-      if (!isNewerOrEqual(room.lastUpdatedAt, data.lastUpdatedAt)) {
-        console.debug("오래된 ROOM_INFO 이벤트 무시:", {
-          current: room.lastUpdatedAt,
-          incoming: data.lastUpdatedAt,
-          roomId: data.id,
-        });
+      // TypeScript 타입 가드
+      if (!room) {
         return;
       }
 
