@@ -74,3 +74,37 @@ export function getVoteStatusMessage(
     }
   }
 }
+
+/**
+ * 두 타임스탬프를 비교하여 newTimestamp가 더 최신인지 확인
+ * SSE 이벤트 처리 시 데이터 정합성 검증에 사용
+ *
+ * @param currentTimestamp - 현재 캐시된 데이터의 타임스탬프
+ * @param newTimestamp - 새로 받은 데이터의 타임스탬프
+ * @returns true면 새 데이터가 더 최신이거나 같음 (업데이트 허용), false면 오래된 데이터 (무시)
+ *
+ * @example
+ * ```ts
+ * // 타임스탬프가 있는 경우
+ * isNewerOrEqual("2024-01-01T10:00:00", "2024-01-01T10:00:01") // true (새 데이터가 더 최신)
+ * isNewerOrEqual("2024-01-01T10:00:01", "2024-01-01T10:00:00") // false (오래된 데이터)
+ *
+ * // 타임스탬프가 없는 경우 (항상 허용)
+ * isNewerOrEqual(null, "2024-01-01T10:00:00") // true
+ * isNewerOrEqual("2024-01-01T10:00:00", null) // true
+ * ```
+ */
+export function isNewerOrEqual(
+  currentTimestamp: string | null | undefined,
+  newTimestamp: string | null | undefined,
+): boolean {
+  // 타임스탬프가 없으면 항상 업데이트 허용
+  if (!currentTimestamp || !newTimestamp) {
+    return true;
+  }
+
+  const currentTime = new Date(currentTimestamp).getTime();
+  const newTime = new Date(newTimestamp).getTime();
+
+  return newTime >= currentTime;
+}

@@ -14,7 +14,7 @@ export interface FractionVO {
 
 export interface ParticipantResponseDTO {
   id: UUID;
-  name: string | null;
+  name: string;
   roomId: number;
   position: string | null;
   participantRole: ParticipantRoleDTO | null;
@@ -58,7 +58,7 @@ export interface VotePaperDTO {
   userName: string;
   votePaperType: VotePaperType;
   createdAt: string;
-  votedAt?: string;
+  votedAt: string | null;
 }
 
 export interface VoteResponseDTO extends VoteResponseDTOFromVote {

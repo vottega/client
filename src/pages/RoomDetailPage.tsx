@@ -20,9 +20,8 @@ import { useRoomInfoEventHandler } from "@/hooks/useRoomInfoEventHandler";
 import { useVoteEventHandler } from "@/hooks/useVoteEventHandler";
 import { useVotePaperEventHandler } from "@/hooks/useVotePaperEventHandler";
 import { Endpoints } from "@/lib/api/endpoints";
-import { useVerifyToken } from "@/lib/api/queries/auth";
 import { useRoom } from "@/lib/api/queries/room";
-import { getToken } from "@/lib/auth";
+import { useAuthenticatedAuth } from "@/lib/auth/useAuthenticatedAuth";
 import { Plus, Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { VoteForm } from "../components/VoteForm";
@@ -30,10 +29,9 @@ import { useCreateVote } from "../lib/api/queries/vote";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
 
 export default function RoomDetailPage() {
-  const token = getToken();
+  const auth = useAuthenticatedAuth();
   const { id: roomId } = useParams<{ id: string }>();
   const { data: room, isSuccess: isRoomSuccess } = useRoom(roomId);
-  const { data: verifyData } = useVerifyToken(token ?? "");
   const { mutate: createVote } = useCreateVote(roomId ?? "");
   const { onError, onSuccess, open, setOpen } = useVoteDialog();
   const handleSubmitVote = (data: VoteRequestDTO) => {
@@ -42,15 +40,15 @@ export default function RoomDetailPage() {
       onError,
     });
   };
-  const showUserOnlyButton = verifyData?.role === "USER";
+  const showUserOnlyButton = auth.role === "USER";
 
-  const roomInfoEventHandler = useRoomInfoEventHandler();
-  const participantEventHandler = useParticipantEventHandler(room?.participants ?? []);
-  const voteEventHandler = useVoteEventHandler();
-  const votePaperEventHandler = useVotePaperEventHandler();
+  const roomInfoEventHandler = useRoomInfoEventHandler(roomId ?? "");
+  const participantEventHandler = useParticipantEventHandler(roomId ?? "");
+  const voteEventHandler = useVoteEventHandler(roomId ?? "");
+  const votePaperEventHandler = useVotePaperEventHandler(roomId ?? "");
 
   const sseUrl =
-    verifyData?.role === "USER"
+    auth.role === "USER"
       ? Endpoints.sse.connect(roomId ?? "").path
       : Endpoints.sse.connectParticipant().path;
 

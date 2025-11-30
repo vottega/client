@@ -70,7 +70,12 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
               <VoteCardFallback>예정된 투표가 없어요.</VoteCardFallback>
             ) : (
               upcomingVoteList.map((vote) => (
-                <VoteDetailDialog vote={vote} roomId={roomId} showStartButton={showStartButton}>
+                <VoteDetailDialog
+                  key={vote.id}
+                  vote={vote}
+                  roomId={roomId}
+                  showStartButton={showStartButton}
+                >
                   <VoteCard vote={vote} />
                 </VoteDetailDialog>
               ))
@@ -89,7 +94,12 @@ export const VoteList = ({ roomId, className, ...props }: VoteListProps) => {
               <VoteCardFallback>종료된 투표가 없어요.</VoteCardFallback>
             ) : (
               endedVoteList.map((vote) => (
-                <VoteDetailDialog vote={vote} roomId={roomId} showStartButton={showStartButton}>
+                <VoteDetailDialog
+                  key={vote.id}
+                  vote={vote}
+                  roomId={roomId}
+                  showStartButton={showStartButton}
+                >
                   <VoteCard vote={vote} />
                 </VoteDetailDialog>
               ))

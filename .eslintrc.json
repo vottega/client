@@ -13,7 +13,7 @@
     "sourceType": "module",
     "ecmaFeatures": { "jsx": true }
   },
-  "plugins": ["@typescript-eslint", "react-hooks", "react-refresh"],
+  "plugins": ["@typescript-eslint", "react-hooks", "react-refresh", "react"],
   "settings": {},
   "rules": {
     "react-refresh/only-export-components": ["warn", { "allowConstantExport": true }],
@@ -23,7 +23,8 @@
       { "args": "after-used", "ignoreRestSiblings": false }
     ],
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "react/jsx-key": ["error", { "checkFragmentShorthand": true }]
   },
   "overrides": [
     {
