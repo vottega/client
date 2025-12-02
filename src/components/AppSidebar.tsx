@@ -1,6 +1,5 @@
-import { ArrowUpRight, BadgeCheck, Bell, ChevronsUpDown, LogOut, Plus, Users } from "lucide-react";
+import { Plus, Users } from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,15 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -28,7 +18,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -39,31 +28,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useVoteDialog } from "@/hooks/useDialog.vote";
 import { useCreateVote, useVoteInfo } from "@/lib/api/queries/vote";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { useMemo } from "react";
 import { useShowUserOnlyButton } from "../hooks/useShowUserOnlyButton";
+import { useRoom } from "../lib/api/queries/room";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
+import { OnlineOffline } from "./OnlineOffline";
 import { VoteResultBadge } from "./VoteCard";
 import { VoteDetailDialog } from "./VoteDetailDialog";
 import { VoteForm } from "./VoteForm";
-
-const sidebarRightData = {
-  user: {
-    name: "류기현",
-    email: "example@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-};
+import { NavUser } from "./NavUser";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   roomId: string;
 }
 
 export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
+  const { data: room } = useRoom(roomId);
   const { data: voteList = [] } = useVoteInfo(roomId);
   const { onError, onSuccess, open, setOpen } = useVoteDialog();
   const { mutate: createVote } = useCreateVote(roomId);
@@ -79,7 +63,7 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
   return (
     <Sidebar className="hidden lg:flex h-svh border-l" {...props}>
       <SidebarHeader className="h-16 border-b border-sidebar-border">
-        <NavUser user={sidebarRightData.user} />
+        <NavUser roomId={roomId} />
       </SidebarHeader>
       <SidebarContent className="gap-0">
         <div className="flex flex-col flex-grow h-0">
@@ -176,123 +160,12 @@ export function AppSidebar({ roomId, ...props }: AppSidebarProps) {
                     현재 접속 인원은 실시간으로 업데이트 됩니다.
                   </DialogDescription>
                 </DialogHeader>
-                <Tabs defaultValue="online">
-                  <TabsList className="w-full grid grid-cols-2 mb-4">
-                    <TabsTrigger value="online">온라인 (11)</TabsTrigger>
-                    <TabsTrigger value="offline">오프라인 (9)</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="online">
-                    <div className="grid gap-8 grid-cols-2 h-[318px] overflow-y-scroll">
-                      {Array.from({ length: 10 }).map((_, idx) => (
-                        <div className="flex items-center gap-4 h-fit" key={idx}>
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                            <AvatarFallback>민균</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">윤민균</p>
-                            <p className="text-sm text-muted-foreground">인지융 컴퓨터과학과</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="offline">
-                    <div className="grid gap-8 grid-cols-2 h-[318px] overflow-y-scroll">
-                      {Array.from({ length: 20 }).map((_, idx) => (
-                        <div key={idx} className="flex items-center gap-4 h-fit">
-                          <Avatar className="hidden h-9 w-9 sm:flex">
-                            <AvatarImage src="/avatars/01.png" alt="Avatar" />
-                            <AvatarFallback>기현</AvatarFallback>
-                          </Avatar>
-                          <div className="grid gap-1">
-                            <p className="text-sm font-medium leading-none">류기현</p>
-                            <p className="text-sm text-muted-foreground">문과대학 중어중문학과</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <OnlineOffline participants={room?.participants ?? []} />
               </DialogContent>
             </Dialog>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
-}
-
-function NavUser({
-  user,
-}: {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
-}) {
-  const { isMobile } = useSidebar();
-
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg">{user.name.slice(0, 2)}</AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
-              </div>
-              <ChevronsUpDown className="ml-auto size-4" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-            side={isMobile ? "bottom" : "right"}
-            align="start"
-            sideOffset={4}
-          >
-            <DropdownMenuLabel className="p-0 font-normal">
-              <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">{user.name.slice(0, 2)}</AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
-                </div>
-              </div>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <BadgeCheck className="mr-2" />
-                계정
-                <ArrowUpRight size={10} className="-translate-y-2" />
-              </DropdownMenuItem>
-
-              <DropdownMenuItem>
-                <Bell className="mr-2" />
-                공지
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut className="mr-2" />
-              로그아웃
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </SidebarMenuItem>
-    </SidebarMenu>
   );
 }
