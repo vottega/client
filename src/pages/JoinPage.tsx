@@ -1,19 +1,24 @@
 import { ErrorState } from "@/components/ErrorState";
 import { Loader } from "@/components/Loader";
-import { useAuthenticateParticipant } from "@/lib/api/queries/auth";
+import { useAuthenticateParticipant, useVerifyToken } from "@/lib/api/queries/auth";
 import { useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { getToken } from "../lib/auth";
 
 export default function JoinPage() {
   const { uuid } = useParams<{ uuid: string }>();
   const navigate = useNavigate();
+  const token = getToken();
 
   const {
     mutate: authenticate,
     error: authError,
     data: authData,
     isPending: isAuthenticating,
+    isSuccess: isAuthenticated,
   } = useAuthenticateParticipant();
+
+  const { isSuccess: isVerifySuccess, refetch: verifyToken } = useVerifyToken(token ?? "");
 
   // 전체 로딩 상태 계산
   const isLoading = useMemo(() => {
@@ -40,10 +45,16 @@ export default function JoinPage() {
   }, [uuid, authenticate]);
 
   useEffect(() => {
-    if (authData?.roomId) {
+    if (isAuthenticated) {
+      verifyToken();
+    }
+  }, [isAuthenticated, verifyToken]);
+
+  useEffect(() => {
+    if (isVerifySuccess && authData?.roomId) {
       navigate(`/rooms/${authData.roomId}`);
     }
-  }, [authData, navigate]);
+  }, [isVerifySuccess, navigate, authData?.roomId]);
 
   // UUID가 없는 경우
   if (!uuid) {
