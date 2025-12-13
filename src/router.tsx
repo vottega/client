@@ -1,6 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import { AuthGuard } from "@/lib/auth/AuthGuard";
 import { AppLayout } from "@/components/layouts/AppLayout";
+import { ProtectedRoute } from "./routes/ProtectedRoute";
 
 // Public Pages (no authentication required)
 import SigninPage from "./pages/SigninPage";
@@ -17,72 +18,136 @@ import RoomSettingsRolesPage from "./pages/RoomSettingsRolesPage";
 import RoomSettingsVotesPage from "./pages/RoomSettingsVotesPage";
 import NewRoomPage from "./pages/NewRoomPage";
 
-// 라우트 설정 타입
-interface RouteConfig {
-  path: string;
-  element: React.ComponentType;
-  showHeader: boolean;
-}
+// 참여자가 접근 가능한 경로인지 확인
+const isParticipantAllowedPath = (path: string) => {
+  // 참여자는 오직 "/rooms/:id"에만 접근 가능 (설정 페이지 제외)
+  return /^\/rooms\/[^/]+$/.test(path);
+};
 
-// 공개 라우트 설정
-const publicRoutes: RouteConfig[] = [
-  { path: "/signin", element: SigninPage, showHeader: true },
-  { path: "/signin/register", element: RegisterPage, showHeader: true },
-  { path: "/join/:uuid", element: JoinPage, showHeader: false },
-];
+// 참여자 거부 시 리다이렉트 경로 결정
+const redirectForParticipant = (
+  _fromPath: string,
+  auth: { role: string; roomId?: number | null },
+) => {
+  // 참여자의 경우 roomId를 사용하여 해당 룸으로 리다이렉트
+  if (auth.role === "PARTICIPANT" && auth.roomId) {
+    return `/rooms/${auth.roomId}`;
+  }
+  return "/";
+};
 
-// 보호된 라우트 설정
-const protectedRoutes: RouteConfig[] = [
-  { path: "/", element: HomePage, showHeader: true },
-  { path: "/rooms", element: RoomsPage, showHeader: true },
-  { path: "/rooms/new", element: NewRoomPage, showHeader: true },
-  { path: "/rooms/:id", element: RoomDetailPage, showHeader: false },
-  { path: "/rooms/:id/settings", element: RoomSettingsPage, showHeader: false },
+export const router = createBrowserRouter([
+  // 공개 라우트 (인증 불필요)
   {
-    path: "/rooms/:id/settings/participants",
-    element: RoomSettingsParticipantsPage,
-    showHeader: false,
+    path: "/signin",
+    element: (
+      <AppLayout showHeader={true}>
+        <SigninPage />
+      </AppLayout>
+    ),
   },
-  { path: "/rooms/:id/settings/roles", element: RoomSettingsRolesPage, showHeader: false },
-  { path: "/rooms/:id/settings/votes", element: RoomSettingsVotesPage, showHeader: false },
-];
+  {
+    path: "/signin/register",
+    element: (
+      <AppLayout showHeader={true}>
+        <RegisterPage />
+      </AppLayout>
+    ),
+  },
+  {
+    path: "/join/:uuid",
+    element: (
+      <AppLayout showHeader={false}>
+        <JoinPage />
+      </AppLayout>
+    ),
+  },
 
-// 통합된 라우트 렌더링 함수
-function renderRoute(config: RouteConfig, requireAuth: boolean) {
-  const { path, element: Element, showHeader } = config;
-
-  const wrappedElement = (
-    <AppLayout showHeader={showHeader}>
-      <Element />
-    </AppLayout>
-  );
-
-  return (
-    <Route
-      key={path}
-      path={path}
-      element={requireAuth ? <AuthGuard>{wrappedElement}</AuthGuard> : wrappedElement}
-    />
-  );
-}
-
-function renderPublicRoute(config: RouteConfig) {
-  return renderRoute(config, false);
-}
-
-function renderProtectedRoute(config: RouteConfig) {
-  return renderRoute(config, true);
-}
-
-// Main Router Component
-export function AppRouter() {
-  return (
-    <Routes>
-      {/* 공개 라우트 */}
-      {publicRoutes.map(renderPublicRoute)}
-
-      {/* 보호된 라우트 */}
-      {protectedRoutes.map(renderProtectedRoute)}
-    </Routes>
-  );
-}
+  // 인증 필요 라우트 - 모든 인증된 사용자 접근 가능하지만, 참여자는 /rooms/:id만 허용
+  {
+    element: (
+      <AuthGuard>
+        <ProtectedRoute
+          allow={(role, path) => {
+            // USER는 모든 경로 접근 가능
+            if (role === "USER") {
+              return true;
+            }
+            // PARTICIPANT는 오직 /rooms/:id만 접근 가능
+            if (role === "PARTICIPANT") {
+              return isParticipantAllowedPath(path);
+            }
+            return false;
+          }}
+          redirectTo={(fromPath, auth) => redirectForParticipant(fromPath, auth)}
+        />
+      </AuthGuard>
+    ),
+    children: [
+      {
+        path: "/",
+        element: (
+          <AppLayout showHeader={true}>
+            <HomePage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms",
+        element: (
+          <AppLayout showHeader={true}>
+            <RoomsPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/new",
+        element: (
+          <AppLayout showHeader={true}>
+            <NewRoomPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/:id",
+        element: (
+          <AppLayout showHeader={false}>
+            <RoomDetailPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/:id/settings",
+        element: (
+          <AppLayout showHeader={false}>
+            <RoomSettingsPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/:id/settings/participants",
+        element: (
+          <AppLayout showHeader={false}>
+            <RoomSettingsParticipantsPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/:id/settings/roles",
+        element: (
+          <AppLayout showHeader={false}>
+            <RoomSettingsRolesPage />
+          </AppLayout>
+        ),
+      },
+      {
+        path: "/rooms/:id/settings/votes",
+        element: (
+          <AppLayout showHeader={false}>
+            <RoomSettingsVotesPage />
+          </AppLayout>
+        ),
+      },
+    ],
+  },
+]);

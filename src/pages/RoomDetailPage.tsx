@@ -27,8 +27,10 @@ import { Link, useParams } from "react-router-dom";
 import { VoteForm } from "../components/VoteForm";
 import { useCreateVote } from "../lib/api/queries/vote";
 import type { VoteRequestDTO } from "../lib/api/types/vote-service.dto";
+import { useDeniedToast } from "@/routes/useDeniedToast";
 
 export default function RoomDetailPage() {
+  useDeniedToast();
   const auth = useAuthenticatedAuth();
   const { id: roomId } = useParams<{ id: string }>();
   const { data: room, isSuccess: isRoomSuccess } = useRoom(roomId);
