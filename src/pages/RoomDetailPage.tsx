@@ -40,7 +40,7 @@ export default function RoomDetailPage() {
       onError,
     });
   };
-  const showUserOnlyButton = auth.role === "USER";
+  const isUser = auth.role === "USER";
 
   const roomInfoEventHandler = useRoomInfoEventHandler(roomId ?? "");
   const participantEventHandler = useParticipantEventHandler(roomId ?? "");
@@ -75,15 +75,21 @@ export default function RoomDetailPage() {
       <SidebarInset className="max-w-full">
         <BreadcrumbHeader
           sidebarSide="right"
-          breadcrumbs={[{ label: "내 회의실", href: "/rooms" }, { label: room?.name }]}
+          breadcrumbs={
+            isUser
+              ? [{ label: "내 회의실", href: "/rooms" }, { label: room?.name }]
+              : [{ label: room?.name }]
+          }
           showLogo
         >
-          <Button variant="ghost" asChild size="icon">
-            <Link to={`/rooms/${roomId}/settings`}>
-              <Settings />
-              <span className="sr-only">설정</span>
-            </Link>
-          </Button>
+          {isUser && (
+            <Button variant="ghost" asChild size="icon">
+              <Link to={`/rooms/${roomId}/settings`}>
+                <Settings />
+                <span className="sr-only">설정</span>
+              </Link>
+            </Button>
+          )}
         </BreadcrumbHeader>
 
         {/* contents */}
@@ -92,7 +98,7 @@ export default function RoomDetailPage() {
             <Card className="flex-grow">
               <CardHeader className="flex-row items-center space-y-0">
                 <CardTitle>투표 정보</CardTitle>
-                {showUserOnlyButton && (
+                {isUser && (
                   <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="ml-auto gap-1">
