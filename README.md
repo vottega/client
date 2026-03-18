@@ -2,68 +2,6 @@
 
 > 총학생회 회의에서 거수로 투표하던 비효율을 없애기 위해 만든, 의사정족수·의결정족수를 지원하는 실시간 투표 시스템의 프론트엔드입니다.
 
-## 스크린샷
-
-### 1. 회의실 생성 — 역할별 투표권 설정
-
-<img src="./docs/screenshots/room-create.png" alt="회의실 생성" width="360" />
-
-회의실을 만들 때 참여자 역할(의장, 회의자, 서기 등)을 정의하고 역할별 투표권을 설정합니다.
-
-### 2. 참여자 추가
-
-<img src="./docs/screenshots/participant-create.png" alt="참여자 추가" width="360" />
-
-설정 페이지에서 참여자를 추가합니다. 추가된 참여자에게 초대 링크를 전달하면 별도 회원가입 없이 입장할 수 있습니다.
-
-### 3. 회의실 상세 — 투표 현황 + 참여자 목록
-
-<img src="./docs/screenshots/room-detail.png" alt="회의실 상세" width="360" />
-
-진행중·예정·종료 투표를 한눈에 볼 수 있고, 하단에서 참여 인원의 입장 상태를 확인합니다.
-
-### 4. 실시간 알림 (SSE)
-
-<img src="./docs/screenshots/sse-connection.png" alt="SSE 실시간 입장 알림" width="360" />
-
-참여자 입장 등 실시간 이벤트가 발생하면 SSE를 통해 실시간으로 토스트 알림이 뜨고, 참여자 목록이 자동 업데이트됩니다.
-
-- 참여자 입장/퇴장
-- 투표 생성/수정/시작/종료
-- 투표용지 제출
-
-### 5. 투표 생성 — 의사정족수·의결정족수 설정
-
-<img src="./docs/screenshots/vote-create.png" alt="투표 생성" width="720" />
-
-안건명, 표결 내용, 정족수 조건, 시작 시간, 무기명 여부를 설정하여 투표를 생성합니다.
-
-### 6. 투표 용지 — 참여자 시점
-
-<img src="./docs/screenshots/vote-paper.png" alt="투표 용지" width="480" />
-
-참여자에게 보이는 투표 화면입니다. 안건 정보와 정족수 조건을 확인한 뒤 찬성/반대/기권 중 하나를 선택합니다.
-
-### 7. 실시간 투표 현황판 — 방장 시점
-
-<img src="./docs/screenshots/vote-liveboard-forbidden.png" alt="실시간 투표 현황 (진행중)" width="720" />
-
-방장은 투표 권한이 없는 경우에도 실시간으로 투표 진행률과 참여자별 투표 상태(대기/완료)를 확인할 수 있습니다.
-
-### 8. 투표 완료 — 진행률 100%
-
-<img src="./docs/screenshots/vote-liveboard.png" alt="투표 완료 현황" width="720" />
-
-모든 참여자의 투표가 완료되면 진행률이 100%로 표시됩니다.
-
-### 9. 투표 결과 — 정족수 충족 여부 판정
-
-<img src="./docs/screenshots/vote-result.png" alt="투표 결과" width="720" />
-
-투표 종료 후 참석 인원, 의사정족수 충족 여부, 의결정족수 충족 여부, 찬성/반대/기권 비율을 종합하여 가결·부결을 판정합니다.
-
----
-
 ## 목차
 
 - [스크린샷](#스크린샷)
@@ -79,6 +17,68 @@
 - [코드에서 봐야 할 포인트](#코드에서-봐야-할-포인트)
 - [향후 계획](#향후-계획)
 - [관련 레포지토리](#관련-레포지토리)
+
+---
+
+## 스크린샷
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>1. 회의실 생성</b><br/><br/>
+      <img src="./docs/screenshots/room-create.png" alt="회의실 생성" width="300" /><br/><br/>
+      역할(의장, 회의자, 서기 등)을 정의하고<br/>역할별 투표권을 설정합니다.
+    </td>
+    <td align="center" width="50%">
+      <b>2. 참여자 추가</b><br/><br/>
+      <img src="./docs/screenshots/participant-create.png" alt="참여자 추가" width="300" /><br/><br/>
+      참여자를 추가하고 초대 링크를 전달하면<br/>별도 회원가입 없이 입장할 수 있습니다.
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>3. 회의실 상세</b><br/><br/>
+      <img src="./docs/screenshots/room-detail.png" alt="회의실 상세" width="300" /><br/><br/>
+      투표 현황과 참여자 입장 상태를<br/>한눈에 확인합니다.
+    </td>
+    <td align="center">
+      <b>4. 실시간 알림 (SSE)</b><br/><br/>
+      <img src="./docs/screenshots/sse-connection.png" alt="SSE 실시간 알림" /><br/><br/>
+      참여자 입장 시 실시간 토스트 알림과<br/>참여자 목록 자동 업데이트.
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>5. 투표 생성</b><br/><br/>
+      <img src="./docs/screenshots/vote-create.png" alt="투표 생성" width="300" /><br/><br/>
+      의사정족수·의결정족수, 무기명 여부 등<br/>투표 조건을 설정합니다.
+    </td>
+    <td align="center">
+      <b>6. 투표 용지 (참여자)</b><br/><br/>
+      <img src="./docs/screenshots/vote-paper.png" alt="투표 용지" width="360" /><br/><br/>
+      안건 정보와 조건을 확인한 뒤<br/>찬성/반대/기권을 선택합니다.
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>7. 실시간 투표 현황 (진행중)</b><br/><br/>
+      <img src="./docs/screenshots/vote-liveboard-forbidden.png" alt="투표 현황 진행중" /><br/><br/>
+      방장이 투표 진행률과<br/>참여자별 상태를 실시간 확인.
+    </td>
+    <td align="center">
+      <b>8. 투표 완료 (100%)</b><br/><br/>
+      <img src="./docs/screenshots/vote-liveboard.png" alt="투표 완료" /><br/><br/>
+      모든 참여자의 투표가 완료되면<br/>진행률 100%로 표시됩니다.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center">
+      <b>9. 투표 결과 — 정족수 충족 여부 판정</b><br/><br/>
+      <img src="./docs/screenshots/vote-result.png" alt="투표 결과" width="720" /><br/><br/>
+      참석 인원, 정족수 충족 여부, 찬성/반대/기권 비율을 종합하여 가결·부결을 판정합니다.
+    </td>
+  </tr>
+</table>
 
 ---
 
