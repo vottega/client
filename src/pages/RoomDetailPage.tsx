@@ -20,8 +20,10 @@ import { useRoomInfoEventHandler } from "@/hooks/useRoomInfoEventHandler";
 import { useVoteEventHandler } from "@/hooks/useVoteEventHandler";
 import { useVotePaperEventHandler } from "@/hooks/useVotePaperEventHandler";
 import { Endpoints } from "@/lib/api/endpoints";
+import { queryKeys } from "@/lib/api/queries";
 import { useRoom } from "@/lib/api/queries/room";
 import { useAuthenticatedAuth } from "@/lib/auth/useAuthenticatedAuth";
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Settings } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { VoteForm } from "../components/VoteForm";
@@ -32,6 +34,7 @@ import { useDeniedToast } from "@/routes/useDeniedToast";
 export default function RoomDetailPage() {
   useDeniedToast();
   const auth = useAuthenticatedAuth();
+  const queryClient = useQueryClient();
   const { id: roomId } = useParams<{ id: string }>();
   const { data: room, isSuccess: isRoomSuccess } = useRoom(roomId);
   const { mutate: createVote } = useCreateVote(roomId ?? "");
@@ -65,6 +68,10 @@ export default function RoomDetailPage() {
     {
       enabled: isRoomSuccess,
       retry: false,
+      onReconnect: () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.rooms.detail(roomId!) });
+        queryClient.invalidateQueries({ queryKey: queryKeys.votes.byRoom(roomId!) });
+      },
     },
   );
 

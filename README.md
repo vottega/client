@@ -155,6 +155,40 @@ SSE 이벤트 수신
 
 > 📂 관련 코드: `src/hooks/useVoteEventHandler.ts`, `src/hooks/useParticipantEventHandler.ts`, `src/lib/utils.ts`의 `isNewerOrEqual()`
 
+### 연결 갭 복구: SSE 재연결 시점의 하이브리드 전략
+
+`@microsoft/fetch-event-source`는 기본적으로 탭이 비활성(hidden) 상태가 되면 연결을 끊고, 다시 활성(visible)이 되면 재연결합니다. 이는 백그라운드 리소스 절약을 위한 라이브러리의 의도된 동작이지만, **연결이 끊겨 있는 동안 서버에서 발생한 이벤트가 유실**됩니다.
+
+**문제:** 탭 전환 → SSE 끊김 → 이 사이에 다른 참여자의 투표 발생 → 탭 복귀 → SSE 재연결되지만, 끊겨 있던 동안의 이벤트는 받지 못함.
+
+**검토한 대안:**
+
+| 접근 | 장점 | 한계 |
+| --- | --- | --- |
+| `openWhenHidden: true` | 1줄 수정으로 갭 자체를 없앰 | 모바일 브라우저는 백그라운드 탭의 네트워크를 throttle/kill할 수 있어 보장이 안 됨. 리소스 낭비 |
+| SSE `Last-Event-ID` 기반 서버 replay | 가장 robust한 표준 방식 | 서버 측 변경이 필요하여 프론트엔드만으로 완결 불가 |
+| **SSE 재연결 시점에 REST refetch (채택)** | 기존 타임스탬프 검증이 safety net으로 동작. 커넥션 관리와 캐시 관리의 책임 분리 | 재연결 시 1회 REST 요청 발생 |
+
+**해결: 재연결 감지 + 선택적 캐시 무효화**
+
+```
+탭 hidden
+  → fetch-event-source가 내부적으로 연결 close (기본 동작)
+  → (이 사이에 서버 이벤트 유실 가능)
+
+탭 visible
+  → fetch-event-source가 자동 재연결
+  → onopen 발동 (재연결 감지)
+  → onReconnect() 콜백 호출
+  → invalidateQueries()로 REST를 통해 최신 전체 상태 fetch
+  → 동시에 SSE도 새 이벤트 수신 시작
+  → REST와 SSE 데이터가 겹쳐도, 기존 타임스탬프 이중 검증이 race condition 방어
+```
+
+핵심은 **처음 연결과 재연결을 구분**하여, 갭이 발생한 재연결 시에만 REST refetch를 트리거한다는 점입니다. 이를 통해 SSE는 **실시간 push** 채널로, REST는 **정합성 복구** 채널로 역할이 분리됩니다. 기존에 설계해 둔 타임스탬프 이중 검증이 두 소스의 데이터 충돌을 자연스럽게 방어하기 때문에, 추가 동기화 로직 없이 확장할 수 있었습니다.
+
+> 📂 관련 코드: `src/hooks/useRoomEventFetchSource.ts`의 `onopen` + `onReconnect`, `src/pages/RoomDetailPage.tsx`
+
 ---
 
 ### 서버 상태 단일 소스: React Query 캐시 직접 조작
@@ -257,6 +291,7 @@ pnpm preview   # 프로덕션 빌드 로컬 미리보기
 | -------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------- |
 | `src/hooks/useVoteEventHandler.ts`     | 타임스탬프 이중 검증 패턴               | SSE와 REST 간 race condition을 한 파일 안에서 완결적으로 처리          |
 | `src/hooks/useRoomEventFetchSource.ts` | Discriminated Union + exhaustive switch | TypeScript의 타입 시스템으로 SSE 이벤트 누락을 컴파일 타임에 검출      |
+| `src/hooks/useRoomEventFetchSource.ts` | 재연결 감지 + 갭 복구 콜백              | 초기 연결과 재연결을 구분하여, 유실 구간의 데이터를 REST로 복구        |
 | `src/lib/auth/AuthContext.tsx`         | Symbol 기반 인증 상태 분리              | `null` 대신 Sentinel Symbol로 "미확인"과 "미인증"을 구분하는 패턴      |
 | `src/lib/api/errors.ts`                | HttpError 시맨틱 분류                   | Axios 에러를 의미 있는 메서드(`isForbidden()`, `isConflict()`)로 변환  |
 | `src/routes/ProtectedRoute.tsx`        | 선언적 역할 기반 라우팅                 | `allow` 함수와 `redirectTo` 함수로 역할별 접근 제어를 설정 형태로 표현 |

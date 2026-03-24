@@ -26,6 +26,7 @@ type Options = {
   headers?: Record<string, string>;
   retry?: boolean;
   enabled?: boolean;
+  onReconnect?: () => void;
 };
 
 export function useRoomEventFetchSource(
@@ -49,6 +50,7 @@ export function useRoomEventFetchSource(
 
     console.log("[SSE] Connecting to:", url);
     const controller = new AbortController();
+    let hasConnectedBefore = false;
 
     fetchEventSource(url, {
       method: "GET",
@@ -57,6 +59,13 @@ export function useRoomEventFetchSource(
         ...options?.headers,
       },
       signal: controller.signal,
+      async onopen() {
+        if (hasConnectedBefore) {
+          console.log("[SSE] Reconnected — triggering gap recovery");
+          options?.onReconnect?.();
+        }
+        hasConnectedBefore = true;
+      },
       onmessage(ev) {
         try {
           const parsed = JSON.parse(ev.data) as RoomEvent;
@@ -103,5 +112,6 @@ export function useRoomEventFetchSource(
       console.log("[SSE] Disconnecting from:", url);
       controller.abort();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- onReconnect는 ref로 안정화하지 않아도 연결 재생성을 유발하지 않음
   }, [url, token, options?.enabled, options?.retry, options?.headers]);
 }
